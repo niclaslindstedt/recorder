@@ -1,0 +1,603 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { useState } from "react";
+
+import { FLAC_LEVELS, WAV_DEPTHS } from "@niclaslindstedt/oss-framework/audio";
+import {
+  Button,
+  CloudIcon,
+  CogIcon,
+  ConfirmDialog,
+  DatabaseIcon,
+  DownloadIcon,
+  FolderIcon,
+  InfoIcon,
+  MicIcon,
+  PaletteIcon,
+  PlayIcon,
+  ScrollTextIcon,
+  Section,
+  SegmentedControl,
+  ToggleRow,
+} from "@niclaslindstedt/oss-framework/components";
+import { EncryptionSettings } from "@niclaslindstedt/oss-framework/encryption";
+import { LogViewer } from "@niclaslindstedt/oss-framework/logging";
+
+import { backupFileName, readBackupFile, saveBackup } from "./backup.ts";
+import type { DemoDataToggle } from "./dev/useDemoData.ts";
+import { useEncryptionLabels } from "./encryptionLabels.ts";
+import { useT } from "./i18n/index.ts";
+import { logStore } from "./log.ts";
+import { mergeDocs } from "./merge.ts";
+import { serializeDoc } from "./migrations.ts";
+import { SelfHostedSettings } from "./SelfHostedSettings.tsx";
+import { emptyDoc } from "./types.ts";
+import {
+  BITRATES,
+  EXPORT_RATES,
+  SKIP_SECONDS,
+  type AppSettings,
+  type ExportFormat,
+  type ThemeChoice,
+} from "./useAppSettings.ts";
+import type { DocStore } from "./useDocStore.ts";
+import {
+  PROVIDER_NAMES,
+  type SyncBackendId,
+  type SyncEngine,
+} from "./useSyncEngine.ts";
+
+// One scrolling page: appearance, how a take is kept, playback, what an
+// export defaults to, the spaces, the backend and its passphrase, the data,
+// the developer knobs, and About. Every knob reads and writes the caller's
+// settings store, so what is on screen is always what is persisted.
+
+type Props = {
+  settings: AppSettings;
+  update: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
+  store: DocStore;
+  sync: SyncEngine;
+  demoData: DemoDataToggle;
+  spaceName: string;
+  onManageSpaces: () => void;
+  onAdoptSpace: (slug: string) => void;
+  onNotice: (message: string) => void;
+};
+
+export function SettingsScreen({
+  settings,
+  update,
+  store,
+  sync,
+  demoData,
+  spaceName,
+  onManageSpaces,
+  onAdoptSpace,
+  onNotice,
+}: Props) {
+  const t = useT();
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [foundSpaces, setFoundSpaces] = useState<string[] | null>(null);
+  const encryptionLabels = useEncryptionLabels(sync.providerName);
+
+  const importBackup = async (file: File) => {
+    try {
+      const doc = await readBackupFile(file);
+      const before = Object.keys(store.data.recordings).length;
+      const merged = mergeDocs(store.data, doc);
+      store.replaceAll(merged);
+      onNotice(
+        t("settings.imported", {
+          count: String(Object.keys(merged.recordings).length - before),
+        }),
+      );
+    } catch {
+      onNotice(t("settings.importFailed"));
+    }
+  };
+
+  const media = sync.media;
+
+  return (
+    <div className="flex flex-col gap-3 px-3 py-3">
+      <Section
+        title={t("settings.appearance")}
+        icon={<PaletteIcon className="h-3.5 w-3.5" />}
+      >
+        <SegmentedControl<ThemeChoice>
+          value={settings.theme}
+          options={[
+            { value: "light", label: t("settings.themeLight") },
+            { value: "dark", label: t("settings.themeDark") },
+            { value: "system", label: t("settings.themeSystem") },
+          ]}
+          onChange={(theme) => update("theme", theme)}
+          ariaLabel={t("settings.theme")}
+          fullWidth
+        />
+      </Section>
+
+      <Section
+        title={t("settings.recording")}
+        icon={<MicIcon className="h-3.5 w-3.5" />}
+      >
+        <Labelled label={t("settings.recordingKind")}>
+          <SegmentedControl<AppSettings["recordingKind"]>
+            value={settings.recordingKind}
+            options={[
+              { value: "compact", label: t("record.kind.compact") },
+              { value: "lossless", label: t("record.kind.lossless") },
+            ]}
+            onChange={(next) => update("recordingKind", next)}
+            ariaLabel={t("settings.recordingKind")}
+            fullWidth
+          />
+          <p className="text-xs text-muted">
+            {t(`settings.recordingKindHint.${settings.recordingKind}`)}
+          </p>
+        </Labelled>
+        {settings.recordingKind === "compact" && (
+          <Labelled label={t("settings.recordingBitrate")}>
+            <SegmentedControl<string>
+              value={String(settings.recordingBitrate)}
+              options={BITRATES.map((b) => ({
+                value: String(b),
+                label: String(b),
+              }))}
+              onChange={(next) =>
+                update(
+                  "recordingBitrate",
+                  Number(next) as AppSettings["recordingBitrate"],
+                )
+              }
+              ariaLabel={t("settings.recordingBitrate")}
+              fullWidth
+            />
+            <p className="text-xs text-muted">
+              {t("export.kbps", { kbps: String(settings.recordingBitrate) })}
+            </p>
+          </Labelled>
+        )}
+        <ToggleRow
+          label={t("settings.voiceProcessing")}
+          hint={t("settings.voiceProcessingHint")}
+          checked={settings.voiceProcessing}
+          onChange={(next) => update("voiceProcessing", next)}
+        />
+        <ToggleRow
+          label={t("settings.showSpectrum")}
+          hint={t("settings.showSpectrumHint")}
+          checked={settings.showSpectrum}
+          onChange={(next) => update("showSpectrum", next)}
+        />
+      </Section>
+
+      <Section
+        title={t("settings.playback")}
+        icon={<PlayIcon className="h-3.5 w-3.5" />}
+      >
+        <Labelled label={t("settings.skipSeconds")}>
+          <SegmentedControl<string>
+            value={String(settings.skipSeconds)}
+            options={SKIP_SECONDS.map((s) => ({
+              value: String(s),
+              label: `${s} ${t("common.seconds")}`,
+            }))}
+            onChange={(next) =>
+              update("skipSeconds", Number(next) as AppSettings["skipSeconds"])
+            }
+            ariaLabel={t("settings.skipSeconds")}
+            fullWidth
+          />
+        </Labelled>
+      </Section>
+
+      <Section
+        title={t("settings.exportDefaults")}
+        icon={<DownloadIcon className="h-3.5 w-3.5" />}
+      >
+        <p className="text-xs text-muted">{t("settings.exportDefaultsHint")}</p>
+        <Labelled label={t("export.format")}>
+          <SegmentedControl<ExportFormat>
+            value={settings.exportFormat}
+            options={[
+              { value: "wav", label: t("export.wav") },
+              { value: "flac", label: t("export.flac") },
+              { value: "mp3", label: t("export.mp3") },
+            ]}
+            onChange={(next) => update("exportFormat", next)}
+            ariaLabel={t("export.format")}
+            fullWidth
+          />
+        </Labelled>
+        {settings.exportFormat === "wav" && (
+          <Labelled label={t("export.depth")}>
+            <SegmentedControl<string>
+              value={String(settings.exportWavDepth)}
+              options={WAV_DEPTHS.map((d) => ({
+                value: String(d),
+                label:
+                  d === 32
+                    ? t("export.depthFloat")
+                    : t("export.depthBits", { bits: String(d) }),
+              }))}
+              onChange={(next) =>
+                update(
+                  "exportWavDepth",
+                  Number(next) as AppSettings["exportWavDepth"],
+                )
+              }
+              ariaLabel={t("export.depth")}
+              fullWidth
+            />
+          </Labelled>
+        )}
+        {settings.exportFormat === "flac" && (
+          <Labelled label={t("export.level")}>
+            <SegmentedControl<string>
+              value={String(settings.exportFlacLevel)}
+              options={FLAC_LEVELS.map((l) => ({
+                value: String(l),
+                label: t(`export.levelName.${String(l) as "0" | "5" | "8"}`),
+              }))}
+              onChange={(next) =>
+                update(
+                  "exportFlacLevel",
+                  Number(next) as AppSettings["exportFlacLevel"],
+                )
+              }
+              ariaLabel={t("export.level")}
+              fullWidth
+            />
+          </Labelled>
+        )}
+        {settings.exportFormat === "mp3" && (
+          <Labelled label={t("export.bitrate")}>
+            <SegmentedControl<string>
+              value={String(settings.exportMp3Bitrate)}
+              options={BITRATES.map((b) => ({
+                value: String(b),
+                label: String(b),
+              }))}
+              onChange={(next) =>
+                update(
+                  "exportMp3Bitrate",
+                  Number(next) as AppSettings["exportMp3Bitrate"],
+                )
+              }
+              ariaLabel={t("export.bitrate")}
+              fullWidth
+            />
+          </Labelled>
+        )}
+        <Labelled label={t("export.rate")}>
+          <SegmentedControl<string>
+            value={String(settings.exportRate)}
+            options={EXPORT_RATES.map((r) => ({
+              value: String(r),
+              label:
+                r === 0
+                  ? t("export.rateKeep")
+                  : t("export.rateHz", { khz: String(r / 1000) }),
+            }))}
+            onChange={(next) =>
+              update("exportRate", Number(next) as AppSettings["exportRate"])
+            }
+            ariaLabel={t("export.rate")}
+            fullWidth
+          />
+        </Labelled>
+        <ToggleRow
+          label={t("export.mono")}
+          hint={t("export.monoHint")}
+          checked={settings.exportMono}
+          onChange={(next) => update("exportMono", next)}
+        />
+      </Section>
+
+      <Section
+        title={t("settings.spaces")}
+        icon={<FolderIcon className="h-3.5 w-3.5" />}
+      >
+        <p className="text-xs text-muted">{t("settings.spacesHint")}</p>
+        <p className="text-sm text-fg">
+          {t("library.space")}:{" "}
+          <span className="font-medium text-fg-bright">{spaceName}</span>
+        </p>
+        <Button onClick={onManageSpaces}>{t("settings.manageSpaces")}</Button>
+      </Section>
+
+      <Section
+        title={t("settings.sync")}
+        icon={<CloudIcon className="h-3.5 w-3.5" />}
+      >
+        <p className="text-xs text-muted">
+          {sync.available.includes("icloud")
+            ? t("settings.syncHintICloud")
+            : t("settings.syncHint")}
+        </p>
+        <SegmentedControl<SyncBackendId>
+          value={sync.backend}
+          options={sync.available.map((id) => ({
+            value: id,
+            label: PROVIDER_NAMES[id],
+            disabled: demoData.on && id !== sync.backend,
+          }))}
+          onChange={(next) => {
+            if (next === sync.backend || demoData.on) return;
+            if (next === "local") {
+              sync.disconnect();
+              return;
+            }
+            setBusy(true);
+            void sync
+              .connect(next)
+              .catch((err: unknown) =>
+                onNotice(err instanceof Error ? err.message : String(err)),
+              )
+              .finally(() => setBusy(false));
+          }}
+          ariaLabel={t("settings.backend")}
+          fullWidth
+        />
+        <p className="text-xs text-muted">
+          {sync.connected
+            ? t("settings.connected", { name: sync.providerName })
+            : t("settings.localOnly")}
+          {" · "}
+          {sync.location.path}
+        </p>
+        {sync.connected && (
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={sync.saveNow} disabled={busy || !sync.dirty}>
+              {t("settings.saveNow")}
+            </Button>
+            <Button onClick={() => void sync.reload()} disabled={busy}>
+              {t("settings.reload")}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={sync.disconnect}
+              disabled={demoData.on}
+            >
+              {t("settings.disconnect")}
+            </Button>
+          </div>
+        )}
+        {sync.connected && (
+          <div className="flex flex-col gap-1 rounded-md border border-line p-2 text-xs text-muted">
+            <span className="font-medium text-fg">
+              {t("settings.files", { name: sync.providerName })}
+            </span>
+            <span>
+              {media.running
+                ? t("settings.filesRunning", {
+                    done: String(media.done),
+                    total: String(media.total),
+                  })
+                : media.last
+                  ? t("settings.filesLast", {
+                      sent: String(media.last.pushed.length),
+                      fetched: String(media.last.pulled.length),
+                      removed: String(media.last.pruned.length),
+                    })
+                  : t("settings.filesIdle")}
+            </span>
+            {media.last && media.last.failed.length > 0 && (
+              <span className="text-danger">
+                {t("settings.filesFailed", {
+                  count: String(media.last.failed.length),
+                })}
+              </span>
+            )}
+            <div>
+              <Button onClick={media.run} disabled={media.running}>
+                {t("settings.filesRun")}
+              </Button>
+            </div>
+          </div>
+        )}
+        {sync.encryptable && sync.connected && (
+          <EncryptionSettings
+            encryption={sync.encryption}
+            location={sync.providerName}
+            labels={encryptionLabels}
+            disabled={demoData.on}
+            onChanged={() => void sync.reload()}
+          />
+        )}
+        {sync.backend === "selfhosted" && (
+          <SelfHostedSettings
+            selfHosted={sync.selfHosted}
+            onUnpaired={sync.disconnect}
+            onNotice={onNotice}
+          />
+        )}
+        {sync.connected && (
+          <div className="flex flex-col gap-1">
+            <Button
+              onClick={() =>
+                void sync
+                  .listSpaces()
+                  .then((slugs) =>
+                    setFoundSpaces(slugs.filter((s) => s !== store.slug)),
+                  )
+                  .catch((err: unknown) =>
+                    onNotice(err instanceof Error ? err.message : String(err)),
+                  )
+              }
+            >
+              {t("settings.listSpaces")}
+            </Button>
+            {foundSpaces && (
+              <div className="flex flex-col gap-1 text-sm">
+                <span className="text-xs text-muted">
+                  {t("spaces.onBackendHint")}
+                </span>
+                {foundSpaces.length === 0 ? (
+                  <span className="text-xs text-muted">
+                    {t("settings.noSpacesOnBackend")}
+                  </span>
+                ) : (
+                  foundSpaces.map((slug) => (
+                    <div
+                      key={slug}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="text-fg">{slug}</span>
+                      <Button onClick={() => onAdoptSpace(slug)}>
+                        {t("spaces.open")}
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </Section>
+
+      <Section
+        title={t("settings.data")}
+        icon={<DatabaseIcon className="h-3.5 w-3.5" />}
+      >
+        <div className="flex flex-col gap-1">
+          <Button
+            onClick={() =>
+              void saveBackup(store.data, store.slug).catch((err: unknown) =>
+                onNotice(
+                  t("common.exportFailed", {
+                    file: backupFileName(store.slug),
+                    reason: err instanceof Error ? err.message : String(err),
+                  }),
+                ),
+              )
+            }
+          >
+            {t("settings.export")}
+          </Button>
+          <p className="text-xs text-muted">{t("settings.exportHint")}</p>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="inline-flex">
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              onChange={(e) => {
+                const input = e.currentTarget;
+                const file = input.files?.[0];
+                if (file) void importBackup(file);
+                input.value = "";
+              }}
+            />
+            <span className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-sm text-fg hover:bg-surface-2">
+              {t("settings.import")}
+            </span>
+          </label>
+          <p className="text-xs text-muted">{t("settings.importHint")}</p>
+        </div>
+        <div className="flex flex-col gap-1">
+          <Button variant="danger" onClick={() => setConfirmClear(true)}>
+            {t("settings.deleteAll")}
+          </Button>
+          <p className="text-xs text-muted">{t("settings.deleteAllHint")}</p>
+        </div>
+      </Section>
+
+      <Section
+        title={t("settings.developer")}
+        icon={<ScrollTextIcon className="h-3.5 w-3.5" />}
+      >
+        <ToggleRow
+          label={t("settings.devMode")}
+          hint={t("settings.devModeHint")}
+          checked={settings.devMode}
+          onChange={(next) => {
+            update("devMode", next);
+            if (!next && demoData.on) demoData.setOn(false);
+          }}
+        />
+        {settings.devMode && (
+          <>
+            <ToggleRow
+              label={t("settings.demoData")}
+              hint={t("settings.demoDataHint")}
+              checked={demoData.on}
+              onChange={(next) => {
+                demoData.setOn(next);
+                onNotice(
+                  next ? t("settings.demoDataOn") : t("settings.demoDataOff"),
+                );
+              }}
+            />
+            <ToggleRow
+              label={t("settings.captureLogs")}
+              hint={t("settings.captureLogsHint")}
+              checked={settings.captureLogs}
+              onChange={(next) => {
+                update("captureLogs", next);
+                logStore.setCaptureEnabled(next);
+              }}
+            />
+            <p className="text-xs text-muted">
+              {t("settings.documentSize")}:{" "}
+              {serializeDoc(store.data).length.toLocaleString()} bytes
+            </p>
+            <div className="max-h-64 overflow-auto rounded-md border border-line p-2">
+              <LogViewer store={logStore} />
+            </div>
+          </>
+        )}
+      </Section>
+
+      <Section
+        title={t("settings.about")}
+        icon={<InfoIcon className="h-3.5 w-3.5" />}
+      >
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+          <dt className="text-muted">{t("settings.version")}</dt>
+          <dd className="text-fg">{__APP_VERSION__}</dd>
+          <dt className="text-muted">{t("settings.build")}</dt>
+          <dd className="text-fg">{__BUILD_LABEL__}</dd>
+        </dl>
+        <p className="text-xs leading-snug text-muted">
+          {t("settings.privacy")}
+        </p>
+      </Section>
+
+      <ConfirmDialog
+        open={confirmClear}
+        title={t("settings.deleteAllConfirm")}
+        description={t("settings.deleteAllHint")}
+        confirmLabel={t("common.delete")}
+        tone="danger"
+        labels={{ cancel: t("common.cancel"), close: t("common.close") }}
+        onConfirm={() => {
+          store.replaceAll(emptyDoc());
+          setConfirmClear(false);
+          onNotice(t("settings.deleted"));
+        }}
+        onCancel={() => setConfirmClear(false)}
+      />
+      <span className="hidden">
+        <CogIcon className="h-3.5 w-3.5" />
+      </span>
+    </div>
+  );
+}
+
+function Labelled({
+  label,
+  children,
+}: {
+  label: string;
+  children: preact.ComponentChildren;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-xs font-medium text-fg">{label}</span>
+      {children}
+    </div>
+  );
+}

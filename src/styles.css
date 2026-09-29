@@ -1,0 +1,450 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+
+/* App stylesheet.
+
+     1. Tailwind v4 base + utilities.
+     2. The framework's prebuilt stylesheet — the theme-token map, the button /
+        elevation flavours, and every preset palette (baked in — no runtime
+        `installPresetTokens()` call needed).
+     3. `@source` — scan the installed framework package so the utility classes
+        its components use are emitted into this app's CSS.
+     4. App-shell layout: the html/body reset that makes this a full-viewport,
+        non-scrolling PWA, and the safe-area padding the bottom nav needs. This
+        stays the app's — it is layout, not framework. */
+
+@import "tailwindcss";
+@import "@niclaslindstedt/oss-framework/styles.css";
+
+@source "../node_modules/@niclaslindstedt/oss-framework/dist";
+
+/* ── Corners ─────────────────────────────────────────────────────────────────
+   The app is round-cornered, and the radius is a scale rather than a number
+   chosen per box. Most of that scale is the theme engine's: `look.ts` picks the
+   framework's largest radius preset, and the engine writes `--radius-sm` /
+   `--radius-md` / `--radius-lg` onto <html> as inline styles at paint time —
+   6px, 10px and 20px — which every `rounded-sm|md|lg` in this app and in the
+   framework's components then resolves against.
+
+   The engine does not write the rest of Tailwind's ramp, so those are set here
+   to continue it. Without this block `rounded-xl` (0.75rem) would be *tighter*
+   than `rounded-lg` (20px) and a card asking for a rounder corner would get a
+   squarer one. `--radius` is the bare `rounded`, which is what the framework's
+   `Section` card uses; it is matched to `--radius-md` so a framework panel and
+   an app panel sitting next to each other cut the same corner.
+
+   Inline styles beat a `@theme` value, which is why sm/md/lg are the engine's
+   to set and are deliberately not repeated here. */
+@theme {
+  --radius: 0.625rem;
+  --radius-xs: 0.25rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2rem;
+}
+
+/* ── The wordmark ────────────────────────────────────────────────────────────
+   The lockup in the top bar: the mark and the name, both in the accent, and
+   the one piece of text in the app that is not Inter.
+
+   Mono for the name is the point of it. Everything else on screen is prose and
+   numbers read at a glance; the wordmark is a *name*, and setting it in the
+   one family nothing else uses is what stops it reading as a page title that
+   happens to sit at the top. It also puts the name in the same register as the
+   mark beside it — a stroke of even width, and letters of even width.
+
+   The family is named here rather than reached through Tailwind's `font-mono`:
+   that utility resolves to `--font-mono`, which the framework's code blocks and
+   the log viewer read too, and this app has no wish to restyle those. The
+   system stack stays behind it, for the moment before the webfont lands
+   (`@fontsource/jetbrains-mono`, imported in `main.tsx` — self-hosted, so this
+   costs a request to nobody).
+
+   `-0.02em` because mono metrics set every letter on the same advance, which
+   at wordmark size opens gaps a proportional face would have closed; pulling
+   the tracking in makes the two words read as one lockup rather than as spaced
+   out type. */
+.app-wordmark {
+  font-family:
+    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ── Toasts ──────────────────────────────────────────────────────────────────
+   The framework tints a toast by kind. Both kinds wear the app's own colours
+   here, and the difference between them is loudness rather than hue: a save
+   is a hairline of accent and a tint you have to look for, an error is a
+   full-strength danger border you cannot miss. Scoped to `.app-toasts` (the
+   viewport in App.tsx). */
+.app-toasts [data-kind="success"] {
+  border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+  background-color: color-mix(in oklab, var(--accent) 12%, var(--surface-2));
+}
+
+.app-toasts [data-kind="success"] > span[aria-hidden="true"] {
+  background-color: var(--accent);
+}
+
+.app-toasts [data-kind="danger"] {
+  border-color: var(--danger);
+  background-color: color-mix(in oklab, var(--danger) 32%, var(--surface-2));
+}
+
+.app-toasts [data-kind="danger"] > span[aria-hidden="true"] {
+  background-color: var(--danger);
+}
+
+/* ── Pointer affordance ──────────────────────────────────────────────────────
+   Tailwind v4's preflight stopped restoring `cursor: pointer` on buttons, and
+   the user-agent default for a <button> is the plain arrow — so under a mouse
+   a nav tab, a yes/no answer and a Save button all looked as inert as the
+   text beside them. It costs a touch device nothing and it is the only
+   hover-time signal a desktop reader gets that a control is a control.
+
+   A stylesheet rule rather than a `cursor-pointer` utility per call site:
+   most of the buttons on screen are the framework's to render (the modals,
+   the segmented control, the settings rows), so a class in this app could
+   only ever reach half of them. <label> is deliberately not on the list — the
+   ones around the editor's fields wrap a text field and want a caret. */
+button,
+summary,
+select,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"] {
+  cursor: pointer;
+}
+
+/* A control that cannot be used says so instead of going on inviting the
+   click it will ignore — which is the state the break and category buttons
+   are in before the work has started. */
+button:disabled,
+select:disabled,
+input:disabled,
+[aria-disabled="true"],
+[aria-disabled="true"] button {
+  cursor: not-allowed;
+}
+
+html,
+body {
+  height: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--fg);
+  font-family: var(--app-font-family, system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Installed iOS PWA edge-to-edge under the home indicator. iOS only extends
+   the page under the home indicator when the *root* element carries a fixed
+   `100vh` height; with `100dvh` the document stops at the letterboxed viewport
+   and iOS paints the remainder as a dead black band below the bottom nav.
+   Force `100vh` in the installed iOS PWA so the shell reaches the screen edge.
+   Scoped to iOS via the `-webkit-touch-callout` probe (no other engine
+   supports it) and to `display-mode: standalone`, so a plain mobile Safari tab
+   — where the collapsing toolbar is the whole reason for `100dvh` — keeps it. */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    html,
+    body,
+    #root {
+      height: 100vh;
+    }
+  }
+}
+
+/* The notch and the home indicator. The header pads down from the status bar,
+   so an installed PWA paints edge to edge without putting the buttons — or the
+   rule under them — beneath the Dynamic Island.
+
+   The larger of the row's own padding and the inset, rather than one on top of
+   the other: stacking them would push the bar visibly below the status bar
+   instead of tucking it under, and the bare inset is nothing at all in a
+   browser tab, where the bar would then have a top edge and no top padding.
+   The same expression the sibling `notes` header uses, so the two apps' bars
+   land at the same height on the same phone. */
+.app-header {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+/* A screen with no bar over it — a screen with none — starts at the top of the viewport, and pads
+   down from the status bar the way the header would have. The bare inset
+   rather than the header's `max(0.75rem, …)`: the screen has its own
+   padding under this, and in a browser tab the inset is nothing. */
+
+.app-bottom-nav {
+  padding-bottom: 10px;
+}
+
+/* A tab is a thumb target, so give it the platform minimum regardless of how
+   short the label renders. */
+.app-bottom-nav button {
+  min-height: 3rem;
+}
+
+/* ── Selection, and the lens a caret is placed with ──────────────────────────
+   The app is an instrument rather than a document: nothing on screen is there
+   to be read out and quoted, and a phone treats a press held on a label as the
+   start of a selection — so the pill you meant to hold comes back with a blue
+   wash and two handles over it, and a drag to page between tabs selects a
+   paragraph of the list instead. Both go, along with iOS's own callout, which is
+   the other thing a held control summons.
+
+   On `html` rather than on `<main>`, because the app is more than its screens.
+   The bars top and bottom, the toasts, the desk's settings panel and — the
+   ones a rule on `<main>` could never have reached — the framework's modals,
+   which portal into `document.body` outside `#root` entirely, all used to
+   select. A gesture does not respect the boundary either: a drag that starts
+   on a nav label and ends on the screen is one selection, so half a rule left
+   half the problem.
+
+   It is also the only thing that reaches the **caret lens** — the glass iOS
+   puts over the page while a press is held, the magnifier a finger places a
+   text cursor with. That lens is a UIKit gesture the web view arms before it
+   consults a stylesheet, so no property turns it off; what turns it off is
+   having nothing for it to do. Where a press can start no selection the
+   gesture never arms. It matters most in the installed PWA, where the lens is
+   the system's own full-screen glass rather than a lozenge inside a browser
+   tab, and where there is no surrounding chrome to blame it on.
+
+   Selection is put back wherever there is text somebody would actually want:
+   a field's own value, and the monospaced blocks the framework's log viewer
+   prints. */
+html {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* A field is not one thing, and that distinction is the rest of the lens. An
+   `<input type="text">` wants it: placing a caret in a project name typed
+   wrong is precisely what the magnifier is for, and taking it away would leave
+   the field editable only by retyping it. The pickers do not — `time` and
+   `date` open the phone's own wheel, `file` opens a sheet, `range` is a
+   slider, `color` a swatch — and a press held on one of those raised a lens
+   over a control with no text under it to find. The Restore button is the
+   sharpest case: it is a <label> around a visually hidden `type="file"`, so
+   the blanket exception this list replaces armed the text interaction on an
+   input nobody can see, under a button. */
+:is(textarea, [contenteditable="true"], pre, code),
+input:not(
+  [type="button"],
+  [type="checkbox"],
+  [type="color"],
+  [type="date"],
+  [type="file"],
+  [type="image"],
+  [type="radio"],
+  [type="range"],
+  [type="reset"],
+  [type="submit"],
+  [type="time"]
+) {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* ── Scrollbars ──────────────────────────────────────────────────────────────
+   A scrolling region — a long form in a modal, the Settings page, the side
+   panel — otherwise gets the platform's own bar, which on a desktop is a grey
+   gutter with a white track: a slab of the operating system's light theme
+   down the edge of a dark sheet. The framework styles none, so this is the
+   app's: a thin pill in the theme's own ink over no track at all, the way a
+   phone draws one, following light and dark because it is mixed from `--fg`.
+
+   Two dialects. `scrollbar-color` / `scrollbar-width` are the standard and
+   what Firefox and Chromium read — and Chromium ignores the `::-webkit-`
+   pseudo-elements once they are set, so those are kept behind `@supports` for
+   the engine that still only has them (Safari). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--fg) 28%, transparent) transparent;
+}
+
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* The border is the pill's margin: a transparent edge clipped away by
+     `background-clip`, so a 10px gutter draws a 4px bar clear of the card's
+     rounded edge. */
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--fg) 28%, transparent);
+    background-clip: padding-box;
+    border: 3px solid transparent;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--fg) 45%, transparent);
+  }
+}
+
+/* ── The update prompt ───────────────────────────────────────────────────────
+   The framework's `UpdateToast` fixes itself to the bottom of the viewport,
+   which in this shell is precisely where the bottom nav is: a new build
+   landing while the app was open dropped a card over the four tabs and kept it
+   there until it was dismissed. `App.tsx` gives it a zero-height slot in the
+   flow immediately above the bar instead, and this re-points the card at that
+   slot — `absolute` rather than `fixed`, so `bottom` is measured from the bar's
+   top edge whatever height its labels come out at, on any phone.
+
+   `[data-toast-stack]` is the hook the framework puts on the card for exactly
+   this. The sides stay the card's own (0.75rem plus whatever the shell reserves
+   through `--app-content-left|right`), and the safe-area inset it carried is
+   dropped along with the `fixed`: the bar below it already clears the home
+   indicator, so spending the inset again here would only lift the card off the
+   bar it is sitting on. */
+.app-update-slot [data-toast-stack] {
+  position: absolute;
+  bottom: 0.75rem;
+}
+
+/* ── Moving between screens ──────────────────────────────────────────────────
+   The bottom bar is four destinations in a fixed left-to-right order and a
+   swipe moves one step along it (see `useSwipeNav.ts`). Without motion the
+   screen simply replaces itself, which leaves the gesture unanswered: the
+   finger says "the next one, that way" and the app gives no sign that a *row*
+   is what it moved along. So the arriving screen comes in from the side it
+   lives on — from the right going forward, from the left going back — and the
+   direction is the bar's, not the gesture's, so tapping a tab two along looks
+   like the same move as swiping to it (see `screenEnter` in `BottomNav.tsx`).
+
+   Only the incoming screen animates; the outgoing one is gone the moment the
+   tab changes. A true two-up page transition would have to keep the old screen
+   mounted and slide the pair, which on this app means holding a second copy of
+   the report's charts on screen to be scrolled off them. The short offset is
+   chosen for that: at 100% width the trailing edge would expose a screen-wide
+   strip of empty page, while `1.5rem` reads as the screen catching up with the
+   swipe rather than as a gap.
+
+   Transform and opacity only — both composited, so this stays off the main
+   thread on a phone. */
+.app-screen[data-enter="forward"] {
+  animation: screen-in-right 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-screen[data-enter="back"] {
+  animation: screen-in-left 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Settings has no place in the row, so it arrives from nowhere: a fade is a
+   change of screen with no direction claimed, which is what pressing a
+   top-bar button is. It is also what the app's very first paint
+   gets, which is the right nothing-in-particular for a screen that did not
+   come from another one. */
+.app-screen[data-enter="none"] {
+  animation: screen-fade-in 160ms ease-out;
+}
+
+@keyframes screen-in-right {
+  from {
+    transform: translate3d(1.5rem, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes screen-in-left {
+  from {
+    transform: translate3d(-1.5rem, 0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes screen-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The tab still changes, instantly — the motion was only ever the explanation
+   of a change that happens either way. */
+@media (prefers-reduced-motion: reduce) {
+  .app-screen[data-enter] {
+    animation: none;
+  }
+}
+
+/* ── The side panel ──────────────────────────────────────────────────────────
+   Settings on the desk. It comes in from the edge it lives on, the way the
+   screens do on the phone, and the scrim fades up with it. */
+.app-panel {
+  animation: panel-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-panel-scrim {
+  animation: screen-fade-in 220ms ease-out;
+}
+
+@keyframes panel-in {
+  from {
+    transform: translate3d(1.5rem, 0, 0);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-panel,
+  .app-panel-scrim {
+    animation: none;
+  }
+}
+
+/* ── The Record screen ───────────────────────────────────────────────────────
+   The dot beside "Recording" beats, and the button lifts a hair on hover.
+   Both still under reduced motion. */
+@keyframes rec-beat {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.app-rec-dot {
+  animation: rec-beat 1.2s ease-in-out infinite;
+}
+
+.app-record-button {
+  box-shadow: 0 6px 24px color-mix(in oklab, var(--danger) 45%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-rec-dot {
+    animation: none;
+  }
+}
+
+/* The clip lamp, lit: the framework's `data-on` drives the colour; a hatched
+   texture says it in a second way for a reader who cannot tell red. */
+.oss-clip-lamp[data-on="true"] {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 4px,
+    color-mix(in oklab, var(--fg-bright) 25%, transparent) 4px 6px
+  );
+}
