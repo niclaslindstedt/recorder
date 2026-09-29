@@ -2,7 +2,7 @@
 //! The loopback OAuth redirect — the decisions half.
 //!
 //! The one thing a web page cannot do for itself. The app is served from the
-//! `time:` scheme, and no OAuth provider will register a custom scheme as a
+//! `recorder:` scheme, and no OAuth provider will register a custom scheme as a
 //! redirect URI. The way out is the one RFC 8252 prescribes for native apps:
 //! send the user to the provider in their real browser, and catch the redirect
 //! on a loopback listener the app opens for the occasion.

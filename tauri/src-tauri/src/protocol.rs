@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 //! Answering the `recorder://` scheme — the effects half of
-//! `time_shell::webroot`, which owns every decision this file acts on.
+//! `recorder_shell::webroot`, which owns every decision this file acts on.
 //!
 //! Where the bundled site lives depends on the shape the app is in, and there
 //! are exactly two:
@@ -17,10 +17,10 @@
 use std::fs;
 use std::path::PathBuf;
 
+use recorder_shell::webroot::{content_type_for, resolve_webroot_file};
 use tauri::http::{Request, Response};
 use tauri::path::BaseDirectory;
 use tauri::{AppHandle, Manager};
-use time_shell::webroot::{content_type_for, resolve_webroot_file};
 
 /// Where the bundled site is, for this shape of app.
 pub fn webroot_dir(app: &AppHandle) -> PathBuf {

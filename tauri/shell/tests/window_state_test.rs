@@ -6,7 +6,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-use time_shell::window_state::{
+use recorder_shell::window_state::{
     load_window_state, on_some_display, save_window_state, state_file, DisplayArea, WindowState,
     DEFAULT_STATE, MIN_HEIGHT, MIN_WIDTH,
 };

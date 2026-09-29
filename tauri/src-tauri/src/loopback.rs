@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! The loopback OAuth redirect — the effects half of `time_shell::oauth`,
+//! The loopback OAuth redirect — the effects half of `recorder_shell::oauth`,
 //! which owns every decision this file acts on: the paths, the ports, the
 //! timeout, what counts as the redirect, and the shape of every reply.
 //!
@@ -17,7 +17,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use time_shell::oauth::{
+use recorder_shell::oauth::{
     begin_reply, error_reply, query_reply, redirect_query, redirect_uri, DONE_PAGE, LOOPBACK_PORTS,
     LOOPBACK_TIMEOUT,
 };

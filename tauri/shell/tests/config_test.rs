@@ -5,14 +5,14 @@
 //! on the machine is keyed to, and the navigation guard is the whole of this
 //! shell's security policy.
 
-use time_shell::config::{app_origin, is_internal_url, start_url, APP_HOST, APP_SCHEME};
+use recorder_shell::config::{app_origin, is_internal_url, start_url, APP_HOST, APP_SCHEME};
 
 /// The two desktop webviews spell a registered scheme differently, and the
 /// shell has to hand each one the origin it actually granted.
 #[test]
 fn each_platform_gets_the_origin_it_grants() {
     assert_eq!(app_origin(false), "recorder://localhost");
-    assert_eq!(app_origin(true), "http://time.localhost");
+    assert_eq!(app_origin(true), "http://recorder.localhost");
 }
 
 /// Not a tautology: these two words are what every stored day is keyed to,
@@ -26,7 +26,10 @@ fn the_origin_is_built_from_the_two_constants() {
 
 #[test]
 fn the_window_opens_on_the_entry_page() {
-    assert_eq!(start_url("recorder://localhost"), "recorder://localhost/index.html");
+    assert_eq!(
+        start_url("recorder://localhost"),
+        "recorder://localhost/index.html"
+    );
     // A trailing slash on the origin must not become a double one.
     assert_eq!(
         start_url("recorder://localhost/"),
@@ -38,8 +41,16 @@ fn the_window_opens_on_the_entry_page() {
 fn our_own_pages_navigate_in_the_window() {
     let origin = "recorder://localhost";
     assert!(is_internal_url("recorder://localhost", origin, None));
-    assert!(is_internal_url("recorder://localhost/index.html", origin, None));
-    assert!(is_internal_url("recorder://localhost/privacy/", origin, None));
+    assert!(is_internal_url(
+        "recorder://localhost/index.html",
+        origin,
+        None
+    ));
+    assert!(is_internal_url(
+        "recorder://localhost/privacy/",
+        origin,
+        None
+    ));
 }
 
 /// Everything else opens in the user's browser rather than replacing the app

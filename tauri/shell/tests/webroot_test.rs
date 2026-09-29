@@ -10,7 +10,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use time_shell::webroot::{content_type_for, percent_decode, resolve_webroot_file, webroot_exists};
+use recorder_shell::webroot::{
+    content_type_for, percent_decode, resolve_webroot_file, webroot_exists,
+};
 
 /// A throwaway webroot with the shape a built site has: an entry page, a
 /// hashed module under `assets/`, and a nested index.

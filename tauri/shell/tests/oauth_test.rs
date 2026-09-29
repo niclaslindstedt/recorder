@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-//! The loopback OAuth redirect's decisions (`time_shell::oauth`).
+//! The loopback OAuth redirect's decisions (`recorder_shell::oauth`).
 //!
 //! The page owns the other side of both paths and the provider owns the list
 //! of redirect URIs, so the constants here are contracts rather than choices:
 //! a drift is a sign-in that fails at the consent screen or a fetch that 404s.
 
-use time_shell::oauth::{
+use recorder_shell::oauth::{
     begin_reply, error_reply, query_reply, redirect_query, redirect_uri, AWAIT_PATH, BEGIN_PATH,
     LOOPBACK_PORTS,
 };

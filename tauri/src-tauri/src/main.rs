@@ -23,11 +23,11 @@ mod loopback;
 mod protocol;
 mod window;
 
+use recorder_shell::config::APP_SCHEME;
+use recorder_shell::oauth::{AWAIT_PATH, BEGIN_PATH};
+use recorder_shell::webroot::webroot_exists;
 use tauri::{Manager, WindowEvent};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
-use time_shell::config::APP_SCHEME;
-use time_shell::oauth::{AWAIT_PATH, BEGIN_PATH};
-use time_shell::webroot::webroot_exists;
 
 fn main() {
     tauri::Builder::default()
@@ -45,12 +45,12 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         // THE WHOLE APP, served off local disk from one stable origin. See
-        // `time_shell::webroot` for the three properties this arrangement is
+        // `recorder_shell::webroot` for the three properties this arrangement is
         // for and how each is kept.
         //
         // Asynchronous for ONE path: `/__oauth/await` holds its answer until
         // the sign-in redirect lands on the loopback listener (see
-        // `time_shell::oauth`), which can be minutes, so it answers from a
+        // `recorder_shell::oauth`), which can be minutes, so it answers from a
         // thread of its own. Everything else answers at once, as before.
         .register_asynchronous_uri_scheme_protocol(APP_SCHEME, |ctx, request, responder| {
             match request.uri().path() {
@@ -73,7 +73,7 @@ fn main() {
             // A packaged app has no console, so the one failure that leaves a
             // blank window has to say so somewhere a user will see it. In a
             // checkout this is "you have not run `npm run bundle` yet".
-            if time_shell::config::remote_app_url().is_none() && !webroot_exists(&root) {
+            if recorder_shell::config::remote_app_url().is_none() && !webroot_exists(&root) {
                 let message = format!(
                     "Recorder could not find the app it is meant to show.\n\n\
                      Looked in: {}\n\n\

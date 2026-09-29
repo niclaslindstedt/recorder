@@ -7,7 +7,7 @@
 version: 2
 updates:
   - package-ecosystem: npm
-    directories: ["/", "/native", "/tauri"]
+    directories: ["/", "/tauri", "/native"]
     schedule:
       interval: weekly
     versioning-strategy: lockfile-only
