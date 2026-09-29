@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+
+  Hardened-runtime entitlements for the macOS build, and DELIBERATELY holding
+  one entitlement rather than the set a webview shell is usually handed.
+
+  Apple's hardened runtime is required for notarization and switches off
+  several things an app may need. This app needs one of them:
+
+    device.audio-input
+      The app is a voice recorder. The page records through `getUserMedia`,
+      and under the hardened runtime a process without this entitlement is
+      refused the microphone before the user is ever asked. It is the one
+      thing the app does that a page needs the machine for, and it goes with
+      `NSMicrophoneUsageDescription` in `Info.plist`, which is the sentence
+      the OS shows when the first recording asks.
+
+  And none of the others:
+
+    allow-jit / allow-unsigned-executable-memory
+      An Electron app needs both, because V8 lives inside it and compiles
+      JavaScript to machine code in the app's own address space. WKWebView does
+      not: it runs the page in its own out-of-process content and JIT services,
+      which carry Apple's entitlements rather than ours. Granting an app
+      permission to write executable memory it never writes is a hole with no
+      feature behind it.
+
+    disable-library-validation
+      Nothing unsigned is loaded — the binary is one executable and a directory
+      of static files.
+
+    device.camera / personal-information.location
+      The app opens no camera and no location. The pairing sheet's QR scan is
+      the phone app's; on the desk a code is pasted.
+
+  Each entitlement the app carries has its argument written next to it, so
+  the day another is needed the same is asked of it.
+-->
+<plist version="1.0">
+  <dict>
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+  </dict>
+</plist>

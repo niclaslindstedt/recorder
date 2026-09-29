@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Recorder",
+  "mainBinaryName": "recorder",
+  "version": "../../package.json",
+  "identifier": "dev.local.recorder",
+  "build": {
+    "frontendDist": "./placeholder"
+  },
+  "app": {
+    "windows": [],
+    "withGlobalTauri": false,
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage", "app", "dmg", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/256x256.png",
+      "icons/512x512.png",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../webroot": "webroot"
+    },
+    "category": "Productivity",
+    "shortDescription": "a local-first voice recorder",
+    "longDescription": "A local-first voice recorder: record with a level meter that shows clipping, keep recordings in folders and spaces, and export them as WAV, FLAC or MP3. Your recordings stay on your machine.",
+    "copyright": "Copyright © Niclas Lindstedt",
+    "macOS": {
+      "entitlements": "entitlements.mac.plist",
+      "minimumSystemVersion": "10.15"
+    }
+  }
+}

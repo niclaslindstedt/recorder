@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+
+  Merged by Tauri into the generated Info.plist of the macOS bundle. One key:
+  the sentence macOS shows the first time the page asks for the microphone.
+  Without it the OS refuses the request silently and the meter stays dark,
+  which is the one failure a recorder cannot explain to its user.
+-->
+<plist version="1.0">
+  <dict>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>The microphone is used to record your voice memos. Recordings stay on your machine unless you connect your own cloud storage.</string>
+  </dict>
+</plist>

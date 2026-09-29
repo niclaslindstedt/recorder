@@ -1,0 +1,438 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// THE WHOLE APP: a WebView over the bundled web build, and nothing else.
+//
+// This is a deliberately thin wrapper. It starts a loopback server, points a
+// WebView at it, keeps the native chrome in step with the page's theme, sends
+// off-origin links to the system browser, answers the page when it asks its
+// iCloud container for the document, opens a provider's sign-in in an
+// authentication session when the page asks for one, hands an export to the
+// share sheet when the page saves a file, and opens the camera to read a
+// pairing code when the reader taps Scan. There is no native UI at all beyond
+// a spinner, a failure screen and that scanner — everything else a reader
+// sees is the web app, unchanged.
+//
+// The wrapper adds exactly two things the browser cannot do, and it has to add
+// something: App Store guideline 4.2 rejects a build that is only a viewer for
+// a website. Those two are that it serves the recorder FROM INSIDE THE
+// DOWNLOAD — no network at all, ever, for the app itself — and the iCLOUD
+// backend, which keeps the document in the reader's own container. Both are
+// offered from the OUTSIDE — the page is served unchanged and looks for a
+// capability rather than for this wrapper. See `native/README.md`.
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  BackHandler,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import {
+  WebView,
+  type WebViewMessageEvent,
+  type WebViewNavigation,
+} from "react-native-webview";
+
+import {
+  FALLBACK_BACKGROUND,
+  FALLBACK_FOREGROUND,
+  REMOTE_URL,
+} from "./src/config";
+import { startLocalServer, type LocalServer } from "./src/local-server";
+import {
+  AFTER_LOAD_SCRIPT,
+  BEFORE_LOAD_SCRIPT,
+  isThemeReport,
+  statusBarStyleFor,
+} from "./src/injected";
+import {
+  CLOUD_SCRIPT,
+  isCloudRequest,
+  resolveScript,
+  type CloudRequest,
+} from "./src/icloudBridge";
+import { answerCloudRequest } from "./src/icloud";
+import {
+  authSessionResolveScript,
+  authSessionScript,
+  isAuthSessionRequest,
+} from "./src/authSessionBridge";
+import { answerAuthSession, authRedirectUri } from "./src/authSession";
+import {
+  SAVE_FILE_DESCRIPTOR,
+  isInPageUrl,
+  isSaveFileRequest,
+  type SaveFileRequest,
+} from "./src/saveFileBridge";
+import { answerSaveFile } from "./src/saveFile";
+import {
+  SCAN_QR_DESCRIPTOR,
+  isFromOrigin,
+  isScanQrRequest,
+  refusal,
+  scanQrResultScript,
+  type ScanQrAnswer,
+  type ScanQrRequest,
+} from "./src/scanQrBridge";
+import { QrScanner } from "./src/QrScanner";
+
+// Hold the native splash until the WebView actually paints. Called at module
+// scope so the auto-hide never wins the race; a rejection only means the
+// splash was already gone, which is harmless.
+void SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// The redirect URI a sign-in comes back on (`<scheme>://oauth`, the scheme
+// being the bundle id), and the provider the page finds it through. Null in a
+// build with no URL scheme, which offers no provider and leaves the page on
+// its redirect flow.
+const AUTH_REDIRECT_URI = authRedirectUri();
+const AUTH_SESSION_SCRIPT = AUTH_REDIRECT_URI
+  ? authSessionScript(AUTH_REDIRECT_URI)
+  : "";
+
+// Ceiling on how long the splash may stay up. The happy path hides it on first
+// paint; this only fires when a load hangs, so a broken start falls through to
+// the spinner or the failure screen instead of stranding the reader on a
+// splash forever.
+const SPLASH_TIMEOUT_MS = 10_000;
+
+// Which screen edges the native frame keeps clear of the system bars.
+//
+// iOS: none. The page is built to run edge to edge — `viewport-fit=cover`,
+// the header and the toasts pad themselves with `env(safe-area-inset-*)`, and
+// the bottom navigation runs to the screen edge with the home indicator over
+// it — which is how the installed PWA looks. Framing the WebView inside the
+// safe area instead zeroes those insets and leaves two flat bands above and
+// below the page, so the bars stop short of the status bar and the home
+// indicator.
+//
+// Android: top and bottom. The WebView's safe-area insets are not reliably
+// reported there, so the frame keeps the page clear of the system bars and
+// paints the bands in the page's own background instead.
+const FRAME_EDGES =
+  Platform.OS === "ios" ? ([] as const) : (["top", "bottom"] as const);
+
+type ServerState =
+  | { status: "starting" }
+  | { status: "ready"; origin: string }
+  | { status: "failed"; error: Error };
+
+export default function App() {
+  const [server, setServer] = useState<ServerState>(
+    REMOTE_URL
+      ? { status: "ready", origin: REMOTE_URL }
+      : { status: "starting" },
+  );
+  // The page's background as it last reported it; null until it has.
+  const [pageBackground, setPageBackground] = useState<string | null>(null);
+  const background = pageBackground ?? FALLBACK_BACKGROUND;
+  const webViewRef = useRef<WebView>(null);
+  const canGoBack = useRef(false);
+  const serverRef = useRef<LocalServer | null>(null);
+
+  // --- the embedded server --------------------------------------------------
+
+  const start = useCallback(async () => {
+    if (REMOTE_URL) return;
+    setServer({ status: "starting" });
+    try {
+      const running = await startLocalServer();
+      serverRef.current = running;
+      setServer({ status: "ready", origin: running.origin });
+    } catch (error) {
+      setServer({
+        status: "failed",
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    void start();
+    return () => {
+      void serverRef.current?.stop();
+    };
+  }, [start]);
+
+  // --- the splash -----------------------------------------------------------
+
+  const splashHidden = useRef(false);
+  const hideSplash = useCallback(() => {
+    if (splashHidden.current) return;
+    splashHidden.current = true;
+    void SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(hideSplash, SPLASH_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [hideSplash]);
+
+  // A failed start has no WebView to paint, so drop the splash onto the
+  // failure screen (and its Try again) rather than holding it.
+  useEffect(() => {
+    if (server.status === "failed") hideSplash();
+  }, [server.status, hideSplash]);
+
+  // --- what the page says ---------------------------------------------------
+
+  // One inbound question about the container. Kept off the render path — a
+  // read can wait on iCloud bringing a file down — and deliberately holding
+  // no state: the document goes from the container straight back into the
+  // page, which is where the app's own merge and its local copy live. The
+  // wrapper keeps no copy of anybody's recordings.
+  const answerCloud = useCallback(async (request: CloudRequest) => {
+    const result = await answerCloudRequest(request);
+    webViewRef.current?.injectJavaScript(resolveScript(request.id, result));
+  }, []);
+
+  // One sign-in. The sheet is modal and the page waits on it; what comes back
+  // is the provider's redirect URL, handed straight to the page, which holds
+  // the PKCE verifier and makes the token exchange itself.
+  const signIn = useCallback(async (id: string, url: string) => {
+    if (!AUTH_REDIRECT_URI) return;
+    const result = await answerAuthSession(url, AUTH_REDIRECT_URI);
+    webViewRef.current?.injectJavaScript(authSessionResolveScript(id, result));
+  }, []);
+
+  // One export — a specification, an invoice file, a backup. The page's
+  // `saveFile` waits on the answer, which comes once the share sheet has been
+  // shown and closed; the bytes go to the sheet and nowhere else.
+  const saveFile = useCallback((request: SaveFileRequest) => {
+    void answerSaveFile(request, (script) =>
+      webViewRef.current?.injectJavaScript(script),
+    );
+  }, []);
+
+  // One scan, open while the page waits on it (see `scanQrBridge.ts`). The
+  // camera is mounted only while this holds a request.
+  const [scan, setScan] = useState<ScanQrRequest | null>(null);
+  const scanOpen = useRef(false);
+  const answerScan = useCallback((id: string, answer: ScanQrAnswer) => {
+    webViewRef.current?.injectJavaScript(scanQrResultScript(id, answer));
+  }, []);
+
+  const origin = server.status === "ready" ? server.origin : null;
+
+  const onMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(event.nativeEvent.data) as unknown;
+      } catch {
+        return; // not ours — the page may postMessage whatever it likes
+      }
+
+      if (isCloudRequest(parsed)) {
+        void answerCloud(parsed);
+        return;
+      }
+      if (isAuthSessionRequest(parsed)) {
+        void signIn(parsed.id, parsed.url);
+        return;
+      }
+      if (isSaveFileRequest(parsed)) {
+        saveFile(parsed);
+        return;
+      }
+      if (isScanQrRequest(parsed)) {
+        // Only the bundled page may open the camera.
+        if (!origin || !isFromOrigin(event.nativeEvent.url, origin)) return;
+        const refused = refusal(parsed, scanOpen.current);
+        if (refused) {
+          answerScan(parsed.id, refused);
+          return;
+        }
+        scanOpen.current = true;
+        setScan(parsed);
+        return;
+      }
+      if (!isThemeReport(parsed)) return;
+
+      // The native chrome follows the page's theme so the status bar and the
+      // safe-area bands match it instead of guessing.
+      const reported = parsed.theme.background;
+      if (typeof reported === "string" && reported.trim() !== "") {
+        setPageBackground(reported.trim());
+      }
+    },
+    [answerCloud, signIn, saveFile, answerScan, origin],
+  );
+
+  // --- navigation -----------------------------------------------------------
+
+  // The app opens documents of its own (the privacy policy, the licence),
+  // so the wrapper has to provide the "back" the browser chrome would.
+  // Android routes the hardware button; iOS gets the edge swipe below.
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!canGoBack.current) return false; // fall through: exit the app
+      webViewRef.current?.goBack();
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+
+  // Keep the WebView on the embedded app. Anything else — a link out of the
+  // app — belongs in the system browser, because App Review expects external
+  // links to open externally. A provider's sign-in page is not navigated to
+  // at all: the page asks for an authentication session instead (see
+  // `src/authSessionBridge.ts`), since a consent page in Safari redirects back
+  // to Safari, not to the app. This stays the fallback for a page that finds
+  // no session provider. A `blob:` or `data:` URL is a download some code
+  // clicked instead of calling `saveFile`: it exists only inside the page, so
+  // the system browser could not open it either, and it is refused.
+  const onShouldStartLoadWithRequest = useCallback(
+    (request: WebViewNavigation) => {
+      if (!origin) return false;
+      if (isInPageUrl(request.url)) return false;
+      if (request.url.startsWith(origin)) return true;
+      if (request.url.startsWith("about:")) return true;
+      void Linking.openURL(request.url);
+      return false;
+    },
+    [origin],
+  );
+
+  if (server.status === "failed") {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.center}>
+          <StatusBar style={statusBarStyleFor(FALLBACK_BACKGROUND)} />
+          <Text style={styles.errorTitle}>Could not start the app</Text>
+          <Text style={styles.errorBody}>{server.error.message}</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => void start()}
+            style={({ pressed }) => [
+              styles.retryButton,
+              pressed && styles.retryButtonPressed,
+            ]}
+          >
+            <Text style={styles.retryLabel}>Try again</Text>
+          </Pressable>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <SafeAreaView
+        style={[styles.fill, { backgroundColor: background }]}
+        edges={FRAME_EDGES}
+      >
+        {/* Styled from the page's reported background, never from the
+            phone's light or dark setting: the page's own colour is what sits
+            under the bar (see `statusBarStyleFor`). "auto" until it reports. */}
+        <StatusBar style={statusBarStyleFor(pageBackground)} />
+        {origin ? (
+          <WebView
+            ref={webViewRef}
+            source={{ uri: origin }}
+            style={[styles.fill, { backgroundColor: background }]}
+            javaScriptEnabled
+            // Android: without this `localStorage` is unavailable entirely,
+            // which is where the app's settings and spaces live (the
+            // recordings themselves are in IndexedDB, keyed by the same origin).
+            domStorageEnabled
+            // Never set `incognito` — it makes WKWebView storage
+            // non-persistent, which would drop the whole document on exit.
+            incognito={false}
+            // The microphone. The page records through `getUserMedia`, and
+            // WKWebView would otherwise put its own permission sheet in front
+            // of the OS's; `grant` answers that one for the bundled origin
+            // — the only origin the WebView loads (`onShouldStartLoadWithRequest`)
+            // — and leaves the OS prompt (`NSMicrophoneUsageDescription`) as
+            // the one the user answers. Android needs no prop: the WebView
+            // grants a page's media request once the app holds
+            // `RECORD_AUDIO`, asking for it at that moment if it does not.
+            mediaCapturePermissionGrantType="grant"
+            // Playback stays in the page: no fullscreen player, and the
+            // player's own controls may start audio without a second tap.
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            allowsBackForwardNavigationGestures
+            setSupportMultipleWindows={false}
+            // Before the page's own scripts: the service-worker guard, and
+            // the descriptors that tell the framework this shell can save a
+            // file (so its `saveFile` hands exports to the share sheet) and
+            // scan a QR code (so the pairing sheet offers Scan).
+            injectedJavaScriptBeforeContentLoaded={`${BEFORE_LOAD_SCRIPT}\n${SAVE_FILE_DESCRIPTOR}\n${SCAN_QR_DESCRIPTOR}`}
+            // Three scripts, one prop: the theme reporter the chrome follows,
+            // the iCloud host the page looks for, and the auth-session
+            // provider its Dropbox sign-in looks for. All run once the page
+            // has loaded, and all are guarded against a second injection (a
+            // reload re-runs this).
+            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CLOUD_SCRIPT}\n${AUTH_SESSION_SCRIPT}`}
+            onMessage={onMessage}
+            onLoadEnd={hideSplash}
+            onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
+            onNavigationStateChange={(nav) => {
+              canGoBack.current = nav.canGoBack;
+            }}
+            // The app draws its own scroll surfaces and pins its own chrome;
+            // bouncing the WebView itself just exposes the native background
+            // behind the layout.
+            bounces={false}
+            overScrollMode="never"
+            // iOS runs full-bleed (see `FRAME_EDGES`), so the scroll view must
+            // not pad itself back down by the safe area: the page does that,
+            // through `env(safe-area-inset-*)`, exactly as the installed PWA.
+            contentInsetAdjustmentBehavior="never"
+            automaticallyAdjustContentInsets={false}
+          />
+        ) : (
+          <View style={styles.center}>
+            <ActivityIndicator />
+          </View>
+        )}
+      </SafeAreaView>
+      {scan ? (
+        <QrScanner
+          request={scan}
+          onAnswer={(answer) => {
+            scanOpen.current = false;
+            setScan(null);
+            answerScan(scan.id, answer);
+          }}
+        />
+      ) : null}
+    </SafeAreaProvider>
+  );
+}
+
+const styles = StyleSheet.create({
+  fill: { flex: 1, backgroundColor: FALLBACK_BACKGROUND },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: FALLBACK_BACKGROUND,
+    padding: 24,
+  },
+  errorTitle: {
+    color: FALLBACK_FOREGROUND,
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  errorBody: { color: "#57606a", fontSize: 14, textAlign: "center" },
+  retryButton: {
+    marginTop: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+    backgroundColor: "#e6eaef",
+  },
+  retryButtonPressed: { backgroundColor: "#d3dae1" },
+  retryLabel: { color: FALLBACK_FOREGROUND, fontSize: 15, fontWeight: "600" },
+});
