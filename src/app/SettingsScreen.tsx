@@ -21,6 +21,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 import { EncryptionSettings } from "@niclaslindstedt/oss-framework/encryption";
 import { LogViewer } from "@niclaslindstedt/oss-framework/logging";
+import type { PwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { backupFileName, readBackupFile, saveBackup } from "./backup.ts";
 import type { DemoDataToggle } from "./dev/useDemoData.ts";
@@ -31,6 +32,7 @@ import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { SelfHostedSettings } from "./SelfHostedSettings.tsx";
 import { emptyDoc } from "./types.ts";
+import { UpdateCheck } from "./UpdateCheck.tsx";
 import {
   BITRATES,
   EXPORT_RATES,
@@ -61,6 +63,8 @@ type Props = {
   onManageSpaces: () => void;
   onAdoptSpace: (slug: string) => void;
   onNotice: (message: string) => void;
+  /** The update lifecycle, for About's "Check for updates". */
+  pwa: PwaUpdate;
 };
 
 export function SettingsScreen({
@@ -73,6 +77,7 @@ export function SettingsScreen({
   onManageSpaces,
   onAdoptSpace,
   onNotice,
+  pwa,
 }: Props) {
   const t = useT();
   const [confirmClear, setConfirmClear] = useState(false);
@@ -561,6 +566,7 @@ export function SettingsScreen({
           <dt className="text-muted">{t("settings.build")}</dt>
           <dd className="text-fg">{__BUILD_LABEL__}</dd>
         </dl>
+        {!__SHELL_BUILD__ && <UpdateCheck pwa={pwa} />}
         <p className="text-xs leading-snug text-muted">
           {t("settings.privacy")}
         </p>

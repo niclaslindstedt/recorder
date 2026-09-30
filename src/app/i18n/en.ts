@@ -439,9 +439,16 @@ export const en = {
     finish: "Finish connecting",
   },
 
+  // A new version: the toast, and About's check.
   update: {
     available: "A new version is ready",
     reload: "Reload",
+    reloading: "Reloading…",
+    check: "Check for updates",
+    checking: "Checking…",
+    upToDate: "This is the latest version",
+    unavailable: "Updates can't be checked here",
+    hint: "The app looks for a new version by itself and offers a reload when one has landed. Your recordings stay where they are.",
   },
 } as const;
 

@@ -311,6 +311,7 @@ export function App() {
         setView({ kind: "all" });
       }}
       onNotice={notice}
+      pwa={pwa}
     />
   );
 
