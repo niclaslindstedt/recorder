@@ -49,7 +49,7 @@ import type { Recording } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
 import { createIdbDocBackend, useDocStore } from "./app/useDocStore.ts";
 import { useNamespaces } from "./app/useNamespaces.ts";
-import { useDesk } from "./app/useShape.ts";
+import { useDesk, useStand } from "./app/useShape.ts";
 import { useSyncEngine } from "./app/useSyncEngine.ts";
 import { status } from "./output.ts";
 
@@ -109,6 +109,9 @@ export function App() {
   }, [blobs, sync.media.version, store.editCount]);
 
   const desk = useDesk();
+  // A phone on its side stands the Record screen's instrument beside its
+  // controls, which wants the whole width rather than the reading column.
+  const stand = useStand();
   const [tab, setTab] = useState<Tab>("record");
   const [home, setHome] = useState<NavTab>("record");
   const [enter, setEnter] = useState<ScreenEnter>("none");
@@ -338,7 +341,11 @@ export function App() {
           <div
             key={tab}
             data-enter={enter}
-            className={`app-screen mx-auto flex min-h-full max-w-2xl flex-col ${desk ? "lg:max-w-3xl" : ""}`}
+            className={`app-screen mx-auto flex min-h-full flex-col ${
+              stand && tab === "record"
+                ? "max-w-none"
+                : `max-w-2xl ${desk ? "lg:max-w-3xl" : ""}`
+            }`}
           >
             {tab === "record" && recordScreen}
             {tab === "library" && libraryScreen}

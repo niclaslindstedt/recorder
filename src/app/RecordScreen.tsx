@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   LevelMeter,
@@ -49,6 +55,7 @@ import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
 import { useListen } from "./useListen.ts";
+import { useStand } from "./useShape.ts";
 import { Visualizer } from "./Visualizer.tsx";
 
 // The Record screen, an instrument in four modes (docs/design.md, "Record"):
@@ -92,6 +99,9 @@ const BANDS = 48;
  *  pushing the button off a small phone. */
 const LATEST = 5;
 const LATEST_SHORT = 3;
+/** On its side the list shares the left half with the choices and the
+ *  listen card, in less than three hundred pixels of height. */
+const LATEST_STAND = 2;
 
 export function RecordScreen({
   data,
@@ -287,18 +297,32 @@ export function RecordScreen({
     />
   );
 
+  // Upright, one column; a phone on its side (`useStand`, 956×440 and the
+  // like) is far too short to stack it, so the instrument stands on the left
+  // and a rail of controls on the right (docs/design.md, "On its side").
+  const stand = useStand();
+  const split = (stage: ReactNode, rail: ReactNode) => (
+    <div className="flex min-h-0 flex-1 gap-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">{stage}</div>
+      <div className="flex w-64 shrink-0 flex-col justify-center gap-3">
+        {rail}
+      </div>
+    </div>
+  );
+  const bigButton = stand ? "h-20 w-20" : "h-24 w-24";
+
   const recordButton = (
     <div className="flex items-center justify-center pb-2">
       <button
         type="button"
-        className="app-record-button flex h-24 w-24 items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95"
+        className={`app-record-button flex ${bigButton} items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95`}
         aria-label={t("record.start")}
         disabled={state !== "idle" || saving}
         onClick={() => void start()}
       >
         <span
           aria-hidden
-          className="block h-10 w-10 rounded-full bg-fg-bright/90"
+          className={`block rounded-full bg-fg-bright/90 ${stand ? "h-8 w-8" : "h-10 w-10"}`}
         />
       </button>
     </div>
@@ -310,6 +334,20 @@ export function RecordScreen({
     yesterday: t("common.yesterday"),
   };
 
+  const meter = (subscribe: typeof recorder.subscribe) => (
+    <div className="app-meter-big">
+      <LevelMeter
+        subscribe={subscribe}
+        labels={{
+          meter: t("record.level"),
+          clip: t("record.clip"),
+          clipping: t("record.clipping"),
+        }}
+      />
+    </div>
+  );
+  const visualizerSize = stand ? "min-h-32 flex-1" : "min-h-44 flex-1";
+
   let body;
   if (take) {
     body = (
@@ -317,180 +355,205 @@ export function RecordScreen({
         take={take}
         suggested={suggested}
         saving={saving}
+        beside={stand}
         destination={destinationButton()}
         onSave={(title) => void save(title)}
         onDiscard={() => setConfirmDiscard(true)}
       />
     );
   } else if (capturing) {
-    body = (
-      <>
-        {/* The timer is the headline; tenths tick so the screen is seen to
-            be counting. Under it, what this take is — read-only now. */}
-        <div className="flex flex-col items-center gap-1">
-          <div
-            className="flex items-center gap-3 font-figures text-6xl font-light tracking-tight text-fg-bright tabular-nums"
-            aria-live="off"
-          >
-            <span
-              aria-hidden
-              className={`inline-block h-4 w-4 rounded-full ${
-                state === "recording" ? "app-rec-dot bg-danger" : "bg-muted"
-              }`}
-            />
-            {formatTimer(recorder.elapsedMs)}
-          </div>
-          <div
-            className="truncate text-sm text-muted"
-            role="status"
-            aria-live="polite"
-          >
-            {state === "starting"
-              ? t("record.starting")
-              : state === "paused"
-                ? t("record.paused")
-                : state === "stopping"
-                  ? t("record.saving")
-                  : t("record.recordingTo", {
-                      quality: qualityValue,
-                      folder: destinationValue,
-                    })}
-          </div>
-        </div>
-
-        {/* The big picture takes the room: the last seconds scrolling by
-            (or the spectrum, or the spectrogram), and the whole take along
-            its foot. */}
-        <Visualizer
-          kind={settings.visualizer}
-          onKind={(next) => update("visualizer", next)}
-          subscribe={recorder.subscribe}
-          running={state === "recording"}
-          ticks={ticks}
-          bands={BANDS}
-          overview={peaks}
-          className="flex-1"
-        />
-
-        <div className="app-meter-big">
-          <LevelMeter
-            subscribe={recorder.subscribe}
-            labels={{
-              meter: t("record.level"),
-              clip: t("record.clip"),
-              clipping: t("record.clipping"),
-            }}
+    // The timer is the headline; tenths tick so the screen is seen to be
+    // counting. Under it, what this take is — read-only now.
+    const timer = (
+      <div className="flex flex-col items-center gap-1">
+        <div
+          className={`flex items-center gap-3 font-figures font-light tracking-tight text-fg-bright tabular-nums ${
+            stand ? "text-5xl" : "text-6xl"
+          }`}
+          aria-live="off"
+        >
+          <span
+            aria-hidden
+            className={`inline-block h-4 w-4 rounded-full ${
+              state === "recording" ? "app-rec-dot bg-danger" : "bg-muted"
+            }`}
           />
+          {formatTimer(recorder.elapsedMs)}
         </div>
-        {clipped && (
-          <p className="-mt-2 flex items-center gap-1.5 text-xs font-medium text-danger">
-            <ClipIcon className="h-4 w-4 shrink-0" />
-            {t("record.clippedHint")}
-          </p>
+        <div
+          className="max-w-full truncate text-sm text-muted"
+          role="status"
+          aria-live="polite"
+        >
+          {state === "starting"
+            ? t("record.starting")
+            : state === "paused"
+              ? t("record.paused")
+              : state === "stopping"
+                ? t("record.saving")
+                : t("record.recordingTo", {
+                    quality: qualityValue,
+                    folder: destinationValue,
+                  })}
+        </div>
+      </div>
+    );
+    // The big picture takes the room: the last seconds scrolling by (or the
+    // spectrum, or the spectrogram), and the whole take along its foot.
+    const picture = (
+      <Visualizer
+        kind={settings.visualizer}
+        onKind={(next) => update("visualizer", next)}
+        subscribe={recorder.subscribe}
+        running={state === "recording"}
+        ticks={ticks}
+        bands={BANDS}
+        overview={peaks}
+        className={visualizerSize}
+      />
+    );
+    const warning = clipped && (
+      <p className="-mt-2 flex items-center gap-1.5 text-xs font-medium text-danger">
+        <ClipIcon className="h-4 w-4 shrink-0" />
+        {t("record.clippedHint")}
+      </p>
+    );
+    const ms = recordingTimeLeft(
+      freeBytes,
+      settings.recordingKind,
+      settings.recordingBitrate,
+    );
+    const stats = (
+      <TakeStats
+        columns={stand ? 2 : 4}
+        maxPeakDb={recorder.meter.maxPeakDb}
+        clipCount={recorder.meter.clipCount}
+        size={formatSize(
+          (bytesPerSecond(settings.recordingKind, settings.recordingBitrate) *
+            recorder.elapsedMs) /
+            1000,
+          locale,
         )}
-
-        <TakeStats
-          maxPeakDb={recorder.meter.maxPeakDb}
-          clipCount={recorder.meter.clipCount}
-          size={formatSize(
-            (bytesPerSecond(settings.recordingKind, settings.recordingBitrate) *
-              recorder.elapsedMs) /
-              1000,
-            locale,
+        left={
+          ms === null
+            ? null
+            : formatSpan(ms, {
+                hours: t("common.hours"),
+                minutes: t("common.minutes"),
+              })
+        }
+      />
+    );
+    // Pause · Stop · Discard. Stop sits where Record was, so the thumb does
+    // not move; Discard is a glyph, and asks.
+    const controls = (
+      <div
+        className={`flex items-center justify-center pb-2 ${stand ? "gap-5" : "gap-10"}`}
+      >
+        <RoundGlyph
+          label={state === "paused" ? t("record.resume") : t("record.pause")}
+          disabled={!live}
+          onClick={() =>
+            state === "paused" ? recorder.resume() : recorder.pause()
+          }
+        >
+          {state === "paused" ? (
+            <PlayIcon className="h-6 w-6" />
+          ) : (
+            <PauseIcon className="h-6 w-6" />
           )}
-          left={(() => {
-            const ms = recordingTimeLeft(
-              freeBytes,
-              settings.recordingKind,
-              settings.recordingBitrate,
-            );
-            return ms === null
-              ? null
-              : formatSpan(ms, {
-                  hours: t("common.hours"),
-                  minutes: t("common.minutes"),
-                });
-          })()}
-        />
-
-        {/* Pause · Stop · Discard. Stop sits where Record was, so the thumb
-            does not move; Discard is a glyph, and asks. */}
-        <div className="flex items-center justify-center gap-10 pb-2">
-          <RoundGlyph
-            label={state === "paused" ? t("record.resume") : t("record.pause")}
-            disabled={!live}
-            onClick={() =>
-              state === "paused" ? recorder.resume() : recorder.pause()
-            }
-          >
-            {state === "paused" ? (
-              <PlayIcon className="h-6 w-6" />
-            ) : (
-              <PauseIcon className="h-6 w-6" />
-            )}
-          </RoundGlyph>
-          <button
-            type="button"
-            className="app-record-button flex h-24 w-24 items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95"
-            aria-label={t("record.stop")}
-            disabled={!live}
-            onClick={() => void stop()}
-          >
-            <StopIcon className="h-10 w-10 text-fg-bright" />
-          </button>
-          <RoundGlyph
-            label={t("record.discard")}
-            tone="danger"
-            disabled={!live}
-            onClick={() => setConfirmDiscard(true)}
-          >
-            <TrashIcon className="h-6 w-6" />
-          </RoundGlyph>
-        </div>
+        </RoundGlyph>
+        <button
+          type="button"
+          className={`app-record-button flex ${bigButton} items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95`}
+          aria-label={t("record.stop")}
+          disabled={!live}
+          onClick={() => void stop()}
+        >
+          <StopIcon
+            className={`text-fg-bright ${stand ? "h-8 w-8" : "h-10 w-10"}`}
+          />
+        </button>
+        <RoundGlyph
+          label={t("record.discard")}
+          tone="danger"
+          disabled={!live}
+          onClick={() => setConfirmDiscard(true)}
+        >
+          <TrashIcon className="h-6 w-6" />
+        </RoundGlyph>
+      </div>
+    );
+    body = stand ? (
+      split(
+        <>
+          {picture}
+          {meter(recorder.subscribe)}
+          {warning}
+        </>,
+        <>
+          {timer}
+          {stats}
+          {controls}
+        </>,
+      )
+    ) : (
+      <>
+        {timer}
+        {picture}
+        {meter(recorder.subscribe)}
+        {warning}
+        {stats}
+        {controls}
       </>
     );
   } else if (listen.on) {
-    body = (
-      <>
-        <div className="flex items-center gap-2">
-          <span
-            aria-hidden
-            className="app-rec-dot inline-block h-2.5 w-2.5 rounded-full bg-accent"
-          />
-          <p className="min-w-0 flex-1 text-sm">
-            <span className="font-semibold text-fg-bright">
-              {t("listen.title")}
-            </span>{" "}
-            <span className="text-muted">{t("listen.nothingKept")}</span>
-          </p>
-          <Button onClick={() => void listen.stop()} className="shrink-0">
-            {t("listen.stop")}
-          </Button>
-        </div>
-
-        <Visualizer
-          kind={settings.visualizer}
-          onKind={(next) => update("visualizer", next)}
-          subscribe={listen.subscribe}
-          running
-          ticks={ticks}
-          bands={BANDS}
-          className="flex-1"
+    const status = (
+      <div className="flex items-center gap-2">
+        <span
+          aria-hidden
+          className="app-rec-dot inline-block h-2.5 w-2.5 rounded-full bg-accent"
         />
-
-        <div className="app-meter-big">
-          <LevelMeter
-            subscribe={listen.subscribe}
-            labels={{
-              meter: t("record.level"),
-              clip: t("record.clip"),
-              clipping: t("record.clipping"),
-            }}
-          />
-        </div>
-
+        <p className="min-w-0 flex-1 text-sm">
+          <span className="font-semibold text-fg-bright">
+            {t("listen.title")}
+          </span>{" "}
+          <span className="text-muted">{t("listen.nothingKept")}</span>
+        </p>
+        <Button onClick={() => void listen.stop()} className="shrink-0">
+          {t("listen.stop")}
+        </Button>
+      </div>
+    );
+    const picture = (
+      <Visualizer
+        kind={settings.visualizer}
+        onKind={(next) => update("visualizer", next)}
+        subscribe={listen.subscribe}
+        running
+        ticks={ticks}
+        bands={BANDS}
+        className={visualizerSize}
+      />
+    );
+    body = stand ? (
+      split(
+        <>
+          {status}
+          {picture}
+          {meter(listen.subscribe)}
+        </>,
+        <>
+          <AmbientReadout ambient={listen.ambient} />
+          {recordButton}
+        </>,
+      )
+    ) : (
+      <>
+        {status}
+        {picture}
+        {meter(listen.subscribe)}
         <AmbientReadout ambient={listen.ambient} />
-
         {/* Still changeable, no longer the subject — and on a small phone
             left to Ready, so the button stays in reach. */}
         <div className="hidden grid-cols-2 gap-2 tall:grid">
@@ -501,60 +564,85 @@ export function RecordScreen({
       </>
     );
   } else {
-    body = (
+    // The take's two choices, decided before it and never during.
+    const choices = (
+      <div className="grid grid-cols-2 gap-2">
+        {qualityButton()}
+        {destinationButton()}
+      </div>
+    );
+    const shown = stand ? LATEST_STAND : LATEST_SHORT;
+    const recent =
+      latest.length > 0 ? (
+        <section className="flex flex-col gap-1.5">
+          <h2 className="px-1 text-xs font-semibold tracking-wide text-muted uppercase">
+            {t("record.latest")}
+          </h2>
+          <ul className="flex flex-col gap-1.5">
+            {latest.map((r, i) => (
+              <li
+                key={r.id}
+                className={
+                  i >= shown
+                    ? stand
+                      ? "hidden"
+                      : "hidden tall:block"
+                    : undefined
+                }
+              >
+                <RecordingRow
+                  dense
+                  recording={r}
+                  detail={`${formatDay(r.createdAt, now, locale, dayLabels)} ${formatClock(r.createdAt, locale)}`}
+                  onOpen={() => onOpen(r.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        <p className="px-1 text-center text-sm text-muted">
+          {t("record.firstHint")}
+        </p>
+      );
+    const listenCard = (
+      <ListenCard
+        compact={stand}
+        busy={listen.starting}
+        onListen={() => void listen.start()}
+      />
+    );
+    // The rest of the room is the button's: centred in it, large, with the
+    // one word it needs.
+    const go = (
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 py-2">
+        {recordButton}
+        <span className="text-sm text-muted">{t("record.tapToRecord")}</span>
+      </div>
+    );
+    body = stand ? (
+      split(
+        <>
+          {choices}
+          {listenCard}
+          {recent}
+        </>,
+        go,
+      )
+    ) : (
       <>
-        {/* The take's two choices, decided before it and never during. */}
-        <div className="grid grid-cols-2 gap-2">
-          {qualityButton()}
-          {destinationButton()}
-        </div>
-
-        <ListenCard
-          busy={listen.starting}
-          onListen={() => void listen.start()}
-        />
-
-        {latest.length > 0 ? (
-          <section className="flex flex-col gap-1.5">
-            <h2 className="px-1 text-xs font-semibold tracking-wide text-muted uppercase">
-              {t("record.latest")}
-            </h2>
-            <ul className="flex flex-col gap-1.5">
-              {latest.map((r, i) => (
-                <li
-                  key={r.id}
-                  className={
-                    i >= LATEST_SHORT ? "hidden tall:block" : undefined
-                  }
-                >
-                  <RecordingRow
-                    dense
-                    recording={r}
-                    detail={`${formatDay(r.createdAt, now, locale, dayLabels)} ${formatClock(r.createdAt, locale)}`}
-                    onOpen={() => onOpen(r.id)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : (
-          <p className="px-1 text-center text-sm text-muted">
-            {t("record.firstHint")}
-          </p>
-        )}
-
-        {/* The rest of the room is the button's: centred in it, large,
-            with the one word it needs. */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-2">
-          {recordButton}
-          <span className="text-sm text-muted">{t("record.tapToRecord")}</span>
-        </div>
+        {choices}
+        {listenCard}
+        {recent}
+        {go}
       </>
     );
   }
 
   return (
-    <div className="app-record flex min-h-full flex-1 flex-col gap-4 px-4 py-4">
+    <div
+      className={`app-record flex min-h-full flex-1 flex-col gap-4 px-4 ${stand ? "py-3" : "py-4"}`}
+    >
       {body}
 
       {errorLine && (

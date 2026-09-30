@@ -83,13 +83,18 @@ export function ChoiceButton({
 export function ListenCard({
   onListen,
   busy,
+  compact = false,
 }: {
   onListen: () => void;
   busy: boolean;
+  /** Less padding, for a phone on its side. */
+  compact?: boolean;
 }) {
   const t = useT();
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-dashed border-line bg-surface/60 p-4">
+    <div
+      className={`flex items-center gap-3 rounded-lg border border-dashed border-line bg-surface/60 ${compact ? "px-4 py-2.5" : "p-4"}`}
+    >
       <WaveformIcon className="h-8 w-8 shrink-0 text-accent" />
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-fg-bright">{t("listen.invite")}</p>
@@ -208,11 +213,15 @@ export function TakeReview({
   suggested,
   destination,
   saving,
+  beside = false,
   onSave,
   onDiscard,
 }: {
   take: CaptureResult;
   suggested: string;
+  /** A phone on its side: the take on the left, where it goes and Save in
+   *  a rail on the right. */
+  beside?: boolean;
   /** The "Save to" choice, drawn by the screen. */
   destination: ReactNode;
   saving: boolean;
@@ -257,99 +266,127 @@ export function TakeReview({
   const canPlay = preview !== null || take.pcm !== null;
 
   const clipped = take.clipCount > 0;
+  const name = (
+    <label className="flex flex-col gap-1">
+      <span className="text-[0.6875rem] font-semibold tracking-wide text-muted uppercase">
+        {t("record.name")}
+      </span>
+      <input
+        ref={input}
+        type="text"
+        value={title}
+        maxLength={200}
+        onInput={(e) => setTitle(e.currentTarget.value)}
+        className={`w-full border-b-2 border-line bg-transparent pb-1.5 font-bold text-fg-bright outline-none focus:border-accent ${
+          beside ? "text-xl" : "text-2xl"
+        }`}
+      />
+    </label>
+  );
+  const hear = (
+    <div className={`flex flex-col gap-2 ${beside ? "min-h-0 flex-1" : ""}`}>
+      <div
+        className={`rounded-md bg-surface-2 px-2 py-1 text-accent ${
+          beside ? "min-h-16 flex-1" : "h-24 tall:h-40"
+        }`}
+      >
+        <Waveform
+          peaks={take.peaks}
+          progress={progress}
+          onSeek={
+            preview ? (share) => player.seek(share * duration) : undefined
+          }
+          label={t("player.position")}
+        />
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={toggle}
+          disabled={!canPlay}
+          aria-label={
+            player.playing ? t("player.pause") : t("record.listenBack")
+          }
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-page transition-transform active:scale-95 disabled:opacity-40"
+        >
+          {player.playing ? (
+            <PauseIcon className="h-5 w-5" />
+          ) : (
+            <PlayIcon className="h-5 w-5 translate-x-px" />
+          )}
+        </button>
+        <p className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm text-muted">
+          <span className="font-figures text-fg tabular-nums">
+            {formatDuration(player.time * 1000)} /{" "}
+            {formatDuration(take.durationMs)}
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            {t("record.peak")}{" "}
+            <span className="font-figures tabular-nums">
+              {formatDb(take.maxPeakDb)} dB
+            </span>
+          </span>
+          <span aria-hidden>·</span>
+          <span className={clipped ? "font-medium text-danger" : ""}>
+            {clipped
+              ? t("record.clippedTimes", { count: String(take.clipCount) })
+              : t("player.clippedNone")}
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+  const keep = (
+    <div className="flex items-center gap-3 pb-2">
+      <RoundGlyph
+        label={t("record.discard")}
+        onClick={onDiscard}
+        disabled={saving}
+        tone="danger"
+      >
+        <TrashIcon className="h-5 w-5" />
+      </RoundGlyph>
+      <button
+        type="submit"
+        disabled={saving}
+        className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-accent text-base font-bold text-page shadow-sm transition-transform active:scale-[0.98] disabled:opacity-50"
+      >
+        <CheckIcon className="h-5 w-5" />
+        {saving ? t("record.saving") : t("common.save")}
+      </button>
+    </div>
+  );
+
   return (
     <form
-      className="flex min-h-full flex-1 flex-col gap-4"
+      className={`flex min-h-full flex-1 gap-4 ${beside ? "flex-row" : "flex-col"}`}
       onSubmit={(e) => {
         e.preventDefault();
         onSave(title);
       }}
     >
-      <label className="flex flex-col gap-1">
-        <span className="text-[0.6875rem] font-semibold tracking-wide text-muted uppercase">
-          {t("record.name")}
-        </span>
-        <input
-          ref={input}
-          type="text"
-          value={title}
-          maxLength={200}
-          onInput={(e) => setTitle(e.currentTarget.value)}
-          className="w-full border-b-2 border-line bg-transparent pb-1.5 text-2xl font-bold text-fg-bright outline-none focus:border-accent"
-        />
-      </label>
-
-      <div className="flex flex-col gap-2">
-        <div className="h-24 rounded-md bg-surface-2 px-2 py-1 text-accent tall:h-40">
-          <Waveform
-            peaks={take.peaks}
-            progress={progress}
-            onSeek={
-              preview ? (share) => player.seek(share * duration) : undefined
-            }
-            label={t("player.position")}
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={toggle}
-            disabled={!canPlay}
-            aria-label={
-              player.playing ? t("player.pause") : t("record.listenBack")
-            }
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-page transition-transform active:scale-95 disabled:opacity-40"
-          >
-            {player.playing ? (
-              <PauseIcon className="h-5 w-5" />
-            ) : (
-              <PlayIcon className="h-5 w-5 translate-x-px" />
-            )}
-          </button>
-          <p className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm text-muted">
-            <span className="font-figures text-fg tabular-nums">
-              {formatDuration(player.time * 1000)} /{" "}
-              {formatDuration(take.durationMs)}
-            </span>
-            <span aria-hidden>·</span>
-            <span>
-              {t("record.peak")}{" "}
-              <span className="font-figures tabular-nums">
-                {formatDb(take.maxPeakDb)} dB
-              </span>
-            </span>
-            <span aria-hidden>·</span>
-            <span className={clipped ? "font-medium text-danger" : ""}>
-              {clipped
-                ? t("record.clippedTimes", { count: String(take.clipCount) })
-                : t("player.clippedNone")}
-            </span>
-          </p>
-        </div>
-      </div>
-
-      {destination}
-
-      <div className="flex-1" />
-
-      <div className="flex items-center gap-3 pb-2">
-        <RoundGlyph
-          label={t("record.discard")}
-          onClick={onDiscard}
-          disabled={saving}
-          tone="danger"
-        >
-          <TrashIcon className="h-5 w-5" />
-        </RoundGlyph>
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-accent text-base font-bold text-page shadow-sm transition-transform active:scale-[0.98] disabled:opacity-50"
-        >
-          <CheckIcon className="h-5 w-5" />
-          {saving ? t("record.saving") : t("common.save")}
-        </button>
-      </div>
+      {beside ? (
+        <>
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            {name}
+            {hear}
+          </div>
+          <div className="flex w-64 shrink-0 flex-col justify-end gap-3">
+            {destination}
+            <div className="flex-1" />
+            {keep}
+          </div>
+        </>
+      ) : (
+        <>
+          {name}
+          {hear}
+          {destination}
+          <div className="flex-1" />
+          {keep}
+        </>
+      )}
     </form>
   );
 }
@@ -359,11 +396,15 @@ export function TakeReview({
  *  fit an email?) and how much longer this device has room for (can the
  *  interview run on?). */
 export function TakeStats({
+  columns = 4,
   maxPeakDb,
   clipCount,
   size,
   left,
 }: {
+  /** Four across under the meter; two by two in a phone-on-its-side's
+   *  rail. */
+  columns?: 2 | 4;
   maxPeakDb: number;
   clipCount: number;
   size: string;
@@ -387,7 +428,9 @@ export function TakeStats({
     [t("stats.left"), left ?? "—", "text-fg-bright"],
   ];
   return (
-    <dl className="grid grid-cols-4 gap-2">
+    <dl
+      className={`grid gap-2 ${columns === 2 ? "grid-cols-2" : "grid-cols-4"}`}
+    >
       {cells.map(([label, value, tone]) => (
         <div
           key={label}

@@ -120,6 +120,35 @@ On a tall window (`tall:` in `styles.css`, 52rem and up: a large phone
 upright, a laptop) the instruments grow into the room. On a small phone they
 keep compact sizes, so the button is never scrolled out of reach.
 
+### On its side
+
+A phone laid on its side (`useStand`: landscape, under the desk's width,
+under 44rem tall: 956×440 and the like) is wide enough for two columns and
+far too short to stack one. Stacked, the record button fell below the fold
+and the timer scrolled off the top. So on its side every mode stands in two
+columns across the whole width, not the reading column:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  THE STAGE (the instrument)                │  THE RAIL        │
+│  Ready:     choices · listen card · latest │  (●) Tap to rec  │
+│  Listening: status · visualizer · meter    │  readings · (●)  │
+│  Recording: visualizer · meter · warning   │  timer · figures │
+│                                            │  ‖  (■)  🗑      │
+│  Review:    title · shape · listen back    │  Save to · Save  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+- **The stage** is on the left because it is the thing looked at. It takes
+  the width that is left, so the visualizer is wide, which suits a
+  scrolling picture.
+- **The rail** (16rem) is on the right, where a right thumb holds a phone
+  on its side. The big button, the timer and the figures sit there, centred
+  in the height.
+- The figures go two by two, the big buttons drop from 96 to 80 px, the
+  Latest list shows two recordings, and the listen card is slimmer. The
+  bottom bar stays: this is still a phone.
+
 ### Ready: the microphone is closed
 
 ```

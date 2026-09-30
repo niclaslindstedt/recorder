@@ -137,6 +137,14 @@ suppress noise and level the volume, the way a call does. It is off by
 default, because it also changes what was recorded: on records what the
 microphone hears less the room.
 
+## On its side
+
+Turn the phone sideways and the Record screen stands in two columns across
+the whole width: the choices, the visualizer and the meter on the left, and
+the record button, the timer, the take's figures and Save on the right. The
+button and the timer are never below the fold. See `docs/design.md`, "On
+its side".
+
 ## On a desk
 
 Wide enough, the Record screen keeps its column and the two destinations go
