@@ -70,7 +70,7 @@ export function Visualizer({
   ];
   return (
     <div
-      className={`flex min-h-44 flex-col gap-2 rounded-lg border border-line bg-surface p-3 ${className}`}
+      className={`flex flex-col gap-2 rounded-lg border border-line bg-surface p-3 ${className}`}
     >
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-xs text-muted">
@@ -101,7 +101,7 @@ export function Visualizer({
           ))}
         </div>
       </div>
-      <div className="relative min-h-28 flex-1">
+      <div className="relative min-h-16 flex-1">
         <div className="absolute inset-0">
           {kind === "wave" && (
             <ScrollingWave subscribe={subscribe} running={running} />
