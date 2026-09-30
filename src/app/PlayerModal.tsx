@@ -323,10 +323,10 @@ export function PlayerModal({
           </Button>
           <IconButton
             label={t("common.delete")}
-            className="h-11 w-11 text-danger hover:border-danger/60"
+            className="h-11 w-11 hover:border-danger/60 hover:bg-danger/10"
             onClick={onTrash}
           >
-            <TrashIcon className="h-5 w-5" />
+            <TrashIcon className="h-5 w-5 text-danger" />
           </IconButton>
         </div>
       </div>

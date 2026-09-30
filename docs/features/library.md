@@ -37,7 +37,8 @@ Tap a row and the player opens, a recording's page:
   on the next;
 - **Export…**, and a trash glyph at the other end to delete it.
 
-Swipe a row to delete it; hold one (or use the right button) for the rest:
+Swipe a row left to bare its red trash button, and press it to delete;
+hold one (or use the right button) for the rest:
 favorite, move to a folder, export, delete. The export sheet is also where
 the original file is shared as it is (see [`export.md`](export.md)).
 

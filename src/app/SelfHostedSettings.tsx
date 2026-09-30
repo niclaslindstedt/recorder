@@ -3,8 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   Button,
+  CheckIcon,
+  CloudOffIcon,
   ConfirmDialog,
+  LockIcon,
   Modal,
+  PlusIcon,
+  RefreshIcon,
 } from "@niclaslindstedt/oss-framework/components";
 import { QrCode } from "@niclaslindstedt/oss-framework/qr";
 import {
@@ -95,7 +100,10 @@ export function SelfHostedSettings({
         <div className="flex flex-col gap-2">
           <p className="text-xs text-muted">{t("selfHosted.needsKeys")}</p>
           <Button onClick={() => selfHosted.requestConnect()}>
-            {t("selfHosted.finish")}
+            <span className="flex items-center justify-center gap-1.5">
+              <LockIcon className="h-4 w-4 shrink-0" />
+              {t("selfHosted.finish")}
+            </span>
           </Button>
         </div>
       )}
@@ -119,10 +127,16 @@ export function SelfHostedSettings({
                 )
               }
             >
-              {t("selfHosted.addDevice")}
+              <span className="flex items-center justify-center gap-1.5">
+                <PlusIcon className="h-4 w-4 shrink-0" />
+                {t("selfHosted.addDevice")}
+              </span>
             </Button>
             <Button disabled={busy} onClick={() => setConfirm("recovery")}>
-              {t("selfHosted.newRecovery")}
+              <span className="flex items-center justify-center gap-1.5">
+                <RefreshIcon className="h-4 w-4 shrink-0" />
+                {t("selfHosted.newRecovery")}
+              </span>
             </Button>
           </div>
 
@@ -160,7 +174,10 @@ export function SelfHostedSettings({
                           })
                         }
                       >
-                        {t("selfHosted.approve")}
+                        <span className="flex items-center justify-center gap-1.5">
+                          <CheckIcon className="h-4 w-4 shrink-0" />
+                          {t("selfHosted.approve")}
+                        </span>
                       </Button>
                     </li>
                   ))}
@@ -169,7 +186,10 @@ export function SelfHostedSettings({
             )}
             <div>
               <Button disabled={busy} onClick={() => void checkApprovals()}>
-                {t("selfHosted.checkApprovals")}
+                <span className="flex items-center justify-center gap-1.5">
+                  <RefreshIcon className="h-4 w-4 shrink-0" />
+                  {t("selfHosted.checkApprovals")}
+                </span>
               </Button>
             </div>
           </div>
@@ -179,7 +199,10 @@ export function SelfHostedSettings({
       {phase !== "signed-out" && phase !== "loading" && (
         <div>
           <Button variant="danger" onClick={() => setConfirm("unpair")}>
-            {t("selfHosted.unpair")}
+            <span className="flex items-center justify-center gap-1.5">
+              <CloudOffIcon className="h-4 w-4 shrink-0" />
+              {t("selfHosted.unpair")}
+            </span>
           </Button>
         </div>
       )}

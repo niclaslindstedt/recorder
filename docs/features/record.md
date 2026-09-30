@@ -15,9 +15,8 @@ in) opens the folder picker. Save to starts on the folder the library is
 showing, so pressing Record while you are in Interviews files the take
 there.
 
-Under them, **Check your level** offers Listening, and **Latest** lists the
-most recent recordings (three, five on a tall window); a tap opens the
-player. The big red button, **Tap to record**, sits centred in the room
+Under them, **Check your level** offers Listening. What you have recorded
+is on the **Recordings** screen, not here. The big red button, **Tap to record**, sits centred in the room
 that is left. Press it and the browser asks for the microphone once.
 
 ## Listening

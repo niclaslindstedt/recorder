@@ -67,7 +67,11 @@ export function UpdateCheck({ pwa }: { pwa: PwaUpdate }) {
             onClick={() => void check()}
           >
             <span className="flex items-center gap-1.5">
-              {pwa.checking && <SpinnerIcon className="h-4 w-4 animate-spin" />}
+              {pwa.checking ? (
+                <SpinnerIcon className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshIcon className="h-4 w-4" />
+              )}
               {t("update.check")}
             </span>
           </Button>

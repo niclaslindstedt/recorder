@@ -2,7 +2,8 @@
 // App-owned glyphs. Everything the framework's set has — the microphone, the
 // transport, folders, the cog — comes from
 // `@niclaslindstedt/oss-framework/components`; what is here is the app's
-// own mark, which the favicon and the install icon share.
+// own mark, which the favicon and the install icon share, and the few the
+// framework's set lacks.
 
 import type { ReactNode } from "react";
 
@@ -123,6 +124,44 @@ export function ClipIcon({ className }: IconProps) {
     <Glyph className={className}>
       <path d="M2 5h20" opacity="0.45" />
       <path d="M2 17c1.5 0 2.5-12 4-12h3c1.5 0 2.5 14 4.5 14S16 5 17.5 5H20c1 0 1.5 5 2 8" />
+    </Glyph>
+  );
+}
+
+/** Headphones: listening — the microphone open to be heard, nothing kept. */
+export function HeadphonesIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z" />
+      <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+    </Glyph>
+  );
+}
+
+/** A box with an arrow leaving it upward: share — the file handed on as it
+ *  is, to whatever the device offers. */
+export function ShareIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M12 3v12" />
+      <path d="m7 8 5-5 5 5" />
+      <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+    </Glyph>
+  );
+}
+
+/** A code in a viewfinder's corners: scan — the camera reads a pairing code. */
+export function ScanIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+      <rect x="7" y="7" width="4" height="4" rx="0.5" />
+      <rect x="13" y="13" width="4" height="4" rx="0.5" />
+      <path d="M13 7h4v2M7 17v-2h2" />
     </Glyph>
   );
 }

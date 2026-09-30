@@ -3,12 +3,15 @@ import { useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
   CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   ConfirmDialog,
   ContextMenu,
   FolderIcon,
   IconButton,
   ListIcon,
   Modal,
+  PencilIcon,
   PlusIcon,
   SelectPicker,
   StarIcon,
@@ -122,23 +125,39 @@ export function FolderPicker(props: BrowseProps | ChooseProps) {
       [ids[to], ids[at]] = [ids[at]!, ids[to]!];
       store.reorderFolders(folder.parentId, ids);
     };
+    const icon = "h-4 w-4";
     const actions: RowAction[] = [
       {
         label: t("common.rename"),
+        icon: <PencilIcon className={icon} />,
         onSelect: () => setNaming({ kind: "rename", folderId }),
       },
       {
         label: t("folders.addIn", { name: folder.name }),
+        icon: <PlusIcon className={icon} />,
         onSelect: () => setNaming({ kind: "new", parentId: folderId }),
       },
-      { label: t("folders.move"), onSelect: () => setMoving(folderId) },
+      {
+        label: t("folders.move"),
+        icon: <FolderIcon className={icon} />,
+        onSelect: () => setMoving(folderId),
+      },
     ];
     if (at > 0)
-      actions.push({ label: t("folders.up"), onSelect: () => swap(at - 1) });
+      actions.push({
+        label: t("folders.up"),
+        icon: <ChevronUpIcon className={icon} />,
+        onSelect: () => swap(at - 1),
+      });
     if (at >= 0 && at < siblings.length - 1)
-      actions.push({ label: t("folders.down"), onSelect: () => swap(at + 1) });
+      actions.push({
+        label: t("folders.down"),
+        icon: <ChevronDownIcon className={icon} />,
+        onSelect: () => swap(at + 1),
+      });
     actions.push({
       label: t("folders.delete"),
+      icon: <TrashIcon className={icon} />,
       onSelect: () => setDeleting(folderId),
       danger: true,
     });
@@ -226,7 +245,7 @@ export function FolderPicker(props: BrowseProps | ChooseProps) {
           <>
             <li aria-hidden className="mx-4 my-2 border-t border-line" />
             <Row
-              icon={<TrashIcon className="h-5 w-5" />}
+              icon={<TrashIcon className="h-5 w-5 text-danger" />}
               label={t("library.trash")}
               count={trashedRecordings(data, props.now).length}
               on={props.view.kind === "trash"}
