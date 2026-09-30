@@ -30,20 +30,24 @@ something to work on without touching this browser's own recordings.
 
 ## Your first recording
 
-1. Open **Record** and press the big button. The browser asks for the
-   microphone once; the meter comes alive, and the spectrum under it.
-2. Speak. Aim for peaks between −12 and −6 dB on the meter; if the loudest
-   parts go red and the **CLIP** lamp latches, the sound is louder than the
-   microphone can take — back off and the lamp clears after a moment.
-3. Press **Stop**. A sheet asks for a title and a folder; **Save** files it,
-   **Discard** throws the take away. Nothing is written until you save.
+1. Open **Record**. To set a level first, press **Listen** under **Check your
+   level**: the microphone opens, nothing is kept, and a verdict under the
+   meter says whether you are too quiet, good, or too loud.
+2. Press the big button. The browser asks for the microphone once; the timer
+   runs, the meter comes alive, and the waveform scrolls above it. If the
+   loudest parts go red and the clip lamp latches (a wave with its top cut flat), the sound is louder
+   than the microphone can take — back off and the lamp clears after a
+   moment.
+3. Press **Stop**. The screen asks for a title and shows where the take will
+   be saved; play it back if you like, then **Save** files it, and the trash
+   glyph throws the take away. Nothing is written until you save.
 4. Open **Recordings**: the new one is at the top. Tap it to play, with its
    shape drawn under the playhead and the facts about the take beneath.
 5. Its menu has **Export…**, which writes it out as WAV, FLAC or MP3 at the
    quality you pick.
 
-See [`features/record.md`](features/record.md) for the meter and the two ways
-a take can be kept, and [`features/export.md`](features/export.md) for the
+See [`features/record.md`](features/record.md) for the Record screen's modes,
+the meter and the Quality sheet, and [`features/export.md`](features/export.md) for the
 export sheet.
 
 ## Where the data lives

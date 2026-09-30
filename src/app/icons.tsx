@@ -56,3 +56,73 @@ export function StarFilledIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Three dots: "more about this one" — a folder's menu in the picker. */
+export function MoreIcon({ className }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="5" cy="12" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="19" cy="12" r="1.75" />
+    </svg>
+  );
+}
+
+/** Stacked layers: the spaces — separate libraries laid over each other.
+ *  The top bar draws it for a space that has no symbol of its own. */
+export function SpacesIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M12 3 3 7.5l9 4.5 9-4.5L12 3z" />
+      <path d="m3 12 9 4.5 9-4.5" />
+      <path d="m3 16.5 9 4.5 9-4.5" />
+    </Glyph>
+  );
+}
+
+/** Bars rising from a baseline: the spectrum. */
+export function SpectrumIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M4 20v-5" />
+      <path d="M8 20V8" />
+      <path d="M12 20v-9" />
+      <path d="M16 20V5" />
+      <path d="M20 20v-7" />
+    </Glyph>
+  );
+}
+
+/** A grid lit in bands: the spectrogram — frequency over time. */
+export function SpectrogramIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 9.5h18" opacity="0.5" />
+      <path d="M3 14.5h18" opacity="0.5" />
+      <path
+        d="M7 7v0.01M11 12v0.01M15 7v0.01M15 17v0.01M19 12v0.01"
+        strokeWidth={3}
+      />
+    </Glyph>
+  );
+}
+
+/** Clipping: a wave whose tops are cut flat against the ceiling — what a
+ *  signal too loud for the microphone looks like. The meter's lamp wears the
+ *  same drawing (`.app-meter-big .oss-clip-lamp` in styles.css); keep the
+ *  two paths in step. */
+export function ClipIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M2 5h20" opacity="0.45" />
+      <path d="M2 17c1.5 0 2.5-12 4-12h3c1.5 0 2.5 14 4.5 14S16 5 17.5 5H20c1 0 1.5 5 2 8" />
+    </Glyph>
+  );
+}

@@ -35,11 +35,73 @@
    Inline styles beat a `@theme` value, which is why sm/md/lg are the engine's
    to set and are deliberately not repeated here. */
 @theme {
+  /* The figures: every number the app prints in fixed widths — the timer, a
+     length, a level, a size — in the bundled JetBrains Mono (`main.tsx`),
+     never the system's monospace. `font-mono` would reach for that stack
+     (ui-monospace, Menlo, Consolas…), which is a font lookup on the device
+     for every weight: slower to first paint, a different face per platform,
+     and in headless Chromium an occasional renderer hang in its font
+     service. The framework's own scales keep `font-mono`. */
+  --font-figures: "JetBrains Mono", monospace;
   --radius: 0.625rem;
   --radius-xs: 0.25rem;
   --radius-xl: 1.5rem;
   --radius-2xl: 1.75rem;
   --radius-3xl: 2rem;
+}
+
+/* ── Tall windows ────────────────────────────────────────────────────────────
+   `tall:` is a window with room to spare above the Record screen's button —
+   a large phone upright, a laptop. There the instruments grow into the
+   space instead of leaving it empty (docs/design.md, "Record"): the
+   spectrum while listening, the take's shape while recording and in review,
+   two more of the latest recordings. A small phone keeps the compact sizes
+   and never has to scroll to reach the button. */
+@custom-variant tall (@media (min-height: 52rem));
+
+/* ── The big meter ───────────────────────────────────────────────────────────
+   The framework's level meter, drawn at the Record screen's size while
+   listening and recording: a bar you can read from arm's length, its
+   reading and its CLIP lamp grown to match. Only the size changes — the
+   zones, the held peak, the take's max mark, the latched lamp and the status
+   region are all still the framework's, so the four clip signals stay four. */
+.app-meter-big [role="meter"] {
+  height: 1.5rem;
+}
+
+.app-meter-big [role="meter"] + span {
+  width: 3.75rem;
+  font-size: 0.9375rem;
+  color: var(--fg-bright);
+}
+
+/* The lamp's word becomes a glyph: a wave with its tops cut flat against
+   the ceiling (the same drawing as `ClipIcon` in icons.tsx — keep the two
+   paths in step). The word is still in the element for a reader without the
+   stylesheet; the lamp is hidden from assistive tech either way, which hears
+   the status region instead. Latched, it is the glyph on the red lamp. */
+.app-meter-big .oss-clip-lamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 1.5rem;
+  padding: 0;
+  font-size: 0;
+}
+
+.app-meter-big .oss-clip-lamp::before {
+  content: "";
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 5h20' stroke-opacity='0.45'/%3E%3Cpath d='M2 17c1.5 0 2.5-12 4-12h3c1.5 0 2.5 14 4.5 14S16 5 17.5 5H20c1 0 1.5 5 2 8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.app-meter-big .oss-level-meter > div:last-child {
+  height: 0.875rem;
+  font-size: 0.625rem;
 }
 
 /* ── The wordmark ────────────────────────────────────────────────────────────

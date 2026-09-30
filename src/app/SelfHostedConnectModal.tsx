@@ -256,7 +256,7 @@ export function SelfHostedConnectModal({
                 rows={3}
                 spellcheck={false}
                 autoComplete="off"
-                className={`${TEXT_CLASS} font-mono text-xs`}
+                className={`${TEXT_CLASS} font-figures text-xs`}
               />
             </label>
             <p className="text-xs text-muted">{t(pairingHintKey(canScan))}</p>
@@ -295,7 +295,7 @@ export function SelfHostedConnectModal({
             <p className="text-xs text-muted">{t("selfHosted.recovery")}</p>
             <div className="flex items-start gap-2">
               <code
-                className="min-w-0 flex-1 rounded-md border border-line bg-surface-2 px-2 py-2 font-mono text-sm break-all text-fg-bright"
+                className="min-w-0 flex-1 rounded-md border border-line bg-surface-2 px-2 py-2 font-figures text-sm break-all text-fg-bright"
                 data-testid="recovery-key"
               >
                 {recoveryKey}
@@ -327,7 +327,7 @@ export function SelfHostedConnectModal({
           <>
             <p className="text-xs text-muted">{t("selfHosted.existing")}</p>
             <p
-              className="text-center font-mono text-2xl font-bold tracking-wider text-fg-bright tabular-nums"
+              className="text-center font-figures text-2xl font-bold tracking-wider text-fg-bright tabular-nums"
               data-testid="safety-code"
             >
               {safetyCode ?? "…"}
@@ -345,7 +345,7 @@ export function SelfHostedConnectModal({
                 placeholder={t("selfHosted.recoveryPlaceholder")}
                 autoComplete="off"
                 spellcheck={false}
-                className={`${TEXT_CLASS} font-mono`}
+                className={`${TEXT_CLASS} font-figures`}
               />
             </label>
           </>

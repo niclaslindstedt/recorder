@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { useRef, type ReactNode } from "react";
 
-import { Button } from "@niclaslindstedt/oss-framework/components";
+import {
+  Button,
+  CloseIcon,
+  IconButton,
+} from "@niclaslindstedt/oss-framework/components";
 
 import { useT } from "./i18n/index.ts";
 import { useModalSave } from "./useModalSave.ts";
@@ -87,6 +91,40 @@ export function ModalHeader({
       >
         {saveLabel ?? t("common.save")}
       </Button>
+    </div>
+  );
+}
+
+/** The top of a sheet that only chooses — the folder picker, Quality,
+ *  search: its title and a close glyph. A choice closes the sheet, so there
+ *  is nothing to save and no Cancel to press. */
+export function SheetTitle({
+  titleId,
+  title,
+  onClose,
+  children,
+}: {
+  titleId: string;
+  title: string;
+  onClose: () => void;
+  /** Anything that belongs in the row between the title and the close —
+   *  the search sheet's field takes the title's place. */
+  children?: ReactNode;
+}) {
+  const t = useT();
+  return (
+    <div className="flex shrink-0 items-center gap-2 border-b border-line bg-surface-3 py-2 pr-2 pl-4">
+      {children ?? (
+        <h2
+          id={titleId}
+          className="min-w-0 flex-1 truncate text-base font-bold text-fg-bright"
+        >
+          {title}
+        </h2>
+      )}
+      <IconButton label={t("common.close")} onClick={onClose}>
+        <CloseIcon className="h-5 w-5" />
+      </IconButton>
     </div>
   );
 }

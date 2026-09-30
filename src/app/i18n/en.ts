@@ -22,7 +22,6 @@ export const en = {
   nav: {
     record: "Record",
     library: "Recordings",
-    folders: "Folders",
     settings: "Settings",
   },
 
@@ -43,10 +42,11 @@ export const en = {
     // download cannot fail this way).
     exportFailed: "Could not export {file}: {reason}",
     minutes: "min",
+    hours: "h",
     seconds: "s",
   },
 
-  // The Record screen: the meter, the spectrum, the timer and the one button.
+  // The Record screen: its four modes — Ready, Listening, Recording, Review.
   record: {
     title: "Record",
     start: "Start recording",
@@ -61,41 +61,117 @@ export const en = {
     saving: "Saving…",
     level: "Input level",
     spectrum: "Spectrum",
-    clip: "CLIP",
-    clipping: "The input is clipping",
-    clippedHint:
-      "The sound is louder than the microphone can take, and the loudest parts are being flattened. Move the microphone further away or speak more softly.",
-    aim: "Aim for peaks between −12 and −6 dB",
+    // The lamp is drawn as a glyph (a wave with its top cut off, `styles.css`);
+    // the word is what a reader without the stylesheet gets.
+    clip: "Too loud",
+    clipping: "Too loud",
+    clippedHint: "Too loud — move away from the sound source",
     kind: {
       compact: "Compact",
       lossless: "Lossless",
-    },
-    kindHint: {
-      compact: "The device's own encoder, {bitrate} kbit/s",
-      lossless: "Every sample, as FLAC",
     },
     denied:
       "The microphone is off for this app. Allow it in the browser's settings for this site, or in Settings on the phone, and try again.",
     unavailable: "No microphone could be opened on this device.",
     failed: "Recording failed: {reason}",
-    // The sheet after a take.
-    nameTitle: "Name the recording",
+    // Under the timer while a take runs: what it is and where it goes.
+    recordingTo: "{quality} · to {folder}",
+    saveTo: "Save to",
+    latest: "Latest",
+    tapToRecord: "Tap to record",
+    firstHint: "Press the red button, and your first recording lands here.",
+    // Review: the take in memory, getting its name.
     name: "Title",
     newRecording: "New recording",
-    folder: "Folder",
     noFolder: "No folder",
+    peak: "Peak",
+    listenBack: "Listen back",
+    clippedTimes: "Clipped {count}×",
     saved: "Saved “{title}”",
     discarded: "Recording discarded",
     discardConfirm: "Discard this recording?",
     discardHint: "The take is thrown away; nothing is kept.",
-    length: "Length",
+  },
+
+  // Listening: the microphone open, nothing kept — for setting a level.
+  listen: {
+    invite: "Check your level",
+    inviteHint:
+      "Hear the room and set your input before you record. Nothing is kept.",
+    start: "Listen",
+    stop: "Stop",
+    title: "Listening",
+    nothingKept: "— nothing is kept",
+    room: "Room",
+    peak: "Peak",
+    headroom: "Headroom",
+    verdict: {
+      silent: "Nothing heard yet — is the right microphone on?",
+      quiet: "Too quiet — move closer, or raise the input",
+      good: "Good level",
+      loud: "Loud — little room left for a louder moment",
+      hot: "Almost too loud — back off a little",
+      clipping: "Too loud — move away from the sound source",
+    },
+  },
+
+  // The take so far, under the meter while recording.
+  stats: {
+    peak: "Peak",
+    clips: "Clips",
+    size: "Size",
+    left: "Room for",
+  },
+
+  // What the Record screen draws while listening and recording.
+  visualizer: {
+    label: "Visualizer",
+    overview: "The whole take so far",
+    wave: "Waveform",
+    spectrum: "Spectrum",
+    spectrogram: "Spectrogram",
+    caption: {
+      wave: "Waveform · the last few seconds",
+      spectrum: "Spectrum · low to high",
+      spectrogram: "Spectrogram · frequency over time",
+    },
+    hint: {
+      wave: "The sound's shape scrolling by, on the meter's decibel scale — speech, silence and clipping at a glance.",
+      spectrum:
+        "How loud each frequency is right now, from bass on the left to treble on the right.",
+      spectrogram:
+        "Frequencies over time, brighter where louder — hum, hiss and a voice's harmonics show as lines.",
+    },
+  },
+
+  // The Quality sheet: how the next take is kept.
+  quality: {
+    title: "Quality",
+    custom: "Custom",
+    bitrate: "Bitrate, kbit/s",
+    flac: "FLAC",
+    perMinute: "≈{size}/min",
+    preset: {
+      memo: "Memo",
+      standard: "Standard",
+      high: "High",
+      lossless: "Lossless",
+    },
+    presetHint: {
+      memo: "Speech and reminders — the smallest files",
+      standard: "Voices and interviews",
+      high: "Music and rehearsals, near CD",
+      lossless: "Every sample, as FLAC — for mixing and mastering",
+    },
   },
 
   // The Recordings screen: the list, the search, the trash.
   library: {
     title: "Recordings",
     search: "Search",
-    searchPlaceholder: "Search titles and notes",
+    searchPlaceholder: "Search titles, notes and folders",
+    searchHint: "Looks through every folder in this space.",
+    scope: "Showing {scope} — change",
     all: "All recordings",
     favorites: "Favorites",
     trash: "Recently deleted",
@@ -139,6 +215,8 @@ export const en = {
     skipForward: "Forward {seconds} seconds",
     position: "Position",
     speed: "Speed",
+    speedIs: "Speed {rate} — change",
+    folder: "Folder: {folder} — move",
     notes: "Notes",
     notesPlaceholder: "Add a note",
     details: "Details",
@@ -191,6 +269,7 @@ export const en = {
     monoHint:
       "Fold both channels into one. Half the file, and nothing a voice memo needs is lost.",
     run: "Export",
+    outcome: "≈{size} · {rate} · {channels} {format}",
     working: "Encoding…",
     fetchingEncoder: "Fetching the MP3 encoder…",
     done: "Exported {file}",
@@ -199,16 +278,18 @@ export const en = {
     originalHint: "The take as the device kept it — {format}, no re-encoding.",
   },
 
-  // The Folders screen.
+  // The folder picker: the library's scope, Move, and a take's destination.
   folders: {
     title: "Folders",
+    show: "Show",
+    menu: "More for {name}",
+    create: "Create",
+    inside: "Inside",
+    deleted: "Folder deleted",
     add: "New folder",
     addIn: "New folder in “{name}”",
     name: "Name",
     namePlaceholder: "Folder name",
-    empty: "No folders yet",
-    emptyHint:
-      "A folder keeps related recordings together. Make one, and file recordings into it from their menu.",
     rename: "Rename folder",
     move: "Move folder",
     moveTo: "Move to",
@@ -219,8 +300,6 @@ export const en = {
       "The recordings and folders inside it move up one level. No recording is deleted.",
     up: "Move up",
     down: "Move down",
-    count: "{count}",
-    open: "Show recordings",
   },
 
   spaces: {
@@ -241,6 +320,7 @@ export const en = {
     switchTo: "Open {name}",
     defaultBadge: "Default",
     manage: "Manage spaces",
+    current: "Space: {name}",
     expand: "Show spaces",
     collapse: "Hide spaces",
     personal: "Personal",
@@ -258,7 +338,7 @@ export const en = {
     themeLight: "Light",
     themeDark: "Dark",
     themeSystem: "Device",
-    recording: "Recording",
+    recording: "Record screen",
     recordingKind: "Keep a take as",
     recordingKindHint: {
       compact:
@@ -270,8 +350,7 @@ export const en = {
     voiceProcessing: "Voice processing",
     voiceProcessingHint:
       "Ask the device to cancel echo, suppress noise and level the volume, the way a call does. Off records what the microphone hears.",
-    showSpectrum: "Spectrum while recording",
-    showSpectrumHint: "The bars under the meter, by frequency.",
+    visualizer: "Visualizer",
     playback: "Playback",
     skipSeconds: "Skip buttons move",
     exportDefaults: "Export defaults",

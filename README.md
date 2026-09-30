@@ -8,24 +8,28 @@
 
 ## What
 
-**Recorder** is a voice recorder that runs entirely in your browser. Press
-the button and it records; while it does, a level meter in dBFS shows how
-loud you are, a spectrum shows where the sound is, and when the input is too
-loud for the microphone the meter goes red and a **CLIP** lamp latches, so
-you know before you play it back that the loud parts were flattened. Stop,
-give the take a name and a folder, and it lands in **Recordings**, where a
-tap plays it with its shape drawn under the playhead and the facts about the
-take beneath — how long, what format, the loudest peak, whether it clipped.
+**Recorder** is a voice recorder that runs entirely in your browser. Before
+a take, **Listen** opens the microphone and keeps nothing: the room's noise
+floor, the peak and the headroom, and a verdict in words, so the level is
+right before you press the button. Press it and it records; while it does,
+the timer, a level meter in dBFS and a waveform, spectrum or spectrogram show
+what is coming in, and when the input is too loud for the microphone the
+meter goes red and a clip lamp latches, so you know before you play it
+back that the loud parts were flattened. Stop, listen back, give the take a
+name, and it lands in **Recordings**, where a tap plays it with its shape
+drawn under the playhead and the facts about the take beneath — how long,
+what format, the loudest peak, whether it clipped.
 
-A take is kept the way you choose: **compact**, in the device's own encoder
-at a bitrate you set (a minute is under a megabyte), or **lossless**, every
-sample as FLAC. Either exports as **WAV** (16, 24 or 32-bit float), **FLAC**
+A take is kept the way you choose on the Record screen: **Memo**,
+**Standard** or **High**, the device's own encoder at 64, 128 or 256 kbit/s
+(a minute of Standard is under a megabyte), or **Lossless**, every sample as
+FLAC. Either exports as **WAV** (16, 24 or 32-bit float), **FLAC**
 (three compression levels) or **MP3** (64 to 320 kbit/s), resampled if you
 like and folded to mono by default — all of it encoded on the device, nothing
 uploaded to be converted.
 
-**Folders** keep related recordings together, in a tree you arrange by hand,
-and **spaces** are separate libraries — Personal and Work, or one per
+**Folders** keep related recordings together, in a tree you arrange by hand
+from the library itself, and **spaces** are separate libraries — Personal and Work, or one per
 client — each with its own folders and its own file on a backend. Deleting a
 recording moves it to **Recently deleted** for thirty days first.
 
@@ -112,23 +116,25 @@ shell is `make tauri` (a Rust toolchain; see [`tauri/README.md`](tauri/README.md
 
 ## Usage
 
-Three places to be. On a phone they are the bottom bar — swipe left or right
+Two places to be. On a phone they are the bottom bar — swipe left or right
 to move between them; on a desk (a window 1024px or wider) they are tabs on
-the top bar and Settings slides in over the right-hand edge. In a dialog,
-`Enter` saves and `Escape` cancels.
+the top bar and Settings slides in over the right-hand edge. While a take is
+recording or waiting to be saved, the bottom bar hides and the Record screen
+is the only one on offer. In a dialog, `Enter` saves and `Escape` cancels.
+Why each thing is where it is: [`docs/design.md`](docs/design.md).
 
-| Tab            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Record**     | The timer, the level meter with its peak and its clip lamp, the spectrum, the take's shape so far, and the button. Press to start, **Pause** to hold, **Stop** to finish; the sheet that follows takes a title and a folder, and **Save** files it — nothing is written before that, and **Discard** throws it away. The line under the button says how the take is being kept (compact at a bitrate, or lossless) and where to change it.                                              |
-| **Recordings** | The list, newest first, with the day, the length and the shape of each. Chips narrow it to a folder, to Favorites or to Recently deleted, and the search matches titles and notes. Tap a row to play it — seek on its shape, skip by the length you set, change the speed, write a note, read the facts about the take. Swipe to delete; hold (or right-click) for favorite, move, export, share the original file. Recently deleted keeps a recording thirty days and can put it back. |
-| **Folders**    | The tree: folders inside folders, each with its count, arranged by hand. Deleting a folder moves what is inside it up a level and deletes nothing recorded.                                                                                                                                                                                                                                                                                                                             |
+| Tab            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Record**     | One screen in four modes. **Ready**: the **Quality** button (Memo, Standard, High or Lossless, the bitrate, voice processing) and **Save to** (the folder the take goes in), **Check your level**, the latest recordings, and the big button. **Listening**: the microphone open and nothing kept — the visualizer, the meter, the room's noise floor, the peak, the headroom and a verdict in words. **Recording**: the timer, the waveform, spectrum or spectrogram with the whole take along its foot, the meter with its peak and its clip lamp, and the take's peak, clips, size and how much longer the device has room for; **Pause**, **Stop**, and a trash glyph to discard. **Review**: the title, listen back, the facts, Save to, and **Save** — nothing is written before that, and the trash glyph throws the take away. |
+| **Recordings** | The list, newest first, under day headings, with the time, the length and the shape of each. The heading is the scope — All, Favorites, a folder or Recently deleted, with its count — and pressing it opens the folder picker, where folders are also made, renamed, nested, reordered and deleted. The search glyph searches titles, notes and folder names across the space. Tap a row to play it — seek on its shape, skip by the length you set, step the speed, rename it, move it with its folder chip, write a note, read the facts about the take, export it. Swipe to delete; hold (or right-click) for favorite, move, export, delete. Recently deleted keeps a recording thirty days and can put it back.                                                                                                                  |
 
-…and two buttons on the top bar, for the things you visit and leave:
+…and glyphs on the right of the top bar, for the things you set and leave:
 
-| Button | What it does                                                                                                                                                                                                                                                                                                                                                      |
-| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **⚙**  | Settings: theme, how a take is kept and at what bitrate, voice processing, the spectrum, the skip length, the export defaults, the spaces, storage (Dropbox, your own storage server, and iCloud in the phone app) with its encryption and the file sweep, download or restore the index, delete the space's data on this device, developer tools, and the build. |
-| **◉**  | The space switcher, top left: which library is open, and the way to another. Spaces are made under Settings.                                                                                                                                                                                                                                                      |
+| Button    | What it does                                                                                                                                                                                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sync**  | Shown only with a backend connected: whether the copy is in step, and the way to its details (Reconnect, Save now).                                                                                                                                                                                           |
+| **Space** | The active space's own symbol in its own colour. Opens the spaces sheet: switch to another library, make one, rename it, set its colour and symbol, or forget it on this device.                                                                                                                              |
+| **⚙**     | Settings: theme, the Record screen's visualizer, the skip length, the export defaults, storage (Dropbox, your own storage server, and iCloud in the phone app) with its encryption and the file sweep, download or restore the index, delete the space's data on this device, developer tools, and the build. |
 
 ## Configuration
 
@@ -204,7 +210,7 @@ timestamp passed in through `ctx` — nothing here reads the clock. See
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `npm install` fails with `401 Unauthorized` | The framework comes from GitHub Packages — see Prerequisites.                                                                      |
 | "The microphone is off for this app"        | Allow it in the browser's settings for this site, or in the phone's Settings for the app, and press Record again.                  |
-| The **CLIP** lamp keeps latching            | The sound is louder than the microphone can take: move it further away or speak more softly. The count is kept with the recording. |
+| The clip lamp keeps latching                | The sound is louder than the microphone can take: move it further away or speak more softly. The count is kept with the recording. |
 | A recording says "Not on this device yet"   | Its file is still on its way from the backend. **Settings → Storage → Sync recordings now** fetches it.                            |
 | Storage shows "Reconnect needed"            | The provider's session lapsed. Tap the sync glyph → Reconnect.                                                                     |
 
@@ -213,9 +219,10 @@ More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 ## Documentation
 
 - [Getting started](docs/getting-started.md)
-- [Recording](docs/features/record.md) — the meter, the clip lamp, and the two ways a take is kept
+- [Design](docs/design.md) — what each screen shows, and why each element is where it is
+- [Recording](docs/features/record.md) — the four modes, the meter, the clip lamp, and how a take is kept
 - [Export](docs/features/export.md)
-- [Spaces](docs/features/spaces.md) and [Folders](docs/features/folders.md)
+- [Recordings](docs/features/library.md), [Folders](docs/features/folders.md) and [Spaces](docs/features/spaces.md)
 - [Cloud sync](docs/features/cloud-sync.md) and [Encryption](docs/features/encryption.md)
 - [The app on a phone](docs/features/native-app.md) — the native wrapper and iCloud
 - [The desktop app](docs/features/desktop-app.md)

@@ -11,12 +11,14 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 
 import {
+  estimateExportBytes,
   exportFileName,
+  exportPlan,
   exportRecording,
   shareOriginal,
   type ExportOptions,
 } from "./export.ts";
-import { formatContainer } from "./format.ts";
+import { formatContainer, formatRate, formatSize } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { ModalHeader } from "./ModalHeader.tsx";
 import type { Recording } from "./types.ts";
@@ -29,11 +31,14 @@ import {
 
 // The export sheet: the format, its quality, the rate and mono, starting on
 // the settings' defaults and writing the choice back to them, so the next
-// export starts where this one left off.
+// export starts where this one left off. Above the button's reach, what the
+// file will be and roughly how large — before the encoder runs, because a
+// file that will not fit in an email is worth knowing about first.
 
 type Props = {
   recording: Recording;
   blob: Blob;
+  locale: string;
   settings: AppSettings;
   update: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
   onNotice: (message: string) => void;
@@ -43,6 +48,7 @@ type Props = {
 export function ExportModal({
   recording,
   blob,
+  locale,
   settings,
   update,
   onNotice,
@@ -58,6 +64,14 @@ export function ExportModal({
     rate: settings.exportRate,
     mono: settings.exportMono,
   };
+
+  const plan = exportPlan(recording, options);
+  const outcome = t("export.outcome", {
+    size: formatSize(estimateExportBytes(recording, options), locale),
+    rate: formatRate(plan.sampleRate),
+    channels: plan.channels > 1 ? t("player.stereo") : t("player.mono"),
+    format: t(`export.${options.format}`),
+  });
 
   const run = async () => {
     setBusy(options.format === "mp3" ? "encoder" : "encoding");
@@ -225,6 +239,13 @@ export function ExportModal({
           checked={settings.exportMono}
           onChange={(next) => update("exportMono", next)}
         />
+
+        <p
+          aria-live="polite"
+          className="rounded-md bg-surface-2 px-3 py-2 text-center text-sm font-medium text-fg-bright"
+        >
+          {outcome}
+        </p>
 
         {busy && (
           <p

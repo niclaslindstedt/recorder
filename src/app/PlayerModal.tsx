@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   PLAYBACK_RATES,
@@ -8,10 +8,14 @@ import {
 } from "@niclaslindstedt/oss-framework/audio";
 import {
   Button,
+  ChevronRightIcon,
+  CloseIcon,
+  DownloadIcon,
+  FolderIcon,
+  IconButton,
   Modal,
   PauseIcon,
   PlayIcon,
-  SegmentedControl,
   SkipBackIcon,
   SkipForwardIcon,
   SpinnerIcon,
@@ -32,9 +36,11 @@ import type { BlobStore } from "./blobStore.ts";
 import type { Recording } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 
-// The player: the recording's shape with the playhead over it, the
-// transport, the speed, the title and the note, and the facts about the
-// take. A full sheet on a phone, a card on a desk.
+// The player, a recording's page: listen, annotate, file, export
+// (docs/design.md, "The player"). The title editable in place, the folder
+// as a chip that files it, the shape with the playhead, the transport with
+// the speed beside it, the note, the facts always in view, and Export — with
+// Delete a glyph at the far end.
 
 type Props = {
   recording: Recording;
@@ -46,6 +52,8 @@ type Props = {
   skipSeconds: number;
   onExport: () => void;
   onMove: () => void;
+  /** The folder's name, for the chip beside the date. */
+  folderName: string | null;
   onTrash: () => void;
   onClose: () => void;
 };
@@ -59,6 +67,7 @@ export function PlayerModal({
   skipSeconds,
   onExport,
   onMove,
+  folderName,
   onTrash,
   onClose,
 }: Props) {
@@ -98,30 +107,20 @@ export function PlayerModal({
       store.patchRecording(recording.id, { notes });
   };
 
-  const facts = useMemo(
-    () => [
-      [t("player.recorded"), formatWhen(recording.createdAt, locale)],
-      [t("player.duration"), formatDuration(recording.durationMs)],
-      [t("player.size"), formatSize(recording.size, locale)],
-      [
-        t("player.format"),
-        `${formatContainer(recording.mimeType)} · ${t(`record.kind.${recording.kind}`)}`,
-      ],
-      [t("player.sampleRate"), formatRate(recording.sampleRate)],
-      [
-        t("player.channels"),
-        recording.channels > 1 ? t("player.stereo") : t("player.mono"),
-      ],
-      [t("player.peak"), `${recording.maxPeakDb.toFixed(1)} dB`],
-      [
-        t("player.clipped"),
-        recording.clipCount > 0
-          ? t("player.clippedTimes", { count: String(recording.clipCount) })
-          : t("player.clippedNone"),
-      ],
-    ],
-    [recording, locale, t],
-  );
+  // The format line: container and how it was kept, rate, channels, size.
+  const format = [
+    `${formatContainer(recording.mimeType)} · ${t(`record.kind.${recording.kind}`)}`,
+    formatRate(recording.sampleRate),
+    recording.channels > 1 ? t("player.stereo") : t("player.mono"),
+    formatSize(recording.size, locale),
+  ].join(" · ");
+
+  const nextRate = () => {
+    const at = PLAYBACK_RATES.indexOf(
+      player.rate as (typeof PLAYBACK_RATES)[number],
+    );
+    player.setRate(PLAYBACK_RATES[(at + 1) % PLAYBACK_RATES.length]!);
+  };
 
   return (
     <Modal
@@ -133,54 +132,86 @@ export function PlayerModal({
       closeLabel={t("common.close")}
     >
       <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-start gap-2">
-          <input
-            id="player-title"
-            type="text"
-            value={title}
-            maxLength={200}
-            aria-label={t("player.rename")}
-            onInput={(e) => setTitle(e.currentTarget.value)}
-            onBlur={commitTitle}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") e.currentTarget.blur();
-            }}
-            className="min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-bold text-fg-bright outline-none hover:border-line focus:border-accent"
-          />
-          <button
-            type="button"
-            aria-pressed={recording.favorite}
-            aria-label={
-              recording.favorite
-                ? t("library.unfavorite")
-                : t("library.favorite")
-            }
-            onClick={() =>
-              store.patchRecording(recording.id, {
-                favorite: !recording.favorite,
-              })
-            }
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-flag hover:bg-surface-2"
-          >
-            {recording.favorite ? (
-              <StarFilledIcon className="h-5 w-5" />
-            ) : (
-              <StarIcon className="h-5 w-5" />
-            )}
-          </button>
+        {/* The title, editable in place — a take named "New recording 4"
+            gets its real name here — the star, and the way out. */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <input
+              id="player-title"
+              type="text"
+              value={title}
+              maxLength={200}
+              aria-label={t("player.rename")}
+              onInput={(e) => setTitle(e.currentTarget.value)}
+              onBlur={commitTitle}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+              }}
+              className="-ml-2 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-bold text-fg-bright outline-none hover:border-line focus:border-accent"
+            />
+            <IconButton
+              label={
+                recording.favorite
+                  ? t("library.unfavorite")
+                  : t("library.favorite")
+              }
+              pressed={recording.favorite}
+              className="border-transparent text-flag"
+              onClick={() =>
+                store.patchRecording(recording.id, {
+                  favorite: !recording.favorite,
+                })
+              }
+            >
+              {recording.favorite ? (
+                <StarFilledIcon className="h-5 w-5" />
+              ) : (
+                <StarIcon className="h-5 w-5" />
+              )}
+            </IconButton>
+            <IconButton
+              label={t("common.close")}
+              className="border-transparent"
+              onClick={onClose}
+            >
+              <CloseIcon className="h-5 w-5" />
+            </IconButton>
+          </div>
+          {/* When, and where — the folder is a chip that files it. */}
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+            <span>{formatWhen(recording.createdAt, locale)}</span>
+            <button
+              type="button"
+              onClick={onMove}
+              aria-label={t("player.folder", {
+                folder: folderName ?? t("record.noFolder"),
+              })}
+              className="flex max-w-full items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-fg transition-colors hover:border-accent/60 hover:bg-surface-2"
+            >
+              <FolderIcon className="h-3.5 w-3.5 shrink-0 text-accent" />
+              <span className="truncate">
+                {folderName ?? t("record.noFolder")}
+              </span>
+              <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted" />
+            </button>
+          </div>
         </div>
 
-        <div className="h-20 rounded-md bg-surface-2 px-2 py-1">
-          <Waveform
-            peaks={recording.peaks}
-            progress={progress}
-            onSeek={blob ? (share) => player.seek(share * duration) : undefined}
-            label={t("player.position")}
-          />
-        </div>
-        <div className="flex items-center justify-between font-mono text-xs tabular-nums text-muted">
-          <span>{formatDuration(player.time * 1000)}</span>
-          <span>{formatDuration(duration * 1000)}</span>
+        <div>
+          <div className="h-24 rounded-md bg-surface-2 px-2 py-1">
+            <Waveform
+              peaks={recording.peaks}
+              progress={progress}
+              onSeek={
+                blob ? (share) => player.seek(share * duration) : undefined
+              }
+              label={t("player.position")}
+            />
+          </div>
+          <div className="mt-1 flex items-center justify-between font-figures text-xs text-muted tabular-nums">
+            <span>{formatDuration(player.time * 1000)}</span>
+            <span>{formatDuration(duration * 1000)}</span>
+          </div>
         </div>
 
         {missing && <p className="text-sm text-muted">{t("player.missing")}</p>}
@@ -190,7 +221,11 @@ export function PlayerModal({
           </p>
         )}
 
+        {/* The transport, and the speed beside it — one button that steps,
+            because it changes the transport and is set now and then. The
+            spacer on the left keeps Play in the middle. */}
         <div className="flex items-center justify-center gap-4">
+          <span aria-hidden className="w-12" />
           <Button
             variant="secondary"
             className="h-12 w-12 rounded-full p-0"
@@ -226,62 +261,74 @@ export function PlayerModal({
           >
             <SkipForwardIcon className="h-6 w-6" />
           </Button>
+          <button
+            type="button"
+            onClick={nextRate}
+            aria-label={t("player.speedIs", { rate: `${player.rate}×` })}
+            className="h-9 w-12 rounded-full border border-line font-figures text-xs text-fg tabular-nums transition-colors hover:bg-surface-2"
+          >
+            {player.rate}×
+          </button>
         </div>
 
-        <SegmentedControl<string>
-          value={String(player.rate)}
-          options={PLAYBACK_RATES.map((r) => ({
-            value: String(r),
-            label: `${r}×`,
-          }))}
-          onChange={(next) => player.setRate(Number(next))}
-          ariaLabel={t("player.speed")}
-          fullWidth
+        <textarea
+          value={notes}
+          rows={2}
+          maxLength={2000}
+          aria-label={t("player.notes")}
+          placeholder={t("player.notesPlaceholder")}
+          onInput={(e) => setNotes(e.currentTarget.value)}
+          onBlur={commitNotes}
+          className="w-full resize-y rounded-md border border-line bg-surface-2 px-3 py-2 text-fg outline-none focus:border-accent"
         />
 
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-xs font-medium text-fg">
-            {t("player.notes")}
-          </span>
-          <textarea
-            value={notes}
-            rows={2}
-            maxLength={2000}
-            placeholder={t("player.notesPlaceholder")}
-            onInput={(e) => setNotes(e.currentTarget.value)}
-            onBlur={commitNotes}
-            className="w-full resize-y rounded-md border border-line bg-surface-2 px-2 py-1.5 text-fg outline-none focus:border-accent"
-          />
-        </label>
+        {/* The facts, always shown: what someone checks before dragging
+            it into a session, and before calling a take a keeper. */}
+        <dl className="flex flex-col gap-0.5 text-xs text-muted">
+          <div className="flex flex-wrap gap-x-2">
+            <dt className="sr-only">{t("player.format")}</dt>
+            <dd>{format}</dd>
+          </div>
+          <div className="flex flex-wrap gap-x-2">
+            <dt className="sr-only">{t("player.peak")}</dt>
+            <dd>
+              {t("record.peak")}{" "}
+              <span className="font-figures tabular-nums">
+                {recording.maxPeakDb.toFixed(1)} dB
+              </span>
+            </dd>
+            <span aria-hidden>·</span>
+            <dt className="sr-only">{t("player.clipped")}</dt>
+            <dd className={recording.clipCount > 0 ? "text-danger" : ""}>
+              {recording.clipCount > 0
+                ? t("record.clippedTimes", {
+                    count: String(recording.clipCount),
+                  })
+                : t("player.clippedNone")}
+            </dd>
+          </div>
+        </dl>
 
-        <div className="flex flex-wrap gap-2">
-          <Button variant="primary" onClick={onExport} disabled={!blob}>
+        {/* The way out, labelled because it is what the player is opened
+            for as often as listening; Delete a glyph at the other end. */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="primary"
+            className="flex h-11 flex-1 items-center justify-center gap-2"
+            onClick={onExport}
+            disabled={!blob}
+          >
+            <DownloadIcon className="h-4 w-4" />
             {t("library.export")}
           </Button>
-          <Button onClick={onMove}>{t("library.move")}</Button>
-          <Button variant="danger" onClick={onTrash}>
-            <TrashIcon className="h-4 w-4" />
-            {t("common.delete")}
-          </Button>
+          <IconButton
+            label={t("common.delete")}
+            className="h-11 w-11 text-danger hover:border-danger/60"
+            onClick={onTrash}
+          >
+            <TrashIcon className="h-5 w-5" />
+          </IconButton>
         </div>
-
-        <details className="rounded-md border border-line">
-          <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-fg">
-            {t("player.details")}
-          </summary>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 px-3 pb-3 text-sm">
-            {facts.map(([k, v]) => (
-              <>
-                <dt key={`${k}-k`} className="text-muted">
-                  {k}
-                </dt>
-                <dd key={`${k}-v`} className="text-fg">
-                  {v}
-                </dd>
-              </>
-            ))}
-          </dl>
-        </details>
       </div>
     </Modal>
   );

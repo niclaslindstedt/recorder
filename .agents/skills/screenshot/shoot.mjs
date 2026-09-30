@@ -210,10 +210,12 @@ async function shoot(shot) {
     if (m.type() === "error") errors.push(m.text());
   });
   const result = { ...shot, file, errors };
+  let booted = false;
   try {
     await page.goto(base, { waitUntil: "domcontentloaded" });
     if (!args.motion) await page.addStyleTag({ content: NO_MOTION });
     await ready(page);
+    booted = true;
     await screen.stage(
       page,
       helpers(page, device, { ready, seed: seedSettings }),
@@ -221,6 +223,12 @@ async function shoot(shot) {
     await release(page);
     await page.screenshot({ path: file, type: "png" });
   } catch (error) {
+    // A page that never drew the Record screen, with no page error to say
+    // why, is headless Chromium's font service stalling the renderer at
+    // first paint (a system-font lookup that is never answered — seen in
+    // gdb as FontServiceThread::MatchFamilyName). It is the browser's, not
+    // the app's; the queue gives such a frame one fresh context.
+    result.bootStall = !booted && errors.length === 0;
     result.error = String(error?.message ?? error)
       .split("\n")
       .slice(0, 3)
@@ -241,8 +249,11 @@ const queue = [...matrix];
 const results = [];
 await Promise.all(
   Array.from({ length: Math.min(jobs, queue.length) }, async () => {
-    for (let shot = queue.shift(); shot; shot = queue.shift())
-      results.push(await shoot(shot));
+    for (let shot = queue.shift(); shot; shot = queue.shift()) {
+      let result = await shoot(shot);
+      if (result.bootStall) result = { ...(await shoot(shot)), retried: true };
+      results.push(result);
+    }
   }),
 );
 const shotsMs = Date.now() - t0;
@@ -340,6 +351,11 @@ const noisy = results.filter((r) => r.errors.length);
 console.log(
   `${results.length - failed.length}/${results.length} shots in ${shotsMs} ms (${Date.now() - t0} ms with sheets), ${Math.min(jobs, results.length)} at a time`,
 );
+const retried = results.filter((r) => r.retried);
+if (retried.length)
+  console.log(
+    `retried ${retried.length} that stalled at boot (headless font service): ${retried.map((r) => `${r.device}/${r.theme}/${r.screen}`).join(", ")}`,
+  );
 for (const s of sheets) console.log(`sheet  ${s}`);
 if (singleFile) console.log(`shot   ${singleFile}`);
 else if (!wantSheet || single)

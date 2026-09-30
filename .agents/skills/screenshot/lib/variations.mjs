@@ -35,7 +35,11 @@ export const VARIANTS = {
     label: "Lossless takes",
     settings: { recordingKind: "lossless" },
   },
-  "no-spectrum": { label: "Spectrum off", settings: { showSpectrum: false } },
+  spectrum: { label: "Spectrum", settings: { visualizer: "spectrum" } },
+  spectrogram: {
+    label: "Spectrogram",
+    settings: { visualizer: "spectrogram" },
+  },
   "voice-processing": {
     label: "Voice processing on",
     settings: { voiceProcessing: true },
