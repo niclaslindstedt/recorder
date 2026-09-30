@@ -4,9 +4,11 @@ import { useMemo, useState } from "react";
 import {
   ChevronDownIcon,
   ConfirmDialog,
+  DownloadIcon,
   FolderIcon,
   IconButton,
   ListIcon,
+  RestoreIcon,
   RowActionMenu,
   SearchIcon,
   StarIcon,
@@ -38,7 +40,9 @@ export type { LibraryView } from "./FolderPicker.tsx";
 // opens the search sheet — and then the list, under day headings, so a row's
 // own line only has to say the time.
 //
-// A tap opens the player, a swipe deletes, a hold offers the rest.
+// A tap opens the player, a swipe bares a trash button (the press on it is
+// what deletes, so a swipe that went too far deletes nothing), a hold offers
+// the rest.
 
 type Props = {
   data: AppData;
@@ -167,7 +171,9 @@ export function LibraryScreen({
           aria-label={t("library.scope", { scope: scopeLabel })}
           className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-md px-2 text-left transition-colors hover:bg-surface-2"
         >
-          <ScopeIcon className="h-5 w-5 shrink-0 text-accent" />
+          <ScopeIcon
+            className={`h-5 w-5 shrink-0 ${view.kind === "trash" ? "text-danger" : "text-accent"}`}
+          />
           <span className="truncate text-lg font-bold text-fg-bright">
             {scopeLabel}
           </span>
@@ -212,11 +218,22 @@ export function LibraryScreen({
                   <li key={r.id}>
                     <SwipeableRow
                       trailing={{
-                        kind: "commit",
-                        onCommit: () =>
-                          view.kind === "trash" ? setPurge(r) : onTrash(r.id),
-                        label: t("common.delete"),
-                        icon: <TrashIcon className="h-5 w-5" />,
+                        kind: "reveal",
+                        buttonWidth: 72,
+                        buttons: [
+                          {
+                            label:
+                              view.kind === "trash"
+                                ? t("library.deleteForever")
+                                : t("common.delete"),
+                            icon: <TrashIcon className="h-5 w-5" />,
+                            onSelect: () =>
+                              view.kind === "trash"
+                                ? setPurge(r)
+                                : onTrash(r.id),
+                            danger: true,
+                          },
+                        ],
                       }}
                       className="rounded-lg"
                     >
@@ -282,11 +299,17 @@ export function LibraryScreen({
   );
 
   function actionsFor(r: Recording): RowAction[] {
+    const icon = "h-4 w-4";
     if (view.kind === "trash")
       return [
-        { label: t("library.restore"), onSelect: () => onRestore(r.id) },
+        {
+          label: t("library.restore"),
+          icon: <RestoreIcon className={icon} />,
+          onSelect: () => onRestore(r.id),
+        },
         {
           label: t("library.deleteForever"),
+          icon: <TrashIcon className={icon} />,
           onSelect: () => setPurge(r),
           danger: true,
         },
@@ -294,12 +317,22 @@ export function LibraryScreen({
     return [
       {
         label: r.favorite ? t("library.unfavorite") : t("library.favorite"),
+        icon: <StarIcon className={icon} />,
         onSelect: () => onFavorite(r.id, !r.favorite),
       },
-      { label: t("library.move"), onSelect: () => onMove(r.id) },
-      { label: t("library.export"), onSelect: () => onExport(r.id) },
+      {
+        label: t("library.move"),
+        icon: <FolderIcon className={icon} />,
+        onSelect: () => onMove(r.id),
+      },
+      {
+        label: t("library.export"),
+        icon: <DownloadIcon className={icon} />,
+        onSelect: () => onExport(r.id),
+      },
       {
         label: t("common.delete"),
+        icon: <TrashIcon className={icon} />,
         onSelect: () => onTrash(r.id),
         danger: true,
       },

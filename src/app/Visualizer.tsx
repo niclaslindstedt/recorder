@@ -48,9 +48,15 @@ type Props = {
   className?: string;
 };
 
-/** How often the scrolling views step one column, ms — about six seconds
- *  across a phone. */
+/** How long one column of the scrolling views stands for, ms — about six
+ *  seconds across a phone. The picture does not step by a column at a time:
+ *  it slides a little on every frame the capture hands out (one per
+ *  display frame), so the motion is as smooth as the screen can draw it. */
 const COLUMN_MS = 45;
+
+/** The longest gap between two frames that is still taken as time passed —
+ *  a tab that was hidden resumes where it was rather than lurching. */
+const MAX_STEP_MS = 100;
 
 export function Visualizer({
   kind,
@@ -207,13 +213,26 @@ function ScrollingWave({
     const dpr = window.devicePixelRatio || 1;
     const colW = 3 * dpr;
     const gap = 1 * dpr;
-    const count = Math.ceil(el.width / (colW + gap)) + 1;
+    const pitch = colW + gap;
+    const count = Math.ceil(el.width / pitch) + 2;
     // Each column: the loudest reading in its slice of time, dBFS, and
-    // whether it clipped. Oldest first.
+    // whether it clipped. Oldest first. `slice` is the one being filled,
+    // already sliding in at the right edge; `phase` is how far into it the
+    // clock is, ms.
     const cols: Array<{ db: number; clipped: boolean }> = [];
     let slice = { db: -Infinity, clipped: false };
-    let sliceAt = performance.now();
+    let phase = 0;
+    let last = performance.now();
     const colours = palette(el);
+
+    const bar = (x: number, c: { db: number; clipped: boolean }) => {
+      const mid = el.height / 2;
+      const half = Math.max(dpr, meterFill(c.db) * mid);
+      ctx.fillStyle = c.clipped
+        ? colours.danger
+        : toneColor(meterTone(c.db), colours);
+      ctx.fillRect(x, mid - half, colW, half * 2);
+    };
 
     const draw = () => {
       const w = el.width;
@@ -240,30 +259,33 @@ function ScrollingWave({
       ctx.lineTo(w, mid);
       ctx.stroke();
       ctx.globalAlpha = 1;
+      // Whole device pixels, so a bar's edges stay sharp as it slides.
+      const offset = Math.round((phase / COLUMN_MS) * pitch);
+      const edge = w - offset;
+      if (slice.db > -Infinity) bar(edge, slice);
       for (let i = 0; i < cols.length; i++) {
-        const c = cols[cols.length - 1 - i]!;
-        const x = w - (i + 1) * (colW + gap);
+        const x = edge - (i + 1) * pitch;
         if (x + colW < 0) break;
-        const half = Math.max(dpr, meterFill(c.db) * mid);
-        ctx.fillStyle = c.clipped
-          ? colours.danger
-          : toneColor(meterTone(c.db), colours);
-        ctx.fillRect(x, mid - half, colW, half * 2);
+        bar(x, cols[cols.length - 1 - i]!);
       }
     };
 
     draw();
     return subscribe((frame) => {
+      const now = performance.now();
+      const dt = Math.min(MAX_STEP_MS, now - last);
+      last = now;
       if (!runningRef.current) return;
       const reading = readFrame(frame.samples);
       if (reading.peakDb > slice.db) slice.db = reading.peakDb;
       if (reading.clipped) slice.clipped = true;
-      const now = performance.now();
-      if (now - sliceAt < COLUMN_MS) return;
-      sliceAt = now;
-      cols.push(slice);
+      phase += dt;
+      while (phase >= COLUMN_MS) {
+        phase -= COLUMN_MS;
+        cols.push(slice);
+        slice = { db: -Infinity, clipped: false };
+      }
       if (cols.length > count) cols.splice(0, cols.length - count);
-      slice = { db: -Infinity, clipped: false };
       draw();
     });
   }, [subscribe, size, canvas]);
@@ -319,26 +341,34 @@ function Spectrogram({
     const colours = palette(el);
     ctx.fillStyle = colours.ground;
     ctx.fillRect(0, 0, el.width, el.height);
-    // The loudest each band has been in the column's slice of time.
+    // The loudest each band has been since the last strip was drawn, and
+    // how many device pixels the picture owes the clock: it moves one
+    // column (`colW`) every `COLUMN_MS`, a pixel or two per frame.
     const slice = new Float32Array(bands);
-    let sliceAt = performance.now();
+    const speed = colW / COLUMN_MS;
+    let owed = 0;
+    let last = performance.now();
 
     return subscribe((frame) => {
+      const now = performance.now();
+      const dt = Math.min(MAX_STEP_MS, now - last);
+      last = now;
       if (!runningRef.current) return;
       const n = Math.min(bands, frame.bands.length);
       for (let b = 0; b < n; b++)
         if (frame.bands[b]! > slice[b]!) slice[b] = frame.bands[b]!;
-      const now = performance.now();
-      if (now - sliceAt < COLUMN_MS) return;
-      sliceAt = now;
+      owed += dt * speed;
+      const step = Math.floor(owed);
+      if (step < 1) return;
+      owed -= step;
       const w = el.width;
       const h = el.height;
-      // Move what is drawn one column to the left, and draw the new one at
-      // the right edge: low frequencies at the foot, as a stave reads.
-      ctx.drawImage(el, colW, 0, w - colW, h, 0, 0, w - colW, h);
+      // Move what is drawn `step` pixels to the left, and draw the new strip
+      // at the right edge: low frequencies at the foot, as a stave reads.
+      ctx.drawImage(el, step, 0, w - step, h, 0, 0, w - step, h);
       ctx.globalAlpha = 1;
       ctx.fillStyle = colours.ground;
-      ctx.fillRect(w - colW, 0, colW, h);
+      ctx.fillRect(w - step, 0, step, h);
       const bandH = h / n;
       for (let b = 0; b < n; b++) {
         const v = slice[b]!;
@@ -347,16 +377,16 @@ function Spectrogram({
         // present, the flag's amber for loud, danger for the loudest.
         ctx.globalAlpha = Math.min(1, v * 1.4);
         ctx.fillStyle = colours.accent;
-        ctx.fillRect(w - colW, y, colW, bandH + 0.5);
+        ctx.fillRect(w - step, y, step, bandH + 0.5);
         if (v > 0.55) {
           ctx.globalAlpha = Math.min(1, (v - 0.55) * 3);
           ctx.fillStyle = colours.flag;
-          ctx.fillRect(w - colW, y, colW, bandH + 0.5);
+          ctx.fillRect(w - step, y, step, bandH + 0.5);
         }
         if (v > 0.8) {
           ctx.globalAlpha = Math.min(1, (v - 0.8) * 5);
           ctx.fillStyle = colours.danger;
-          ctx.fillRect(w - colW, y, colW, bandH + 0.5);
+          ctx.fillRect(w - step, y, step, bandH + 0.5);
         }
         slice[b] = 0;
       }

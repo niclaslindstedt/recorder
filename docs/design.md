@@ -131,7 +131,7 @@ columns across the whole width, not the reading column:
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  THE STAGE (the instrument)                │  THE RAIL        │
-│  Ready:     choices · listen card · latest │  (●) Tap to rec  │
+│  Ready:     choices · listen card          │  (●) Tap to rec  │
 │  Listening: status · visualizer · meter    │  readings · (●)  │
 │  Recording: visualizer · meter · warning   │  timer · figures │
 │                                            │  ‖  (■)  🗑      │
@@ -145,9 +145,8 @@ columns across the whole width, not the reading column:
 - **The rail** (16rem) is on the right, where a right thumb holds a phone
   on its side. The big button, the timer and the figures sit there, centred
   in the height.
-- The figures go two by two, the big buttons drop from 96 to 80 px, the
-  Latest list shows two recordings, and the listen card is slimmer. The
-  bottom bar stays: this is still a phone.
+- The figures go two by two, the big buttons drop from 96 to 80 px, and
+  the listen card is slimmer. The bottom bar stays: this is still a phone.
 
 ### Ready: the microphone is closed
 
@@ -158,13 +157,10 @@ columns across the whole width, not the reading column:
 │  │   Standard      │ │   Ideas          │ │
 │  └─────────────────┘ └──────────────────┘ │
 │  ┌─────────────────────────────────────┐  │
-│  │ ≈  Check your level        [Listen] │  │  the invitation to listen
+│  │ ≈  Check your level     [🎧 Listen] │  │  the invitation to listen
 │  │    Hear the room … Nothing is kept. │  │
 │  └─────────────────────────────────────┘  │
-│  LATEST                                   │  what you just made, one tap from playing
-│  ▁▃▅▂  Standup, Monday         0:10       │
-│  ▂▅▃▁  Idea: garden shed…      0:10       │
-│  ▃▂▅▃  Call with the printer   0:10       │  (five on a tall window)
+│                                           │
 │                                           │
 │                 (  ●  )                   │  the one button, centred in the room left
 │              Tap to record                │
@@ -185,12 +181,10 @@ columns across the whole width, not the reading column:
 - **Check your level** invites you into the Listening mode. It is a card
   with one sentence and one button, because the one thing a first-timer
   needs to know is that Listen records nothing.
-- **Latest** is the most recent recordings, as compact rows (thumbnail,
-  title, when, length): three, and five on a tall window. A tap opens the
-  player. It is there because the most common thing to do after recording a
-  memo is to check it, and the second most common is to record another, and
-  this lets you do both from one screen. When the library is empty it is one
-  line saying where the first recording will land.
+- **No recordings.** What was recorded is the Recordings screen's, one
+  swipe or one tab away. A list here gave the screen two subjects and
+  pushed the button down on a small phone; the room it took is the
+  button's now.
 - **The record button** is the largest control on the screen: red, 96 px,
   **centred in whatever room is left**, with "Tap to record" under it. That
   keeps it in the lower half, where a thumb reaches, without a dead band
@@ -203,7 +197,7 @@ level, placing a microphone, checking a room, or just watching sound.
 
 ```
 ┌───────────────────────────────────────────┐
-│  ● Listening — nothing is kept   [ Stop ] │  status: what mode, and how to leave it
+│  ● Listening — nothing is kept      ( ■ ) │  status: what mode, and a stop glyph to leave it
 │  ┌─────────────────────────────────────┐  │
 │  │ Waveform · the last few seconds ≋▥▦ │  │  the visualizer, and its switcher
 │  │ −6  - - - - - - - - - - - - - - -   │  │
@@ -432,9 +426,10 @@ out.
   right-aligned** in tabular figures. Lengths line up so a long interview
   stands out from a thirty-second memo. The chevron is gone: every row is
   obviously tappable, and the length now lives in that corner.
-- **A tap** opens the player. **A swipe** left deletes (to Recently
-  deleted). **A hold** (or right-click) offers favourite, move, export,
-  delete. Nothing changed here, because it worked.
+- **A tap** opens the player. **A swipe** left bares one red trash button,
+  and pressing _it_ deletes (to Recently deleted) — a swipe that went too
+  far, or was meant as a scroll, throws nothing away. **A hold** (or
+  right-click) offers favourite, move, export, delete, each with its glyph.
 - **Recently deleted** says how long it keeps things in one line under the
   scope, and its rows offer Put back and Delete for good.
 
@@ -561,7 +556,7 @@ storage and encryption, your data, developer mode, and About. What left:
 | The library's four chips and count line  | Folded into one scope button that says where you are and how many.                                                          |
 | The full-screen naming sheet             | Two fields on a whole screen, and Discard louder than Save. Now the Review mode, inline.                                    |
 | "Aim for peaks between −12 and −6 dB"    | Static advice under a meter. Now the Listening verdict, which says whether _you_ are there.                                 |
-| The empty meter card before a take       | A dead instrument. Now the invitation to listen, and the latest recordings.                                                 |
+| The empty meter card before a take       | A dead instrument. Now the invitation to listen.                                                                            |
 | The Recording mode's empty lower half    | Half a screen of nothing under a small spectrum. Now the visualizer fills it, with the take's four figures under the meter. |
 | The spectrum on/off setting              | Now a choice of three visualizers, switched on the Record screen itself.                                                    |
 | The quality pill under the record button | It looked like a caption. Now a real button that opens the Quality sheet.                                                   |
@@ -569,6 +564,10 @@ storage and encryption, your data, developer mode, and About. What left:
 | The player's Details disclosure          | The facts matter to this audience; now two quiet lines, always shown.                                                       |
 | The player's six-way speed control       | A row for an occasional setting; now one button that steps.                                                                 |
 | Text "Delete" / "Discard" buttons        | Now trash glyphs, set apart from the primary action, confirming before a take is lost.                                      |
+| The Record screen's Latest list          | A second subject on the instrument. The recordings are the Recordings screen's.                                             |
+| Text "Stop" and "Cancel" buttons         | Now a stop glyph and a close glyph; a word is kept only where a glyph alone would not say what happens.                     |
+| Swipe-to-delete in one motion            | A swipe too far lost a recording. Now the swipe bares a red trash button and the press deletes.                             |
+| Toasts at the top of the screen          | Under the status bar and far from the thumb. Now on the bottom bar, and a tap anywhere on one puts it away.                 |
 
 ## Layout rules
 
@@ -577,12 +576,20 @@ storage and encryption, your data, developer mode, and About. What left:
 - **The desk** is the phone's layout, centred at a readable width, with the
   destinations on the top bar and Settings as a side panel. It does not grow
   a sidebar: the folder picker is a sheet on both.
-- **Sheets:** a sheet that is saved or abandoned carries Cancel / title /
-  Save across its top (`ModalHeader`). A sheet that only chooses (the folder
+- **Sheets:** a sheet that is saved or abandoned carries a close glyph /
+  title / ✓ Save across its top (`ModalHeader`). A sheet that only chooses (the folder
   picker, Quality, search) has a title and a close glyph, and a choice closes
   it.
+- **Glyphs first.** An action a symbol says plainly — stop, pause, play,
+  close, delete, search, share, download — is its glyph. An action that
+  needs its word keeps it, with the glyph in front (Listen, Export, Save
+  now, Delete everything). Delete is always red: the glyph, the swipe's
+  button and the menu row.
 - **Glyph buttons** always carry an accessible name, and a tooltip under a
   mouse (`IconButton`).
+- **Toasts** stand on the bottom bar (on the screen's foot where there is
+  no bar), above the update prompt when one is up. A tap anywhere on one
+  dismisses it; the ✕ is only the visible half.
 - **Colour is never the only signal.** The Listening verdict and the clip
   warning are words as well as colours; a favourite is a filled star, not a
   yellow row.

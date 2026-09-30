@@ -138,7 +138,14 @@
    here, and the difference between them is loudness rather than hue: a save
    is a hairline of accent and a tint you have to look for, an error is a
    full-strength danger border you cannot miss. Scoped to `.app-toasts` (the
-   viewport in App.tsx). */
+   viewport in App.tsx, which stands it on the bottom bar).
+
+   A tap anywhere on a card puts it away (`dismissToast` in App.tsx), so the
+   whole card says it can be pressed. */
+.app-toasts [data-kind] {
+  cursor: pointer;
+}
+
 .app-toasts [data-kind="success"] {
   border-color: color-mix(in oklab, var(--accent) 45%, transparent);
   background-color: color-mix(in oklab, var(--accent) 12%, var(--surface-2));

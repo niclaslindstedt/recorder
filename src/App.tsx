@@ -66,6 +66,19 @@ import { status } from "./output.ts";
 // desk.
 
 const toasts = createToastStore();
+
+/** A tap on a toast, anywhere but its own buttons, is its ✕: the card is
+ *  the framework's, so the press is handed to the dismiss button it draws
+ *  last, which lets the card leave the way it always does. */
+function dismissToast(e: MouseEvent) {
+  const target = e.target as Element | null;
+  if (!target || target.closest("button")) return;
+  const card = target.closest(".app-toasts [data-kind]");
+  const close = card?.querySelector<HTMLButtonElement>(
+    ":scope > button:last-of-type",
+  );
+  close?.click();
+}
 const idbBackend = createIdbDocBackend();
 
 export function App() {
@@ -176,6 +189,8 @@ export function App() {
     logStore.setCaptureEnabled(settings.captureLogs);
   }, [settings.captureLogs]);
 
+  const navShown = !desk && !capturing;
+
   const notice = useCallback((message: string) => {
     toasts.clear();
     toasts.push({ message, kind: "success", durationMs: 2500 });
@@ -265,10 +280,8 @@ export function App() {
       update={update}
       folderId={view.kind === "folder" ? view.folderId : null}
       locale={locale}
-      now={now}
       onSave={saveTake}
       onNotice={notice}
-      onOpen={setOpenId}
       onCaptureChange={setCapturing}
     />
   );
@@ -391,7 +404,25 @@ export function App() {
         )}
       </div>
 
-      {!desk && !capturing && <BottomNav active={tab} onSelect={show} />}
+      {/* The toasts stand on the bottom bar, where the eye already is after
+          a tap and clear of the top bar's glyphs — above the update prompt
+          when one is up, on the screen's foot when there is no bar. A tap
+          anywhere on one puts it away; the ✕ is only the visible half. */}
+      <div className="app-toast-slot relative z-[70]" onClick={dismissToast}>
+        <ToastViewport
+          store={toasts}
+          labels={{ dismiss: t("common.close") }}
+          className={`app-toasts pointer-events-none absolute inset-x-0 flex flex-col items-center gap-2 px-4 ${
+            pwa.needRefresh
+              ? "bottom-20"
+              : navShown
+                ? "bottom-3"
+                : "bottom-[max(0.75rem,env(safe-area-inset-bottom))]"
+          }`}
+        />
+      </div>
+
+      {navShown && <BottomNav active={tab} onSelect={show} />}
 
       {open && (
         <PlayerModal
@@ -522,12 +553,6 @@ export function App() {
           onClose={sync.selfHosted.closeConnect}
         />
       )}
-
-      <ToastViewport
-        store={toasts}
-        labels={{ dismiss: t("common.close") }}
-        className="app-toasts pointer-events-none fixed inset-x-0 top-0 z-[70] flex flex-col items-center gap-2 px-4 pt-[max(0.75rem,env(safe-area-inset-top))]"
-      />
     </div>
   );
 }

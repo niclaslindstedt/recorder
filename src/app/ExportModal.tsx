@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FLAC_LEVELS, WAV_DEPTHS } from "@niclaslindstedt/oss-framework/audio";
 import {
   Button,
+  DownloadIcon,
   Modal,
   SegmentedControl,
   SpinnerIcon,
@@ -20,6 +21,7 @@ import {
 } from "./export.ts";
 import { formatContainer, formatRate, formatSize } from "./format.ts";
 import { useT } from "./i18n/index.ts";
+import { ShareIcon } from "./icons.tsx";
 import { ModalHeader } from "./ModalHeader.tsx";
 import type { Recording } from "./types.ts";
 import {
@@ -130,6 +132,7 @@ export function ExportModal({
         onSave={() => void run()}
         saveDisabled={busy !== null}
         saveLabel={t("export.run")}
+        saveIcon={<DownloadIcon className="h-4 w-4" />}
       />
       <div className="flex flex-col gap-4 p-4">
         <Field label={t("export.format")}>
@@ -260,7 +263,12 @@ export function ExportModal({
         )}
 
         <div className="flex flex-col gap-1 border-t border-line pt-3">
-          <Button onClick={() => void original()} disabled={busy !== null}>
+          <Button
+            onClick={() => void original()}
+            disabled={busy !== null}
+            className="flex items-center justify-center gap-1.5"
+          >
+            <ShareIcon className="h-4 w-4" />
             {t("export.original")}
           </Button>
           <p className="text-xs text-muted">

@@ -8,9 +8,8 @@ import type { Recording } from "./types.ts";
 // One recording, as a row: the thumbnail (recognition at a glance), the
 // title with its star, a quiet line under it, and the length in the right
 // corner in tabular figures, so a long interview stands out from a
-// thirty-second memo down a whole list. The library, search and the Record
-// screen's Latest all draw it, so a recording looks the same wherever it is
-// met. No chevron: every row is plainly a thing to tap, and the corner is
+// thirty-second memo down a whole list. The library and search both draw
+// it, so a recording looks the same wherever it is met. No chevron: every row is plainly a thing to tap, and the corner is
 // the length's.
 
 type Props = {
@@ -19,20 +18,16 @@ type Props = {
    *  not already said. */
   detail: string;
   onOpen: () => void;
-  /** A slimmer row, for the Record screen's Latest. */
-  dense?: boolean;
 };
 
-export function RecordingRow({ recording: r, detail, onOpen, dense }: Props) {
+export function RecordingRow({ recording: r, detail, onOpen }: Props) {
   return (
     <button
       type="button"
       onClick={onOpen}
-      className={`flex w-full items-center gap-3 rounded-lg border border-line bg-surface text-left transition-colors hover:bg-surface-2 ${
-        dense ? "px-3 py-2" : "px-3 py-2.5"
-      }`}
+      className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
     >
-      <div className={`${dense ? "h-6 w-12" : "h-8 w-14"} shrink-0 text-muted`}>
+      <div className="h-8 w-14 shrink-0 text-muted">
         <Waveform peaks={r.peaks} />
       </div>
       <div className="min-w-0 flex-1">

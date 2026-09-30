@@ -16,7 +16,6 @@ import {
   type CaptureResult,
 } from "@niclaslindstedt/oss-framework/audio";
 import {
-  Button,
   ConfirmDialog,
   FolderIcon,
   PauseIcon,
@@ -28,13 +27,7 @@ import {
 
 import { FolderPicker } from "./FolderPicker.tsx";
 import { folderPath } from "./folders.ts";
-import {
-  formatClock,
-  formatDay,
-  formatSize,
-  formatSpan,
-  formatTimer,
-} from "./format.ts";
+import { formatSize, formatSpan, formatTimer } from "./format.ts";
 import { ClipIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { liveCtx } from "./ids.ts";
@@ -49,7 +42,6 @@ import {
   TakeStats,
   useFreeBytes,
 } from "./RecordParts.tsx";
-import { RecordingRow } from "./RecordingRow.tsx";
 import { defaultTitle, finishTake } from "./takes.ts";
 import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
@@ -61,14 +53,15 @@ import { Visualizer } from "./Visualizer.tsx";
 // The Record screen, an instrument in four modes (docs/design.md, "Record"):
 //
 // - Ready: the microphone is closed. The take's two choices (quality and
-//   where it goes) as buttons at the top, the invitation to listen, the
-//   latest recordings, and the one button centred in the room left.
+//   where it goes) as buttons at the top, the invitation to listen, and the
+//   one button centred in the room left. What was recorded is the
+//   Recordings screen's, not this one's.
 // - Listening: the microphone is open and nothing is kept. The visualizer,
 //   the big meter, the room's noise floor, the peak, the headroom and a
 //   verdict in words — the mode for setting a level before a take.
 // - Recording: the timer, the visualizer with the whole take along its
 //   foot, the big meter with its clip lamp, and the take's four figures;
-//   Pause, Stop and a Discard glyph.
+//   Pause, Stop and Discard, all glyphs.
 // - Review: the take is in memory, getting its name and its place, and can
 //   be heard back. Save is the big button; Discard is a glyph and asks first.
 //
@@ -83,10 +76,8 @@ type Props = {
    *  reader picks another. */
   folderId: string | null;
   locale: string;
-  now: Date;
   onSave: (recording: Recording, blob: Blob) => Promise<void>;
   onNotice: (message: string) => void;
-  onOpen: (id: string) => void;
   /** A take is running or waiting to be named: the shell keeps the reader
    *  here until it is saved or discarded. */
   onCaptureChange: (capturing: boolean) => void;
@@ -94,14 +85,6 @@ type Props = {
 
 /** Bars in the spectrum, rows in the spectrogram. */
 const BANDS = 48;
-/** The latest recordings on Ready: three, and two more on a tall window
- *  (`tall:` in styles.css), so the list fills the room it has without
- *  pushing the button off a small phone. */
-const LATEST = 5;
-const LATEST_SHORT = 3;
-/** On its side the list shares the left half with the choices and the
- *  listen card, in less than three hundred pixels of height. */
-const LATEST_STAND = 2;
 
 export function RecordScreen({
   data,
@@ -110,10 +93,8 @@ export function RecordScreen({
   update,
   folderId,
   locale,
-  now,
   onSave,
   onNotice,
-  onOpen,
   onCaptureChange,
 }: Props) {
   const t = useT();
@@ -328,12 +309,6 @@ export function RecordScreen({
     </div>
   );
 
-  const latest = useMemo(() => liveRecordings(data).slice(0, LATEST), [data]);
-  const dayLabels = {
-    today: t("common.today"),
-    yesterday: t("common.yesterday"),
-  };
-
   const meter = (subscribe: typeof recorder.subscribe) => (
     <div className="app-meter-big">
       <LevelMeter
@@ -520,9 +495,13 @@ export function RecordScreen({
           </span>{" "}
           <span className="text-muted">{t("listen.nothingKept")}</span>
         </p>
-        <Button onClick={() => void listen.stop()} className="shrink-0">
-          {t("listen.stop")}
-        </Button>
+        <RoundGlyph
+          size="sm"
+          label={t("listen.stop")}
+          onClick={() => void listen.stop()}
+        >
+          <StopIcon className="h-5 w-5" />
+        </RoundGlyph>
       </div>
     );
     const picture = (
@@ -571,40 +550,6 @@ export function RecordScreen({
         {destinationButton()}
       </div>
     );
-    const shown = stand ? LATEST_STAND : LATEST_SHORT;
-    const recent =
-      latest.length > 0 ? (
-        <section className="flex flex-col gap-1.5">
-          <h2 className="px-1 text-xs font-semibold tracking-wide text-muted uppercase">
-            {t("record.latest")}
-          </h2>
-          <ul className="flex flex-col gap-1.5">
-            {latest.map((r, i) => (
-              <li
-                key={r.id}
-                className={
-                  i >= shown
-                    ? stand
-                      ? "hidden"
-                      : "hidden tall:block"
-                    : undefined
-                }
-              >
-                <RecordingRow
-                  dense
-                  recording={r}
-                  detail={`${formatDay(r.createdAt, now, locale, dayLabels)} ${formatClock(r.createdAt, locale)}`}
-                  onOpen={() => onOpen(r.id)}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : (
-        <p className="px-1 text-center text-sm text-muted">
-          {t("record.firstHint")}
-        </p>
-      );
     const listenCard = (
       <ListenCard
         compact={stand}
@@ -625,7 +570,6 @@ export function RecordScreen({
         <>
           {choices}
           {listenCard}
-          {recent}
         </>,
         go,
       )
@@ -633,7 +577,6 @@ export function RecordScreen({
       <>
         {choices}
         {listenCard}
-        {recent}
         {go}
       </>
     );

@@ -5,18 +5,25 @@ import { FLAC_LEVELS, WAV_DEPTHS } from "@niclaslindstedt/oss-framework/audio";
 import {
   Button,
   CloudIcon,
+  CloudOffIcon,
+  CloudUploadIcon,
   CogIcon,
   ConfirmDialog,
   DatabaseIcon,
   DownloadIcon,
+  FolderOpenIcon,
   InfoIcon,
   MicIcon,
   PaletteIcon,
   PlayIcon,
+  RefreshIcon,
   ScrollTextIcon,
+  SearchIcon,
   Section,
   SegmentedControl,
   ToggleRow,
+  TrashIcon,
+  UploadIcon,
 } from "@niclaslindstedt/oss-framework/components";
 import { EncryptionSettings } from "@niclaslindstedt/oss-framework/encryption";
 import { LogViewer } from "@niclaslindstedt/oss-framework/logging";
@@ -309,17 +316,26 @@ export function SettingsScreen({
         {sync.connected && (
           <div className="flex flex-wrap gap-2">
             <Button onClick={sync.saveNow} disabled={busy || !sync.dirty}>
-              {t("settings.saveNow")}
+              <span className="flex items-center justify-center gap-1.5">
+                <CloudUploadIcon className="h-4 w-4 shrink-0" />
+                {t("settings.saveNow")}
+              </span>
             </Button>
             <Button onClick={() => void sync.reload()} disabled={busy}>
-              {t("settings.reload")}
+              <span className="flex items-center justify-center gap-1.5">
+                <RefreshIcon className="h-4 w-4 shrink-0" />
+                {t("settings.reload")}
+              </span>
             </Button>
             <Button
               variant="danger"
               onClick={sync.disconnect}
               disabled={demoData.on}
             >
-              {t("settings.disconnect")}
+              <span className="flex items-center justify-center gap-1.5">
+                <CloudOffIcon className="h-4 w-4 shrink-0" />
+                {t("settings.disconnect")}
+              </span>
             </Button>
           </div>
         )}
@@ -351,7 +367,10 @@ export function SettingsScreen({
             )}
             <div>
               <Button onClick={media.run} disabled={media.running}>
-                {t("settings.filesRun")}
+                <span className="flex items-center justify-center gap-1.5">
+                  <RefreshIcon className="h-4 w-4 shrink-0" />
+                  {t("settings.filesRun")}
+                </span>
               </Button>
             </div>
           </div>
@@ -386,7 +405,10 @@ export function SettingsScreen({
                   )
               }
             >
-              {t("settings.listSpaces")}
+              <span className="flex items-center justify-center gap-1.5">
+                <SearchIcon className="h-4 w-4 shrink-0" />
+                {t("settings.listSpaces")}
+              </span>
             </Button>
             {foundSpaces && (
               <div className="flex flex-col gap-1 text-sm">
@@ -405,7 +427,10 @@ export function SettingsScreen({
                     >
                       <span className="text-fg">{slug}</span>
                       <Button onClick={() => onAdoptSpace(slug)}>
-                        {t("spaces.open")}
+                        <span className="flex items-center justify-center gap-1.5">
+                          <FolderOpenIcon className="h-4 w-4 shrink-0" />
+                          {t("spaces.open")}
+                        </span>
                       </Button>
                     </div>
                   ))
@@ -433,7 +458,10 @@ export function SettingsScreen({
               )
             }
           >
-            {t("settings.export")}
+            <span className="flex items-center justify-center gap-1.5">
+              <DownloadIcon className="h-4 w-4 shrink-0" />
+              {t("settings.export")}
+            </span>
           </Button>
           <p className="text-xs text-muted">{t("settings.exportHint")}</p>
         </div>
@@ -450,7 +478,8 @@ export function SettingsScreen({
                 input.value = "";
               }}
             />
-            <span className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-sm text-fg hover:bg-surface-2">
+            <span className="flex cursor-pointer items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-sm text-fg hover:bg-surface-2">
+              <UploadIcon className="h-4 w-4 shrink-0" />
               {t("settings.import")}
             </span>
           </label>
@@ -458,7 +487,10 @@ export function SettingsScreen({
         </div>
         <div className="flex flex-col gap-1">
           <Button variant="danger" onClick={() => setConfirmClear(true)}>
-            {t("settings.deleteAll")}
+            <span className="flex items-center justify-center gap-1.5">
+              <TrashIcon className="h-4 w-4 shrink-0" />
+              {t("settings.deleteAll")}
+            </span>
           </Button>
           <p className="text-xs text-muted">{t("settings.deleteAllHint")}</p>
         </div>

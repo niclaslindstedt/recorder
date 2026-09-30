@@ -3,6 +3,7 @@ import { useRef, type ReactNode } from "react";
 
 import {
   Button,
+  CheckIcon,
   CloseIcon,
   IconButton,
 } from "@niclaslindstedt/oss-framework/components";
@@ -10,8 +11,9 @@ import {
 import { useT } from "./i18n/index.ts";
 import { useModalSave } from "./useModalSave.ts";
 
-// The top of every modal that is saved or abandoned: cancel on the left,
-// the title between them, save on the right.
+// The top of every modal that is saved or abandoned: cancel on the left, a
+// close glyph, the title between them, and save on the right, a check with
+// its word.
 //
 // They sit at the top because the bottom of the screen belongs to the nav —
 // a row of buttons above it is a row of buttons next to the tabs, which on a
@@ -40,6 +42,9 @@ type Props = {
   /** What the save button says, where "Save" is not what the modal does —
    *  a form that ends in a file says so. */
   saveLabel?: string;
+  /** The glyph beside it, where a check is not what the modal does — a
+   *  form that ends in a file shows the file leaving. */
+  saveIcon?: ReactNode;
   /** A second way out, beside the save: the modal that both downloads and
    *  prints has two outcomes rather than one, and they belong in this row
    *  together rather than in a second row at the foot of the sheet. */
@@ -53,6 +58,7 @@ export function ModalHeader({
   onSave,
   saveDisabled = false,
   saveLabel,
+  saveIcon,
   extra,
 }: Props) {
   const t = useT();
@@ -73,9 +79,13 @@ export function ModalHeader({
       ref={row}
       className="flex shrink-0 items-center gap-2 border-b border-line bg-surface-3 px-2 py-2"
     >
-      <Button className="min-h-10 shrink-0" onClick={onCancel}>
-        {t("common.cancel")}
-      </Button>
+      <IconButton
+        label={t("common.cancel")}
+        className="h-10 w-10 border-transparent"
+        onClick={onCancel}
+      >
+        <CloseIcon className="h-5 w-5" />
+      </IconButton>
       <h2
         id={titleId}
         className="min-w-0 flex-1 truncate text-center text-sm font-bold text-fg-bright"
@@ -85,10 +95,11 @@ export function ModalHeader({
       {extra}
       <Button
         variant="primary"
-        className="min-h-10 shrink-0 font-bold"
+        className="flex min-h-10 shrink-0 items-center gap-1.5 font-bold"
         disabled={disabled}
         onClick={save}
       >
+        {saveIcon ?? <CheckIcon className="h-4 w-4" />}
         {saveLabel ?? t("common.save")}
       </Button>
     </div>

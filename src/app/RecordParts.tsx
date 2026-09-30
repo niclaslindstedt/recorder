@@ -21,7 +21,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 
 import { formatDuration } from "./format.ts";
-import { ClipIcon } from "./icons.tsx";
+import { ClipIcon, HeadphonesIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import type { Ambient, Verdict } from "./levels.ts";
 
@@ -104,8 +104,9 @@ export function ListenCard({
         variant="primary"
         onClick={onListen}
         disabled={busy}
-        className="shrink-0"
+        className="flex shrink-0 items-center gap-1.5"
       >
+        <HeadphonesIcon className="h-4 w-4" />
         {t("listen.start")}
       </Button>
     </div>
@@ -170,20 +171,23 @@ export function AmbientReadout({ ambient }: { ambient: Ambient | null }) {
   );
 }
 
-/** A round glyph button beside the big one — Pause, Discard. The name is
- *  the accessible name and the tooltip; there is no word on it. */
+/** A round glyph button beside the big one — Pause, Discard — or, `sm`, in
+ *  a line of text: Listening's Stop. The name is the accessible name and the
+ *  tooltip; there is no word on it. */
 export function RoundGlyph({
   label,
   onClick,
   disabled,
   children,
   tone = "plain",
+  size = "md",
 }: {
   label: string;
   onClick: () => void;
   disabled?: boolean;
   children: ReactNode;
   tone?: "plain" | "danger";
+  size?: "sm" | "md";
 }) {
   return (
     <button
@@ -192,7 +196,7 @@ export function RoundGlyph({
       title={label}
       onClick={onClick}
       disabled={disabled}
-      className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line bg-surface transition-colors disabled:opacity-40 ${
+      className={`flex ${size === "sm" ? "h-11 w-11" : "h-14 w-14"} shrink-0 items-center justify-center rounded-full border border-line bg-surface transition-colors disabled:opacity-40 ${
         tone === "danger"
           ? "text-danger hover:border-danger/60 hover:bg-danger/10"
           : "text-fg hover:bg-surface-2"

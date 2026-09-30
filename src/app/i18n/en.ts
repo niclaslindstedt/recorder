@@ -77,9 +77,7 @@ export const en = {
     // Under the timer while a take runs: what it is and where it goes.
     recordingTo: "{quality} · to {folder}",
     saveTo: "Save to",
-    latest: "Latest",
     tapToRecord: "Tap to record",
-    firstHint: "Press the red button, and your first recording lands here.",
     // Review: the take in memory, getting its name.
     name: "Title",
     newRecording: "New recording",

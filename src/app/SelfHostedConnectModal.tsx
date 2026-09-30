@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
+  CheckIcon,
+  CopyIcon,
   LABELED_FIELD_CLASS,
   Modal,
 } from "@niclaslindstedt/oss-framework/components";
@@ -9,6 +11,7 @@ import { canScanQrCode } from "@niclaslindstedt/oss-framework/qr";
 import { describeStorageError } from "@niclaslindstedt/oss-framework/storage";
 
 import { useT } from "./i18n/index.ts";
+import { ScanIcon } from "./icons.tsx";
 import { ModalHeader } from "./ModalHeader.tsx";
 import {
   checkPairing,
@@ -240,8 +243,9 @@ export function SelfHostedConnectModal({
                 type="button"
                 onClick={() => void scan()}
                 disabled={busy}
-                className="min-h-11 rounded-xl border border-line bg-surface-3 px-3 text-sm font-bold text-fg hover:bg-surface-2 disabled:opacity-50"
+                className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface-3 px-3 text-sm font-bold text-fg hover:bg-surface-2 disabled:opacity-50"
               >
+                <ScanIcon className="h-5 w-5 shrink-0" />
                 {t("selfHosted.scan")}
               </button>
             )}
@@ -307,8 +311,13 @@ export function SelfHostedConnectModal({
                     ?.writeText(recoveryKey)
                     .then(() => setCopied(true))
                 }
-                className="min-h-11 rounded-xl border border-line bg-surface-3 px-3 text-sm font-bold text-fg hover:bg-surface-2"
+                className="flex min-h-11 items-center gap-1.5 rounded-xl border border-line bg-surface-3 px-3 text-sm font-bold text-fg hover:bg-surface-2"
               >
+                {copied ? (
+                  <CheckIcon className="h-4 w-4 shrink-0 text-accent" />
+                ) : (
+                  <CopyIcon className="h-4 w-4 shrink-0" />
+                )}
                 {copied ? t("selfHosted.copied") : t("selfHosted.copy")}
               </button>
             </div>
