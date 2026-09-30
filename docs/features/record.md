@@ -81,7 +81,14 @@ under **Settings → Record screen → Visualizer**):
 ## The meter
 
 The level is in dBFS — decibels below the loudest sound the microphone can
-carry — with a peak that holds for a moment and falls.
+carry — with a peak that holds for a moment and falls. It moves on every
+frame the screen draws, in step with the waveform above it: the microphone
+hands its samples over in batches of about 43 ms, and each batch is played
+out across the frames until the next (`src/app/pacing.ts`), so the bar and
+the wave run a batch behind the sound — too little to see — instead of the
+bar stepping twenty-odd times a second. The whole take's strip along the
+visualizer's foot is redrawn on every frame too, each moment as wide as the
+time it holds, so it narrows smoothly as the take grows.
 
 When a run of samples hits the top, the take has **clipped**: the loudest
 parts were flattened, and no export can put them back. The app says so four

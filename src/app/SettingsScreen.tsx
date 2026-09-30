@@ -34,6 +34,7 @@ import type { DemoDataToggle } from "./dev/useDemoData.ts";
 import { useEncryptionLabels } from "./encryptionLabels.ts";
 import { useT } from "./i18n/index.ts";
 import { logStore } from "./log.ts";
+import { LookPicker } from "./LookPicker.tsx";
 import { mergeDocs } from "./merge.ts";
 import { serializeDoc } from "./migrations.ts";
 import { SelfHostedSettings } from "./SelfHostedSettings.tsx";
@@ -125,6 +126,44 @@ export function SettingsScreen({
           ariaLabel={t("settings.theme")}
           fullWidth
         />
+        {/* The looks for whichever sides can show: both while following
+            the device, one by day and one by night. */}
+        {settings.theme !== "dark" && (
+          <Labelled
+            label={
+              settings.theme === "system" ? t("look.day") : t("look.label")
+            }
+          >
+            <LookPicker
+              side="light"
+              value={settings.lookLight}
+              onChange={(look) => update("lookLight", look)}
+              label={
+                settings.theme === "system"
+                  ? t("look.dayHint")
+                  : t("look.label")
+              }
+            />
+          </Labelled>
+        )}
+        {settings.theme !== "light" && (
+          <Labelled
+            label={
+              settings.theme === "system" ? t("look.night") : t("look.label")
+            }
+          >
+            <LookPicker
+              side="dark"
+              value={settings.lookDark}
+              onChange={(look) => update("lookDark", look)}
+              label={
+                settings.theme === "system"
+                  ? t("look.nightHint")
+                  : t("look.label")
+              }
+            />
+          </Labelled>
+        )}
       </Section>
 
       {/* How a take is kept is not here: it varies between takes, so it is

@@ -11,16 +11,22 @@ import {
 } from "@niclaslindstedt/oss-framework/audio";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 
+import {
+  isDarkLook,
+  isLightLook,
+  type DarkLook,
+  type LightLook,
+} from "./look.ts";
 import type { RecordingKind } from "./types.ts";
 
-// The app's own (non-document) settings: the theme, how a take is kept, what
+// The app's own (non-document) settings: the theme and its looks, how a take is kept, what
 // an export defaults to, and the developer knobs. Per device on purpose —
 // which format your laptop exports in is not a fact about a recording — and
 // persisted to localStorage so a reload keeps your choices. Everything else
 // lives in the document (`types.ts`) or in the sync engine's own keys.
 
-/** The theme choice. Deliberately three values and no more — one light, one
- *  dark, and "follow the device". */
+/** The theme's mode: light, dark, or "follow the device". Which look each
+ *  side wears is `lookLight` / `lookDark` (`look.ts`). */
 export type ThemeChoice = "light" | "dark" | "system";
 
 /** The formats an export offers. The MP3 encoder rides an optional package
@@ -52,6 +58,9 @@ export type ExportRate = (typeof EXPORT_RATES)[number];
 
 export type AppSettings = {
   theme: ThemeChoice;
+  /** The look by day, and by night. */
+  lookLight: LightLook;
+  lookDark: DarkLook;
   /** How a take is kept: the browser's encoder, or the samples themselves. */
   recordingKind: RecordingKind;
   /** The encoder's target for a compact take. */
@@ -81,6 +90,8 @@ export type AppSettings = {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
+  lookLight: "studio",
+  lookDark: "studio",
   recordingKind: "compact",
   recordingBitrate: 128,
   voiceProcessing: false,
@@ -120,6 +131,10 @@ export function parseSettings(raw: string): AppSettings {
   >;
   return {
     theme: m.theme === "light" || m.theme === "dark" ? m.theme : "system",
+    lookLight: isLightLook(m.lookLight)
+      ? m.lookLight
+      : DEFAULT_SETTINGS.lookLight,
+    lookDark: isDarkLook(m.lookDark) ? m.lookDark : DEFAULT_SETTINGS.lookDark,
     recordingKind: m.recordingKind === "lossless" ? "lossless" : "compact",
     recordingBitrate: oneOf(
       BITRATES,

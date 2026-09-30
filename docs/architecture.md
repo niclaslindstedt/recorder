@@ -17,6 +17,8 @@ src/
     ├── takes.ts             a take finished: what the microphone handed back → a record + bytes
     ├── quality.ts           the four ways a take is kept (Memo, Standard, High, Lossless) and a minute's cost
     ├── levels.ts            Listening's readings: the room, the peak, the headroom, a verdict
+    ├── pacing.ts            the capture's frames paced to the display, so the meter moves every frame
+    ├── playhead.ts          the player's playhead as a smooth clock over the element's coarse time
     ├── export.ts            WAV / FLAC / MP3 out, through the framework's encoders; the size estimate
     ├── format.ts            durations, timers, day headings, container names
     ├── merge.ts             per-record, last-edit-wins document merge
@@ -28,6 +30,7 @@ src/
     ├── cloudHost.ts         the capability a host (iCloud) may offer
     ├── selfHosted.ts        the reader's own storage server as a backend
     ├── useAppSettings.ts    per-device settings, shape + clamping
+    ├── look.ts              the looks: the framework's palettes under the app's own names, by day and by night
     ├── useListen.ts         Listening: a capture that is never kept, recycled every five minutes
     ├── RecordScreen.tsx     Record, in four modes: Ready, Listening, Recording, Review
     ├── RecordParts.tsx      the pieces those modes are drawn from; the free-space estimate
@@ -40,6 +43,7 @@ src/
     ├── PlayerModal.tsx      the title, the folder chip, the shape, the transport, the note, the facts
     ├── ExportModal.tsx      the export sheet, and what the file will be
     ├── SettingsScreen.tsx   settings; SidePanel.tsx is the same on a desk
+    ├── LookPicker.tsx       the looks as cards, each drawn in its own colours
     ├── TopBar.tsx           the wordmark; sync, space and settings glyphs; the desk's two tabs
     ├── BottomNav.tsx        Record and Recordings, on the phone
     ├── dev/                 the demo library and the in-memory stores that serve it

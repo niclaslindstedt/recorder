@@ -142,6 +142,68 @@ export const en = {
     },
   },
 
+  // The looks (`look.ts`): each of the framework's palettes, named for what
+  // it feels like to work in rather than where it came from.
+  look: {
+    day: "By day",
+    night: "By night",
+    label: "Look",
+    dayHint: "What the app wears while the device is light.",
+    nightHint: "What the app wears while the device is dark.",
+    dark: {
+      studio: {
+        name: "Studio",
+        mood: "A quiet control room. Nothing competes with the sound.",
+      },
+      vinyl: {
+        name: "Vinyl",
+        mood: "Warm browns and amber, like a valve amp glowing.",
+      },
+      neon: {
+        name: "Neon",
+        mood: "City lights after midnight, blue and electric.",
+      },
+      velvet: {
+        name: "Velvet",
+        mood: "Stage curtains and a purple spotlight.",
+      },
+      dusk: {
+        name: "Dusk",
+        mood: "Rose and gold as the light goes down.",
+      },
+      fjord: {
+        name: "Fjord",
+        mood: "Cool northern blues, calm as still water.",
+      },
+      dreampop: {
+        name: "Dream pop",
+        mood: "Soft pastels on a night sky.",
+      },
+      lagoon: {
+        name: "Lagoon",
+        mood: "Deep teal and brass, like tape under water.",
+      },
+    },
+    light: {
+      studio: {
+        name: "Studio",
+        mood: "White walls and daylight. Clean and out of the way.",
+      },
+      paper: {
+        name: "Paper",
+        mood: "Cream stock and ink, like a songwriter's notebook.",
+      },
+      dawn: {
+        name: "Dawn",
+        mood: "Morning light on linen, soft and warm.",
+      },
+      watercolour: {
+        name: "Watercolour",
+        mood: "Pale washes and bright pigment.",
+      },
+    },
+  },
+
   // The Quality sheet: how the next take is kept.
   quality: {
     title: "Quality",

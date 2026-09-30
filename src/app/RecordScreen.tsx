@@ -31,6 +31,7 @@ import { formatSize, formatSpan, formatTimer } from "./format.ts";
 import { ClipIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { liveCtx } from "./ids.ts";
+import { paced } from "./pacing.ts";
 import { bytesPerSecond, presetFor, recordingTimeLeft } from "./quality.ts";
 import { QualitySheet } from "./QualitySheet.tsx";
 import {
@@ -120,7 +121,6 @@ export function RecordScreen({
   const [take, setTake] = useState<CaptureResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const [peaks, setPeaks] = useState<number[]>([]);
   const [clipped, setClipped] = useState(false);
   const [sheet, setSheet] = useState<"quality" | "destination" | null>(null);
 
@@ -135,19 +135,26 @@ export function RecordScreen({
       ? destination
       : null;
 
-  // The take's shape so far, a few times a second, and whether it has
-  // clipped at all — the warning under the meter stays once it has.
-  useEffect(() => {
-    let last = 0;
-    return recorder.subscribe((frame: CaptureFrame) => {
-      if (frame.meter.clipCount > 0) setClipped(true);
-      const at = performance.now();
-      if (at - last > 250) {
-        last = at;
-        setPeaks(frame.peaks.slice());
-      }
-    });
-  }, [recorder]);
+  // Whether the take has clipped at all — the warning under the meter
+  // stays once it has.
+  useEffect(
+    () =>
+      recorder.subscribe((frame: CaptureFrame) => {
+        if (frame.meter.clipCount > 0) setClipped(true);
+      }),
+    [recorder],
+  );
+
+  // What the meter and the picture draw from: the capture's frames, paced
+  // so every display frame shows something new (`pacing.ts`).
+  const recordFrames = useMemo(
+    () => paced(recorder.subscribe),
+    [recorder.subscribe],
+  );
+  const listenFrames = useMemo(
+    () => paced(listen.subscribe),
+    [listen.subscribe],
+  );
 
   const ticks = useMemo(() => bandTicks(layoutBands(BANDS, 2048, 48000)), []);
 
@@ -160,7 +167,6 @@ export function RecordScreen({
   useEffect(() => () => onCaptureChange(false), [onCaptureChange]);
 
   const start = useCallback(async () => {
-    setPeaks([]);
     setClipped(false);
     // Listening hands the microphone over: the level is already set.
     if (listen.on) await listen.stop();
@@ -199,7 +205,6 @@ export function RecordScreen({
         await onSave(recording, blob);
         onNotice(t("record.saved", { title: recording.title }));
         setTake(null);
-        setPeaks([]);
       } catch (err) {
         onNotice(
           t("record.failed", {
@@ -225,7 +230,6 @@ export function RecordScreen({
     setConfirmDiscard(false);
     if (take) setTake(null);
     else await recorder.cancel();
-    setPeaks([]);
     onNotice(t("record.discarded"));
   }, [take, recorder, onNotice, t]);
 
@@ -379,11 +383,11 @@ export function RecordScreen({
       <Visualizer
         kind={settings.visualizer}
         onKind={(next) => update("visualizer", next)}
-        subscribe={recorder.subscribe}
+        subscribe={recordFrames}
         running={state === "recording"}
         ticks={ticks}
         bands={BANDS}
-        overview={peaks}
+        overview
         className={visualizerSize}
       />
     );
@@ -463,7 +467,7 @@ export function RecordScreen({
       split(
         <>
           {picture}
-          {meter(recorder.subscribe)}
+          {meter(recordFrames)}
           {warning}
         </>,
         <>
@@ -476,7 +480,7 @@ export function RecordScreen({
       <>
         {timer}
         {picture}
-        {meter(recorder.subscribe)}
+        {meter(recordFrames)}
         {warning}
         {stats}
         {controls}
@@ -508,7 +512,7 @@ export function RecordScreen({
       <Visualizer
         kind={settings.visualizer}
         onKind={(next) => update("visualizer", next)}
-        subscribe={listen.subscribe}
+        subscribe={listenFrames}
         running
         ticks={ticks}
         bands={BANDS}
@@ -520,7 +524,7 @@ export function RecordScreen({
         <>
           {status}
           {picture}
-          {meter(listen.subscribe)}
+          {meter(listenFrames)}
         </>,
         <>
           <AmbientReadout ambient={listen.ambient} />
@@ -531,7 +535,7 @@ export function RecordScreen({
       <>
         {status}
         {picture}
-        {meter(listen.subscribe)}
+        {meter(listenFrames)}
         <AmbientReadout ambient={listen.ambient} />
         {/* Still changeable, no longer the subject — and on a small phone
             left to Ready, so the button stays in reach. */}

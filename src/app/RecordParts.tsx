@@ -311,7 +311,7 @@ export function TakeReview({
           aria-label={
             player.playing ? t("player.pause") : t("record.listenBack")
           }
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-page transition-transform active:scale-95 disabled:opacity-40"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-page-bg transition-transform active:scale-95 disabled:opacity-40"
         >
           {player.playing ? (
             <PauseIcon className="h-5 w-5" />
@@ -354,7 +354,7 @@ export function TakeReview({
       <button
         type="submit"
         disabled={saving}
-        className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-accent text-base font-bold text-page shadow-sm transition-transform active:scale-[0.98] disabled:opacity-50"
+        className="flex h-14 flex-1 items-center justify-center gap-2 rounded-full bg-accent text-base font-bold text-page-bg shadow-sm transition-transform active:scale-[0.98] disabled:opacity-50"
       >
         <CheckIcon className="h-5 w-5" />
         {saving ? t("record.saving") : t("common.save")}

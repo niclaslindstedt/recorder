@@ -17,7 +17,10 @@ import {
   SyncDetailsModal,
   SyncStatus,
 } from "@niclaslindstedt/oss-framework/sync";
-import { useApplyTheme } from "@niclaslindstedt/oss-framework/theme";
+import {
+  useApplyTheme,
+  useThemeColorMeta,
+} from "@niclaslindstedt/oss-framework/theme";
 
 import { createBlobStore, type BlobStore } from "./app/blobStore.ts";
 import {
@@ -37,7 +40,7 @@ import { SpacesIcon } from "./app/icons.tsx";
 import { useT } from "./app/i18n/index.ts";
 import { LibraryScreen, type LibraryView } from "./app/LibraryScreen.tsx";
 import { logStore } from "./app/log.ts";
-import { appearanceFor } from "./app/look.ts";
+import { appearanceFor, usePrefersDark } from "./app/look.ts";
 import { PlayerModal } from "./app/PlayerModal.tsx";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { RecordScreen } from "./app/RecordScreen.tsx";
@@ -84,7 +87,23 @@ const idbBackend = createIdbDocBackend();
 export function App() {
   const t = useT();
   const { settings, update } = useAppSettings();
-  useApplyTheme(useMemo(() => appearanceFor(settings.theme), [settings.theme]));
+  const prefersDark = usePrefersDark();
+  const appearance = useMemo(
+    () =>
+      appearanceFor(
+        {
+          theme: settings.theme,
+          lookLight: settings.lookLight,
+          lookDark: settings.lookDark,
+        },
+        prefersDark,
+      ),
+    [settings.theme, settings.lookLight, settings.lookDark, prefersDark],
+  );
+  useApplyTheme(appearance);
+  // The browser's own chrome (the address bar, the task switcher) wears the
+  // page's colour too.
+  useThemeColorMeta(appearance.theme);
 
   // Developer "Demo data" takeover: while the toggle is on, an in-memory
   // backend seeded with invented recordings replaces IndexedDB for the
@@ -325,7 +344,7 @@ export function App() {
   );
 
   return (
-    <div className="flex h-full flex-col bg-page text-fg">
+    <div className="flex h-full flex-col bg-page-bg text-fg">
       <TopBar
         active={tab}
         onOpenSettings={toggleSettings}
