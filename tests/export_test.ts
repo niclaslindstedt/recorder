@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, expect, it } from "vitest";
 
-import { exportFileName, exportPlan } from "../src/app/export.ts";
+import {
+  estimateExportBytes,
+  exportFileName,
+  exportPlan,
+} from "../src/app/export.ts";
 import { defaultTitle, finishTake } from "../src/app/takes.ts";
 import { DEFAULT_SETTINGS, parseSettings } from "../src/app/useAppSettings.ts";
 import { ctx, recording } from "./fixtures/helpers.ts";
@@ -155,5 +159,49 @@ describe("parseSettings", () => {
       skipSeconds: 15,
       exportMono: false,
     });
+  });
+});
+
+describe("estimateExportBytes", () => {
+  const take = { sampleRate: 48000, channels: 2, durationMs: 10_000 };
+  const base = { rate: 0, mono: false, wavDepth: 16, mp3Bitrate: 128 } as const;
+
+  it("sizes a WAV exactly, header included", () => {
+    expect(estimateExportBytes(take, { ...base, format: "wav" })).toBe(
+      44 + 480_000 * 2 * 2,
+    );
+    expect(
+      estimateExportBytes(take, {
+        ...base,
+        format: "wav",
+        mono: true,
+        wavDepth: 24,
+      }),
+    ).toBe(44 + 480_000 * 3);
+  });
+
+  it("follows the rate the file will have", () => {
+    expect(
+      estimateExportBytes(take, {
+        ...base,
+        format: "wav",
+        rate: 22050,
+        mono: true,
+      }),
+    ).toBe(44 + 220_500 * 2);
+  });
+
+  it("sizes an MP3 by its bitrate", () => {
+    expect(estimateExportBytes(take, { ...base, format: "mp3" })).toBe(160_000);
+  });
+
+  it("puts FLAC between MP3 and WAV", () => {
+    const flac = estimateExportBytes(take, { ...base, format: "flac" });
+    expect(flac).toBeLessThan(
+      estimateExportBytes(take, { ...base, format: "wav" }),
+    );
+    expect(flac).toBeGreaterThan(
+      estimateExportBytes(take, { ...base, format: "mp3" }),
+    );
   });
 });

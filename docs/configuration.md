@@ -40,16 +40,17 @@ override.
 
 ## Runtime settings
 
-Per device, under **Settings**, persisted in `localStorage` and clamped on read
-(`src/app/useAppSettings.ts`):
+Per device, persisted in `localStorage` and clamped on read
+(`src/app/useAppSettings.ts`). How a take is kept and voice processing are
+set in the Record screen's **Quality** sheet; the rest under **Settings**:
 
 | Setting                      | Values                                 | Default     |
 | ---------------------------- | -------------------------------------- | ----------- |
 | Theme                        | Light, Dark, Device                    | Device      |
-| Keep a take as               | Compact, Lossless                      | Compact     |
+| Quality: how a take is kept  | Compact, Lossless                      | Compact     |
 | Bitrate (compact)            | 64 · 96 · 128 · 192 · 256 · 320 kbit/s | 128         |
 | Voice processing             | on / off                               | off         |
-| Spectrum while recording     | on / off                               | on          |
+| Visualizer                   | Waveform, Spectrum, Spectrogram        | Waveform    |
 | Skip buttons move            | 5 · 10 · 15 · 30 s                     | 15          |
 | Export format                | WAV, FLAC, MP3                         | MP3         |
 | Export WAV depth             | 16 · 24 · 32-bit float                 | 16          |

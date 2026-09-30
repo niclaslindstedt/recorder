@@ -7,11 +7,16 @@ import { NAV_ICONS, TABS, type NavTab, type Tab } from "./BottomNav.tsx";
 import { AppMarkIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 
-// The bar across the top: the space's mark in the left corner, the app's
-// mark and name, the sync glyph, and the cog. On a desk the three
+// The bar across the top: the app's mark and name on the left, and on the
+// right, in order of how often they change, the sync glyph (only when a
+// backend is connected), the space glyph and the cog. On a desk the two
 // destinations sit here too, in the bottom bar's order — a row of tabs, not
-// a menubar. The cog stays on the right on both shells, because Settings is
-// a thing you do and leave rather than a place you are.
+// a menubar.
+//
+// The space and the cog are glyphs because they are set once and rarely
+// looked at again (docs/design.md, "The shell"). The space glyph is the
+// active space's own symbol in its own colour, so the button is the answer
+// to "which space am I in?" without a label taking the wordmark's room.
 
 type Props = {
   active: Tab;
@@ -20,7 +25,7 @@ type Props = {
   onSelect?: (tab: NavTab) => void;
   settingsOpen?: boolean;
   syncSlot?: ReactNode;
-  /** The space switcher, in the left corner. */
+  /** The space glyph, beside the cog. */
   spaceSlot?: ReactNode;
 };
 
@@ -37,7 +42,6 @@ export function TopBar({
   return (
     <header className="app-header relative flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-3 px-4 pb-3">
       <div className="flex min-w-0 shrink items-center gap-2">
-        {spaceSlot}
         <h1 className="app-wordmark flex min-w-0 items-center gap-2 text-accent">
           <AppMarkIcon className="h-6 w-6 shrink-0" />
           <span className="truncate">{t("app.name")}</span>
@@ -74,8 +78,9 @@ export function TopBar({
         </nav>
       )}
 
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1">
         {syncSlot}
+        {spaceSlot}
         <button
           type="button"
           onClick={onOpenSettings}

@@ -9,7 +9,6 @@ import {
   ConfirmDialog,
   DatabaseIcon,
   DownloadIcon,
-  FolderIcon,
   InfoIcon,
   MicIcon,
   PaletteIcon,
@@ -37,9 +36,11 @@ import {
   BITRATES,
   EXPORT_RATES,
   SKIP_SECONDS,
+  VISUALIZERS,
   type AppSettings,
   type ExportFormat,
   type ThemeChoice,
+  type VisualizerKind,
 } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
 import {
@@ -48,9 +49,10 @@ import {
   type SyncEngine,
 } from "./useSyncEngine.ts";
 
-// One scrolling page: appearance, how a take is kept, playback, what an
-// export defaults to, the spaces, the backend and its passphrase, the data,
-// the developer knobs, and About. Every knob reads and writes the caller's
+// One scrolling page of the things set once: appearance, the Record
+// screen's spectrum, playback, what an export defaults to, the backend and
+// its passphrase, the data, the developer knobs, and About. How a take is
+// kept is the Quality sheet's and the spaces are the top bar's glyph. Every knob reads and writes the caller's
 // settings store, so what is on screen is always what is persisted.
 
 type Props = {
@@ -59,8 +61,6 @@ type Props = {
   store: DocStore;
   sync: SyncEngine;
   demoData: DemoDataToggle;
-  spaceName: string;
-  onManageSpaces: () => void;
   onAdoptSpace: (slug: string) => void;
   onNotice: (message: string) => void;
   /** The update lifecycle, for About's "Check for updates". */
@@ -73,8 +73,6 @@ export function SettingsScreen({
   store,
   sync,
   demoData,
-  spaceName,
-  onManageSpaces,
   onAdoptSpace,
   onNotice,
   pwa,
@@ -122,59 +120,27 @@ export function SettingsScreen({
         />
       </Section>
 
+      {/* How a take is kept is not here: it varies between takes, so it is
+          the Record screen's Quality sheet (docs/design.md, "Settings"). */}
       <Section
         title={t("settings.recording")}
         icon={<MicIcon className="h-3.5 w-3.5" />}
       >
-        <Labelled label={t("settings.recordingKind")}>
-          <SegmentedControl<AppSettings["recordingKind"]>
-            value={settings.recordingKind}
-            options={[
-              { value: "compact", label: t("record.kind.compact") },
-              { value: "lossless", label: t("record.kind.lossless") },
-            ]}
-            onChange={(next) => update("recordingKind", next)}
-            ariaLabel={t("settings.recordingKind")}
+        <Labelled label={t("settings.visualizer")}>
+          <SegmentedControl<VisualizerKind>
+            value={settings.visualizer}
+            options={VISUALIZERS.map((v) => ({
+              value: v,
+              label: t(`visualizer.${v}`),
+            }))}
+            onChange={(next) => update("visualizer", next)}
+            ariaLabel={t("settings.visualizer")}
             fullWidth
           />
           <p className="text-xs text-muted">
-            {t(`settings.recordingKindHint.${settings.recordingKind}`)}
+            {t(`visualizer.hint.${settings.visualizer}`)}
           </p>
         </Labelled>
-        {settings.recordingKind === "compact" && (
-          <Labelled label={t("settings.recordingBitrate")}>
-            <SegmentedControl<string>
-              value={String(settings.recordingBitrate)}
-              options={BITRATES.map((b) => ({
-                value: String(b),
-                label: String(b),
-              }))}
-              onChange={(next) =>
-                update(
-                  "recordingBitrate",
-                  Number(next) as AppSettings["recordingBitrate"],
-                )
-              }
-              ariaLabel={t("settings.recordingBitrate")}
-              fullWidth
-            />
-            <p className="text-xs text-muted">
-              {t("export.kbps", { kbps: String(settings.recordingBitrate) })}
-            </p>
-          </Labelled>
-        )}
-        <ToggleRow
-          label={t("settings.voiceProcessing")}
-          hint={t("settings.voiceProcessingHint")}
-          checked={settings.voiceProcessing}
-          onChange={(next) => update("voiceProcessing", next)}
-        />
-        <ToggleRow
-          label={t("settings.showSpectrum")}
-          hint={t("settings.showSpectrumHint")}
-          checked={settings.showSpectrum}
-          onChange={(next) => update("showSpectrum", next)}
-        />
       </Section>
 
       <Section
@@ -298,18 +264,6 @@ export function SettingsScreen({
           checked={settings.exportMono}
           onChange={(next) => update("exportMono", next)}
         />
-      </Section>
-
-      <Section
-        title={t("settings.spaces")}
-        icon={<FolderIcon className="h-3.5 w-3.5" />}
-      >
-        <p className="text-xs text-muted">{t("settings.spacesHint")}</p>
-        <p className="text-sm text-fg">
-          {t("library.space")}:{" "}
-          <span className="font-medium text-fg-bright">{spaceName}</span>
-        </p>
-        <Button onClick={onManageSpaces}>{t("settings.manageSpaces")}</Button>
       </Section>
 
       <Section

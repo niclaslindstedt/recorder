@@ -10,13 +10,13 @@
 
 ## Recording
 
-| Symptom                                     | Fix                                                                                                                                                                               |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "The microphone is off for this app"        | The site (or the app, on a phone) was refused the microphone. Allow it in the browser's site settings, or in the phone's Settings for the app, and press Record again.            |
-| The meter moves but the recording is silent | Another app holds the microphone exclusively, or the device picked a different input. Close the other app; on a desktop, check the system's input device.                         |
-| The **CLIP** lamp keeps latching            | The sound is louder than the microphone can take. Move it further away, speak more softly, or turn voice processing on under **Settings → Recording** to let the device level it. |
-| Recordings are too quiet                    | Aim for peaks between −12 and −6 dB. Voice processing adds automatic gain; an export can be normalised in another program, but the app itself never alters what was recorded.     |
-| A lossless take is huge                     | About four megabytes a minute is what "every sample" costs. Compact takes are under a megabyte a minute; the setting is **Settings → Recording → Keep a take as**.                |
+| Symptom                                     | Fix                                                                                                                                                                                                                                                   |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "The microphone is off for this app"        | The site (or the app, on a phone) was refused the microphone. Allow it in the browser's site settings, or in the phone's Settings for the app, and press Record again.                                                                                |
+| The meter moves but the recording is silent | Another app holds the microphone exclusively, or the device picked a different input. Close the other app; on a desktop, check the system's input device.                                                                                             |
+| The clip lamp keeps latching                | The sound is louder than the microphone can take. Move it further away, speak more softly, or turn voice processing on in the Record screen's **Quality** sheet to let the device level it.                                                           |
+| Recordings are too quiet                    | Press **Listen** before a take and move until the verdict says **Good level** (peaks between −18 and −6 dB). Voice processing adds automatic gain; an export can be normalised in another program, but the app itself never alters what was recorded. |
+| A lossless take is huge                     | About four megabytes a minute is what "every sample" costs. A Standard take is under a megabyte a minute; choose it in the Record screen's **Quality** sheet.                                                                                         |
 
 ## The library and sync
 

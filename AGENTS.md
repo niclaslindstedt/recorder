@@ -167,14 +167,17 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the titles taken.
 - `src/app/export.ts` — the way out: `exportFileName`, `exportPlan` (the
   channel count and the rate the file ends up with, MP3's nine rates
-  included), `encodeExport` (decode → mono → resample → WAV / FLAC / MP3; the
+  included), `estimateExportBytes` (what the export sheet says the file will
+  weigh), `encodeExport` (decode → mono → resample → WAV / FLAC / MP3; the
   MP3 encoder is fetched on first use through the framework's `audio/mp3`
   entry) and `exportRecording`, which hands the file to the framework's
   `saveFile` — a download on the web, the share sheet in the phone app.
   `shareOriginal` shares the take as it is.
 - `src/app/format.ts` — durations (`m:ss`, `h:mm:ss`), the recording timer's
-  tenths, the list's "Today / Yesterday / Friday / Feb 1", and the details
-  line's container, rate and size. Pure; the locale is a parameter.
+  tenths, the list's day headings ("Today / Yesterday / Friday / Feb 1", and
+  `groupByDay` for the runs under them), "Room for" in rough words
+  (`formatSpan`), and the facts line's container, rate and size. Pure; the
+  locale is a parameter.
 - `src/app/merge.ts` — the per-record, last-edit-wins document merge that
   both sync and backup restore run through. A tombstone is an edit like any
   other, so a deletion wins over an older copy and a later edit wins over a
@@ -227,33 +230,75 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   everything itself, so nothing is added there. Suspended wholesale while demo
   data has taken over storage. `listSpaces` reads the spaces a backend holds.
 - `src/app/useAppSettings.ts` — the per-device settings: the theme, how a
-  take is kept (compact at a bitrate, or lossless), voice processing, the
-  spectrum, the skip length, the export defaults, and the developer knobs.
-  Shape plus clamping, in one place.
+  take is kept (compact at a bitrate, or lossless) and voice processing —
+  both chosen on the Record screen's Quality sheet, not in Settings — the
+  visualizer (`wave`, `spectrum` or `spectrogram`), the skip length, the
+  export defaults, and the developer knobs. Shape plus clamping, in one
+  place.
 - `src/app/dev/` — the developer "Demo data" switch: a library of invented
   recordings (`demoData.ts`, pure, every date an offset from `now`, the audio
   short tones written as WAV by the framework's own encoder so every row
   plays), the in-memory document and blob stores that serve them, and the
   never-persisted flag. Behind `import()`.
-- `src/app/RecordScreen.tsx`, `LibraryScreen.tsx`, `FoldersScreen.tsx`,
-  `SettingsScreen.tsx` — the four screens. Three are bottom-nav tabs; Settings
+- `src/app/RecordScreen.tsx`, `LibraryScreen.tsx`, `SettingsScreen.tsx` —
+  the three screens. Record and Recordings are the two destinations; Settings
   is reached from the cog on the top bar, because it is a thing you do and
-  leave rather than a place you are. Record is the timer, the framework's
-  `LevelMeter` (with its clip lamp), `SpectrumBars`, the take's shape so far
-  and the one button; a take ends in the naming sheet (title, folder, Save or
-  Discard — nothing is written until Save). Recordings is the list, filtered
-  by All / a folder / Favorites / Recently deleted and by a search; a tap
-  opens the player, a swipe deletes, a hold offers the rest. Folders is the
-  tree with counts, arranged by hand.
-- `src/app/PlayerModal.tsx` — the recording's shape with the playhead over
-  it (the framework's `Waveform`, seekable), the transport, the speed, the
-  title and the note, and the facts about the take. `ExportModal.tsx` is the
-  export sheet; it starts on the settings' defaults and writes the choice
-  back to them.
+  leave rather than a place you are. Record is an instrument in four modes
+  (`docs/design.md`, "Record"): **Ready** (the Quality and Save-to buttons,
+  the "Check your level" card, the latest recordings, the big button),
+  **Listening** (the microphone open and nothing kept: the visualizer, the
+  big meter, Room / Peak / Headroom and a verdict in words), **Recording**
+  (the timer, the visualizer with the whole take along its foot, the meter
+  with its clip lamp, and the take's four figures — Peak, Clips, Size, Room
+  for), and **Review** (inline: the title, a listen-back, the facts, Save
+  to, the big Save and a Discard glyph that asks first — nothing is written
+  until Save). While a take runs or waits for review, the bottom bar is
+  hidden and the swipe and the tabs are off. Recordings is the scope button
+  (where you are and how many; it opens the folder picker), the search
+  glyph, and the list under day headings; a tap opens the player, a swipe
+  deletes, a hold offers the rest.
+- `src/app/RecordParts.tsx` — the pieces the Record screen's modes are
+  drawn from (the choice buttons, the listen card, the ambient readout, the
+  take's figures, the review) and `useFreeBytes`, the browser's own estimate
+  of its free space behind "Room for" (`navigator.storage.estimate`, read on
+  the device, sent nowhere). `Visualizer.tsx` is the card that fills the
+  stage while listening and recording: a scrolling waveform on the meter's
+  decibel scale, the framework's spectrum bars, or a spectrogram, switched
+  in its corner.
+- `src/app/useListen.ts` — Listening: a throwaway capture through the
+  framework's `useRecorder`, on the same path a take uses, cancelled on Stop
+  and on leaving, started over every five minutes (`LISTEN_RECYCLE_MS`) so
+  it never holds more than that in memory. Nothing it hears is kept.
+  `src/app/levels.ts` reads the last four seconds of meter readings as the
+  room's noise floor, the peak, the headroom and a verdict on the
+  framework's own zones. Pure and clock-free.
+- `src/app/quality.ts` — the four presets (Memo 64, Standard 128, High 256
+  kbit/s, Lossless) over `recordingKind` / `recordingBitrate`, and what a
+  minute of each costs; pure, so the Record screen's button and
+  `QualitySheet.tsx`'s ticked row never disagree. The sheet also carries the
+  bitrate fine-tune and voice processing.
+- `src/app/FolderPicker.tsx` — the one folder picker, in two modes.
+  _Browse_ is the library's scope: All, Favorites, the tree with counts and
+  each folder's ⋯ menu (rename, new folder inside, move, move up / down,
+  delete), New folder, Recently deleted — everything a folders page would
+  do. _Choose_ is Move and a take's destination: No folder, the tree, New
+  folder — and a folder made there is chosen. `SearchSheet.tsx` is search
+  as a sheet, across the whole space's titles, notes and folder names.
+  `RecordingRow.tsx` is a recording as a row (thumbnail, title and star, a
+  quiet line, the length right-aligned) wherever one is listed.
+- `src/app/PlayerModal.tsx` — the title editable in place, the favourite
+  star, the date with the folder as a chip that opens the picker to move it,
+  the recording's shape with the playhead over it (the framework's
+  `Waveform`, seekable), the transport with a speed button that steps, the
+  note, the facts always shown, Export and a Delete glyph.
+  `ExportModal.tsx` is the export sheet; it says what the file will be
+  (roughly how large, the rate, the channels, the format) before it is
+  made, starts on the settings' defaults and writes the choice back to them.
 - `src/app/TopBar.tsx`, `BottomNav.tsx` — the shell's two bars. The top bar
-  carries the space switcher in its left corner, the wordmark, the sync glyph
-  and the cog, and on the desk the three destinations as tabs; the bottom
-  bar is the phone's.
+  carries the wordmark on the left and, on the right, the sync glyph (only
+  with a backend connected), the space glyph (the active space's own symbol
+  and colour; it opens the spaces sheet) and the cog, and on the desk the
+  two destinations as tabs; the bottom bar is the phone's.
 - `src/app/SidePanel.tsx` — Settings on the desk, over the right-hand edge.
 - `src/app/i18n/en.ts` — every user-facing string.
 - `src/output.ts` — the central output module (semantic log helpers over the
@@ -410,6 +455,10 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 | A change to the tree, or an edit to a record | `src/app/folders.ts` (pure, tested in `tests/folders_test.ts`) + the store method in `useDocStore.ts`                                                                             |
 | A change to what is deleted, or when         | `src/app/types.ts` (`TRASH_DAYS`, `TOMBSTONE_DAYS`, `wantedFiles`, `purgeAfter`) — never a record removed outright, see "A deletion is a tombstone"                               |
 | A new export format or quality               | `src/app/export.ts` (tested) + `useAppSettings.ts` (the default) + `ExportModal.tsx` + `SettingsScreen.tsx` — the encoder itself is the framework's                               |
+| A preset for how a take is kept              | `src/app/quality.ts` (pure, tested in `tests/quality_test.ts`) + `QualitySheet.tsx` — the capture reads `recordingKind` / `recordingBitrate`, nothing else                        |
+| What Listening reads, or its verdict         | `src/app/levels.ts` (pure, tested in `tests/levels_test.ts`) — the zones are the framework's `meterTone`, never a second set                                                      |
+| Anything done to a folder from the UI        | `src/app/FolderPicker.tsx` (browse mode's ⋯ menu, or New folder) over the edits in `folders.ts` — there is no folders page                                                        |
+| Where an element goes, or a screen's layout  | `docs/design.md` first — the answer should be derivable from it, and if it isn't, it is added there before the code                                                               |
 | A change to the meter, the spectrum, capture | The framework's `audio` module, not here — this app draws what it is handed                                                                                                       |
 | A new setting                                | `src/app/useAppSettings.ts` (shape + clamping, tested) + a `Section` in `SettingsScreen.tsx`                                                                                      |
 | A new screen                                 | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                         |
@@ -427,8 +476,9 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
-`migrations`, `takes`, `export`, `format`, `useAppSettings`'s parser,
-`shortcuts`, `cloudHost`, `selfHosted`, `demoData`), which is where the app's
+`migrations`, `takes`, `export`, `format`, `levels`, `quality`,
+`useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
+`demoData`), which is where the app's
 real logic is. `native_icloud_test.ts` pins the strings the wrapper and the app
 have to agree on and guards the import discipline that lets it import from
 `native/` at all; `native_auth_session_test.ts`, `native_save_file_test.ts` and
@@ -479,19 +529,20 @@ with `doc: <slug>` in the front matter; the collator renders that as a
 
 ## Documentation sync points
 
-| If you change…                    | Update…                                                                                                                                         |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| The `Recording` or `Folder` shape | `docs/architecture.md`'s data shape, `docs/features/library.md`, and the validation in `migrations.ts`                                          |
-| `takes.ts` or `RecordScreen.tsx`  | `docs/features/record.md` and the README's Usage table                                                                                          |
-| `export.ts`                       | `docs/features/export.md` and the README's Usage table                                                                                          |
-| The sync engine or the merge      | `docs/sync.md`, `docs/features/cloud-sync.md`                                                                                                   |
-| `cloudHost.ts` or the bridge      | `docs/sync.md`, `docs/features/native-app.md`, `native/README.md`, and `tests/native_icloud_test.ts` — which pins the strings both halves share |
-| Anything under `native/`          | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`                                                                        |
-| A `VITE_*` variable               | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it                                  |
-| A screen's behaviour              | The matching `docs/features/*.md` and the README's Usage table                                                                                  |
-| The navigation (nav or top bar)   | `docs/architecture.md`'s tree and the README's Usage tables                                                                                     |
-| Module layout                     | The "Where new code goes" table above and `docs/architecture.md`                                                                                |
-| A make target or script           | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                                                       |
+| If you change…                                   | Update…                                                                                                                                         |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| The `Recording` or `Folder` shape                | `docs/architecture.md`'s data shape, `docs/features/library.md`, and the validation in `migrations.ts`                                          |
+| `takes.ts` or `RecordScreen.tsx`                 | `docs/features/record.md` and the README's Usage table                                                                                          |
+| `export.ts`                                      | `docs/features/export.md` and the README's Usage table                                                                                          |
+| The sync engine or the merge                     | `docs/sync.md`, `docs/features/cloud-sync.md`                                                                                                   |
+| `cloudHost.ts` or the bridge                     | `docs/sync.md`, `docs/features/native-app.md`, `native/README.md`, and `tests/native_icloud_test.ts` — which pins the strings both halves share |
+| Anything under `native/`                         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`                                                                        |
+| A `VITE_*` variable                              | `docs/configuration.md`, `src/vite-env.d.ts`, the README's Configuration table, and the workflows that pass it                                  |
+| A screen's behaviour                             | The matching `docs/features/*.md` and the README's Usage table                                                                                  |
+| A screen's layout, or where an element is placed | `docs/design.md` — the design reference, and the why behind every placement; its sketches and its "What was removed" table                      |
+| The navigation (nav or top bar)                  | `docs/architecture.md`'s tree and the README's Usage tables                                                                                     |
+| Module layout                                    | The "Where new code goes" table above and `docs/architecture.md`                                                                                |
+| A make target or script                          | `CONTRIBUTING.md`, the README's Quick start, and this file's command list                                                                       |
 
 ## Parity and cross-cutting rules
 
@@ -499,18 +550,28 @@ with `doc: <slug>` in the front matter; the collator renders that as a
   runtime is in place so adding a language is one `loaders` entry.
 - **Two themes only** — one light, one dark, plus "follow the device". The
   framework ships a dozen palettes; this app deliberately exposes none of them.
-- **Three destinations, no sidebar, no drawer.** Record, Recordings and
-  Folders on the bottom bar, in that order, a swipe moves along it; on the
-  desk the same three are tabs on the top bar. Things you do and then leave
-  belong on the top bar, which is where Settings and the space switcher are.
-  A new _action_ is a top-bar button, not a tab.
+- **Two destinations, no sidebar, no drawer.** Record and Recordings on the
+  bottom bar, in that order, a swipe moves between them; on the desk the same
+  two are tabs on the top bar. They are the two places a person _is_: at the
+  microphone, or among what it made. Folders are not a third place — a
+  folder is a label on a recording, so it is filed, switched and managed from
+  the library's scope picker and from the recording itself (see
+  `docs/design.md`). Things you do and then leave belong on the top bar as
+  glyphs, which is where the sync glyph, the space glyph and Settings are. A
+  new _action_ is a top-bar button, not a tab. While a take is recording or
+  waiting in Review, the bottom bar is hidden and the swipe and the tabs are
+  off — the Record screen is the only place on offer until Save or Discard.
 - **Nothing is written until Save.** A take lives in memory from Stop to
   Save; Discard throws it away and nothing was ever anywhere. Never write a
-  take on Stop "to be safe".
+  take on Stop "to be safe". Listening keeps nothing at all: it is a capture
+  that is only ever cancelled, never saved, started over every few minutes
+  so it holds no more than that in memory — never add a way to keep what it
+  heard. The microphone opens only on Listen or Record, never at launch.
 - **The clip lamp is never the only signal.** The meter's red zone, the
-  latched CLIP word, its hatched texture and the status region under it are
-  four ways of saying one thing; a change that drops one of them drops it for
-  somebody.
+  latched clip lamp (on the Record screen a glyph — a wave with its tops cut
+  flat, `ClipIcon` and `.app-meter-big` — rather than a word), the "Too
+  loud" warning in words and the status region under the meter are four ways
+  of saying one thing; a change that drops one of them drops it for somebody.
 - **A space is a container, not a filter.** Spaces have their own documents
   and their own files on a backend; a folder is a label inside one. Moving a
   recording between spaces is not offered, on purpose — it would be a copy

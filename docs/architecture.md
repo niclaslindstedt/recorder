@@ -15,8 +15,10 @@ src/
     ├── types.ts             the model: Recording, Folder, AppData; the trash rules
     ├── folders.ts           the tree read and edited, as pure functions
     ├── takes.ts             a take finished: what the microphone handed back → a record + bytes
-    ├── export.ts            WAV / FLAC / MP3 out, through the framework's encoders
-    ├── format.ts            durations, timers, "Today / Yesterday", container names
+    ├── quality.ts           the four ways a take is kept (Memo, Standard, High, Lossless) and a minute's cost
+    ├── levels.ts            Listening's readings: the room, the peak, the headroom, a verdict
+    ├── export.ts            WAV / FLAC / MP3 out, through the framework's encoders; the size estimate
+    ├── format.ts            durations, timers, day headings, container names
     ├── merge.ts             per-record, last-edit-wins document merge
     ├── migrations.ts        parse / normalise / serialize — the only module that trusts bytes
     ├── useDocStore.ts       one document per space, in IndexedDB, over a DocBackend seam
@@ -26,19 +28,42 @@ src/
     ├── cloudHost.ts         the capability a host (iCloud) may offer
     ├── selfHosted.ts        the reader's own storage server as a backend
     ├── useAppSettings.ts    per-device settings, shape + clamping
-    ├── RecordScreen.tsx     the meter, the spectrum, the timer, the button, the naming sheet
-    ├── LibraryScreen.tsx    the list, the search, favorites, the trash
-    ├── FoldersScreen.tsx    the tree, arranged by hand
-    ├── PlayerModal.tsx      the shape, the transport, the note, the facts
-    ├── ExportModal.tsx      the export sheet
+    ├── useListen.ts         Listening: a capture that is never kept, recycled every five minutes
+    ├── RecordScreen.tsx     Record, in four modes: Ready, Listening, Recording, Review
+    ├── RecordParts.tsx      the pieces those modes are drawn from; the free-space estimate
+    ├── Visualizer.tsx       the waveform, spectrum or spectrogram card
+    ├── QualitySheet.tsx     how the next take is kept, and voice processing
+    ├── LibraryScreen.tsx    the scope, the search glyph, the list under day headings
+    ├── FolderPicker.tsx     the one folder picker: the library's scope, Move, a take's destination
+    ├── SearchSheet.tsx      search across the space's titles, notes and folder names
+    ├── RecordingRow.tsx     a recording as a row, wherever one is listed
+    ├── PlayerModal.tsx      the title, the folder chip, the shape, the transport, the note, the facts
+    ├── ExportModal.tsx      the export sheet, and what the file will be
     ├── SettingsScreen.tsx   settings; SidePanel.tsx is the same on a desk
-    ├── TopBar.tsx, BottomNav.tsx
+    ├── TopBar.tsx           the wordmark; sync, space and settings glyphs; the desk's two tabs
+    ├── BottomNav.tsx        Record and Recordings, on the phone
     ├── dev/                 the demo library and the in-memory stores that serve it
     └── i18n/en.ts           every user-facing string
 ```
 
 Dependency direction: screens → stores → framework. Nothing imports from the
 framework's internals, only its published subpaths.
+
+## The screens
+
+Two destinations, **Record** and **Recordings**: the bottom bar on a phone
+(a swipe pages between them), tabs on the top bar on a desk. The top bar
+carries the wordmark and, on the right, the sync glyph (only with a backend
+connected), the space glyph (the active space's own symbol in its own
+colour, which opens the spaces sheet) and the cog, which opens Settings —
+a side panel on a desk. There is no folders page: folders are managed from
+the library's scope, in `FolderPicker.tsx`.
+
+Record is one screen in four modes — Ready, Listening, Recording, Review —
+rather than a screen with sheets over it. While a take is recording or
+waiting in Review, the bottom bar is hidden and the swipe and the desk's
+tabs are off, because leaving would end the take. What each screen shows,
+and why each element is where it is, is [`design.md`](design.md).
 
 ## The framework's share
 
@@ -48,13 +73,17 @@ is its first consumer of the `audio` module:
 - **Capture** — `getUserMedia`, the analyser, the worklet tap, and the two
   ways of keeping what comes in: the browser's `MediaRecorder` (a _compact_
   take) or the samples themselves (a _lossless_ one). `useRecorder` is the
-  hook the Record screen drives.
+  hook the Record screen drives — for a take, and for Listening, which is a
+  take that is only ever cancelled (`useListen.ts`).
 - **The meter** — the level in dBFS with a peak that holds and falls, and the
   clip detector: three consecutive samples at or above 0.985 of full scale
   is a clip, and the lamp latches for a moment and a half so a single
   transient is not missed. The app draws it with `LevelMeter`.
 - **The spectrum** — the analyser's bins folded onto log-spaced bands with a
-  little smoothing, drawn with `SpectrumBars`.
+  little smoothing, drawn with `SpectrumBars`. The Record screen's other two
+  views, the scrolling waveform and the spectrogram, are the app's own
+  (`Visualizer.tsx`), drawn from the same frames on the meter's own scale
+  and zones.
 - **The encoders** — WAV (16, 24 or 32-bit float), FLAC (fixed predictors and
   Rice coding, three levels), and MP3 through an optional entry
   (`audio/mp3`) that pulls the encoder package on first use. Decoding goes

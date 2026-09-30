@@ -11,8 +11,11 @@ import "@fontsource/inter/latin-ext-400.css";
 import "@fontsource/inter/latin-700.css";
 import "@fontsource/inter/latin-ext-700.css";
 
-// The wordmark's family, and the one thing in the app that is not Inter
-// (see `TopBar.tsx`). Bold only, in the two Latin subsets.
+// The wordmark's family (bold, in the two Latin subsets), and the figures'
+// (`font-figures` in styles.css): the timer at 300, every other number — a
+// length, a level, a size — at 400.
+import "@fontsource/jetbrains-mono/latin-300.css";
+import "@fontsource/jetbrains-mono/latin-400.css";
 import "@fontsource/jetbrains-mono/latin-700.css";
 import "@fontsource/jetbrains-mono/latin-ext-700.css";
 

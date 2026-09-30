@@ -2,11 +2,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  dayKey,
   formatContainer,
   formatDay,
   formatDuration,
   formatRate,
+  formatSpan,
   formatTimer,
+  groupByDay,
 } from "../src/app/format.ts";
 
 describe("durations", () => {
@@ -57,5 +60,55 @@ describe("names", () => {
     expect(formatRate(48000)).toBe("48 kHz");
     expect(formatRate(44100)).toBe("44.1 kHz");
     expect(formatRate(0)).toBe("—");
+  });
+});
+
+describe("groupByDay", () => {
+  const at = (d: number, h: number) => ({
+    createdAt: new Date(2026, 2, d, h).toISOString(),
+  });
+
+  it("keys a local day, not a UTC one", () => {
+    expect(dayKey(new Date(2026, 2, 10, 0, 5).toISOString())).toBe(
+      "2026-03-10",
+    );
+    expect(dayKey(new Date(2026, 2, 10, 23, 55).toISOString())).toBe(
+      "2026-03-10",
+    );
+  });
+
+  it("runs a newest-first list into one group per day", () => {
+    const list = [at(10, 15), at(10, 9), at(9, 23), at(6, 12), at(6, 8)];
+    const groups = groupByDay(list);
+    expect(groups.map((g) => g.key)).toEqual([
+      "2026-03-10",
+      "2026-03-09",
+      "2026-03-06",
+    ]);
+    expect(groups.map((g) => g.items.length)).toEqual([2, 1, 2]);
+  });
+
+  it("has no group for an empty list", () => {
+    expect(groupByDay([])).toEqual([]);
+  });
+});
+
+describe("formatSpan", () => {
+  const units = { hours: "h", minutes: "min" };
+  const min = 60_000;
+
+  it("says minutes under an hour, never zero", () => {
+    expect(formatSpan(45 * min, units)).toBe("45 min");
+    expect(formatSpan(10_000, units)).toBe("1 min");
+    expect(formatSpan(-5, units)).toBe("1 min");
+  });
+
+  it("says hours and minutes under ten hours", () => {
+    expect(formatSpan(200 * min, units)).toBe("3 h 20 min");
+    expect(formatSpan(120 * min, units)).toBe("2 h");
+  });
+
+  it("rounds to hours past ten", () => {
+    expect(formatSpan((23 * 60 + 41) * min, units)).toBe("23 h");
   });
 });

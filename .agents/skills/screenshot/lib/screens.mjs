@@ -43,6 +43,19 @@ async function player(page, h) {
   await h.settle();
 }
 
+async function scope(page, h, name) {
+  await h.tab("Recordings");
+  await page.getByRole("button", { name: /^Showing / }).click();
+  const sheet = page.getByRole("dialog").last();
+  await sheet.getByRole("button", { name: "New folder" }).waitFor();
+  if (name) {
+    // A row's name is its label and its count.
+    await sheet.getByRole("button", { name: new RegExp(`^${name}`) }).click();
+    await sheet.waitFor({ state: "detached" });
+  }
+  await h.settle();
+}
+
 async function recording(page, h) {
   await page.getByRole("button", { name: "Start recording" }).click();
   await page.getByRole("button", { name: "Stop", exact: true }).waitFor();
@@ -58,20 +71,37 @@ export const SCREENS = {
       await h.settle();
     },
   },
+  listening: {
+    label: "Listening",
+    async stage(page, h) {
+      await page.getByRole("button", { name: "Listen", exact: true }).click();
+      await page.getByText("Listening", { exact: true }).waitFor();
+      // The fake microphone plays a tone; give the readings a moment.
+      await h.settle(1500);
+    },
+  },
+  quality: {
+    label: "Quality sheet",
+    async stage(page, h) {
+      await page.getByRole("button", { name: /^Quality: / }).click();
+      await page
+        .getByRole("dialog")
+        .last()
+        .getByRole("radio", { name: /Standard/ })
+        .waitFor();
+      await h.settle();
+    },
+  },
   recording: {
     label: "Recording",
     stage: recording,
   },
-  naming: {
-    label: "Naming sheet",
+  review: {
+    label: "Take review",
     async stage(page, h) {
       await recording(page, h);
       await page.getByRole("button", { name: "Stop", exact: true }).click();
-      await page
-        .getByRole("dialog")
-        .last()
-        .getByRole("button", { name: "Save", exact: true })
-        .waitFor();
+      await page.getByRole("button", { name: "Save", exact: true }).waitFor();
       await h.settle();
     },
   },
@@ -85,31 +115,22 @@ export const SCREENS = {
   },
   "library-favorites": {
     label: "Favorites",
-    async stage(page, h) {
-      await h.tab("Recordings");
-      await page
-        .getByRole("button", { name: "Favorites", exact: true })
-        .click();
-      await h.settle();
-    },
+    stage: (page, h) => scope(page, h, "Favorites"),
   },
   "library-trash": {
     label: "Recently deleted",
-    async stage(page, h) {
-      await h.tab("Recordings");
-      await page
-        .getByRole("button", { name: "Recently deleted", exact: true })
-        .click();
-      await h.settle();
-    },
+    stage: (page, h) => scope(page, h, "Recently deleted"),
   },
   "library-search": {
     label: "Search",
     async stage(page, h) {
       await h.tab("Recordings");
-      await page.getByRole("textbox", { name: "Search" }).fill("Mira");
+      await page.getByRole("button", { name: "Search", exact: true }).click();
+      await page.getByRole("searchbox", { name: "Search" }).fill("Mira");
       await page
-        .getByRole("button", { name: "Interview: Mira, part 2" })
+        .getByRole("dialog")
+        .last()
+        .getByRole("button", { name: /Interview: Mira, part 2/ })
         .waitFor();
       await h.settle();
     },
@@ -132,11 +153,8 @@ export const SCREENS = {
     },
   },
   folders: {
-    label: "Folders",
-    async stage(page, h) {
-      await h.tab("Folders");
-      await h.settle();
-    },
+    label: "Folder picker",
+    stage: (page, h) => scope(page, h),
   },
   settings: {
     label: "Settings",
@@ -154,10 +172,7 @@ export const SCREENS = {
   spaces: {
     label: "Spaces",
     async stage(page, h) {
-      await page
-        .getByRole("button", { name: "Manage spaces", exact: true })
-        .first()
-        .click();
+      await page.getByRole("button", { name: /^Space: / }).click();
       await page.getByRole("dialog").last().waitFor();
       await h.settle();
     },
@@ -174,7 +189,7 @@ export const SCREEN_SETS = {
     "player",
     "export",
   ],
-  "record-flow": ["record", "recording", "naming"],
+  "record-flow": ["record", "listening", "quality", "recording", "review"],
   all: Object.keys(SCREENS),
 };
 

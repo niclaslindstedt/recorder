@@ -48,8 +48,8 @@ something needs judging up close.
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `device`  | `phone` 440×956 · `phone-small` 375×667 · `phone-landscape` 956×440 · `tablet-mini` 744×1133 · `tablet` 1032×1376 · `tablet-landscape` 1376×1032 · `desktop` 1440×900 · `desktop-small` 1280×720 · `desktop-wide` 1920×1080 | `phone,tablet,desktop`                   |
 | `theme`   | `light` · `dark` · `system-light` · `system-dark` (theme "Device", the device leaning either way)                                                                                                                           | `light,dark`                             |
-| `variant` | `default` · `lossless` · `no-spectrum` · `voice-processing` · `export-wav` · `export-flac` · `dev` — the settings presets in `lib/variations.mjs`                                                                           | `default`                                |
-| `screen`  | `record` · `recording` · `naming` · `library` · `library-favorites` · `library-trash` · `library-search` · `player` · `export` · `folders` · `settings` · `settings-storage` · `spaces`                                     | `record,library,player,folders,settings` |
+| `variant` | `default` · `lossless` · `spectrum` · `spectrogram` · `voice-processing` · `export-wav` · `export-flac` · `dev` — the settings presets in `lib/variations.mjs`                                                              | `default`                                |
+| `screen`  | `record` · `listening` · `quality` · `recording` · `review` · `library` · `library-favorites` · `library-trash` · `library-search` · `player` · `export` · `folders` · `settings` · `settings-storage` · `spaces`           | `record,library,player,folders,settings` |
 
 Sets: `--device phones|tablets|desktops|all`, `--theme all`, `--variant all`,
 `--screen library-flow|record-flow|all`. The shell a width gets is
@@ -76,7 +76,7 @@ px), so a laptop frame is as tall on the sheet as a phone frame is wide.
   a choice does — the settings key in localStorage, seeded before the page
   loads. Nothing else is injected: no DOM surgery, no fake state.
 - **The microphone is a fake device** (Chromium's `--use-fake-device-for-media-stream`,
-  a loud tone), so `recording` and `naming` really record. The tone clips,
+  a loud tone), so `listening`, `recording` and `review` really hear something. The tone clips,
   which is why those frames show the clip lamp and the warning: a true frame
   of a hot signal, not a bug.
 - **Motion is off** (`prefers-reduced-motion` plus zero-length transitions), so
@@ -111,6 +111,18 @@ px), so a laptop frame is as tall on the sheet as a phone frame is wide.
   change is visual.
 - This is a development tool. The store's screenshots (Apple's rasters, the
   real status bar, captions) are the fleet's store harness, not this.
+
+## A frame that stalls at boot
+
+Now and then (about one frame in a hundred on a busy run) headless Chromium's
+renderer stalls at first paint, waiting on a system-font lookup its font
+service never answers — the page draws nothing and logs nothing. That is the
+browser's, not the app's (the stack is `FontServiceThread::MatchFamilyName`),
+so a frame whose page never reached the Record screen **and logged no page
+error** gets one retry in a fresh context, and the summary says `retried …`.
+A second stall, or any stall with a page error, fails as usual. Fewer
+system-font lookups at first paint make it rarer: the app's figures use the
+bundled JetBrains Mono (`font-figures`), never `font-mono`'s system stack.
 
 ## If it does not run
 

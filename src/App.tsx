@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
+  IconButton,
   SpinnerIcon,
   ToastViewport,
   createToastStore,
@@ -9,10 +10,8 @@ import {
 import { EncryptionGate } from "@niclaslindstedt/oss-framework/encryption";
 import { useSwipeNav } from "@niclaslindstedt/oss-framework/hooks";
 import { LogViewer } from "@niclaslindstedt/oss-framework/logging";
-import {
-  NamespaceSwitcher,
-  NamespacesModal,
-} from "@niclaslindstedt/oss-framework/namespaces";
+import { Glyph } from "@niclaslindstedt/oss-framework/glyphs";
+import { NamespacesModal } from "@niclaslindstedt/oss-framework/namespaces";
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import {
   SyncDetailsModal,
@@ -33,7 +32,8 @@ import {
 import { demoBackendModule, useDemoData } from "./app/dev/useDemoData.ts";
 import { useEncryptionLabels } from "./app/encryptionLabels.ts";
 import { ExportModal } from "./app/ExportModal.tsx";
-import { FoldersScreen, MoveFolderSheet } from "./app/FoldersScreen.tsx";
+import { FolderPicker } from "./app/FolderPicker.tsx";
+import { SpacesIcon } from "./app/icons.tsx";
 import { useT } from "./app/i18n/index.ts";
 import { LibraryScreen, type LibraryView } from "./app/LibraryScreen.tsx";
 import { logStore } from "./app/log.ts";
@@ -59,7 +59,7 @@ import { status } from "./output.ts";
 // encoders, the theme engine, the storage adapters behind sync and the PWA
 // update lifecycle.
 //
-// Two shells over the same screens. On a phone the three destinations sit on
+// Two shells over the same screens. On a phone the two destinations sit on
 // the bottom bar; on a desk (`useDesk`) they sit on the top bar and Settings
 // slides in over the right-hand edge (`SidePanel.tsx`). The player and the
 // export sheet are modals on both: full-screen on the phone, a card on the
@@ -119,6 +119,10 @@ export function App() {
   const [exportBlob, setExportBlob] = useState<Blob | null>(null);
   const [moveId, setMoveId] = useState<string | null>(null);
   const [spacesOpen, setSpacesOpen] = useState(false);
+  // A take is running or waiting to be named: the Record screen is the only
+  // place on offer until it is saved or discarded (docs/design.md, "The
+  // shell") — leaving it would end the take.
+  const [capturing, setCapturing] = useState(false);
   const [syncDetailsOpen, setSyncDetailsOpen] = useState(false);
   const [reloading, setReloading] = useState(false);
   // The clock the list's "Today" and the trash's window are read against:
@@ -163,7 +167,7 @@ export function App() {
     },
     [tab, home, show],
   );
-  useSwipeNav(main, swipe, { enabled: !desk });
+  useSwipeNav(main, swipe, { enabled: !desk && !capturing });
 
   useEffect(() => {
     logStore.setCaptureEnabled(settings.captureLogs);
@@ -233,40 +237,42 @@ export function App() {
   const open = openId ? store.data.recordings[openId] : undefined;
   const exporting = exportId ? store.data.recordings[exportId] : undefined;
 
-  const spaceSwitcher = (
-    <NamespaceSwitcher
-      namespaces={spaces.list}
-      activeNamespace={slug}
-      onSwitch={(next) => {
-        spaces.switchTo(next);
-        setView({ kind: "all" });
-        setOpenId(null);
-      }}
-      onManage={() => setSpacesOpen(true)}
-      defaultCollapsed
-      labels={{
-        heading: t("spaces.heading"),
-        manage: t("spaces.manage"),
-        switchTo: (name) => t("spaces.switchTo", { name }),
-        expand: t("spaces.expand"),
-        collapse: t("spaces.collapse"),
-      }}
-    />
+  // The space glyph: the active space's own symbol in its own colour, so
+  // the button is the answer to "which space am I in?" without a label.
+  const spaceButton = (
+    <IconButton
+      label={t("spaces.current", { name: spaces.active.name })}
+      onClick={() => setSpacesOpen(true)}
+      className="border-transparent"
+      style={spaces.active.color ? { color: spaces.active.color } : undefined}
+    >
+      {spaces.active.glyph ? (
+        <Glyph name={spaces.active.glyph} className="h-5 w-5" />
+      ) : (
+        <SpacesIcon className="h-5 w-5" />
+      )}
+    </IconButton>
   );
 
   const recordScreen = (
     <RecordScreen
       data={store.data}
+      store={store}
       settings={settings}
+      update={update}
       folderId={view.kind === "folder" ? view.folderId : null}
+      locale={locale}
+      now={now}
       onSave={saveTake}
       onNotice={notice}
-      onOpenSettings={toggleSettings}
+      onOpen={setOpenId}
+      onCaptureChange={setCapturing}
     />
   );
   const libraryScreen = (
     <LibraryScreen
       data={store.data}
+      store={store}
       view={view}
       onView={setView}
       present={present}
@@ -282,17 +288,6 @@ export function App() {
       onPurge={(id) => store.purgeRecording(id)}
       onMove={setMoveId}
       onExport={openExport}
-      onOpenFolders={() => show("folders")}
-    />
-  );
-  const foldersScreen = (
-    <FoldersScreen
-      data={store.data}
-      store={store}
-      onOpen={(folderId) => {
-        setView({ kind: "folder", folderId });
-        show("library");
-      }}
       onNotice={notice}
     />
   );
@@ -303,8 +298,6 @@ export function App() {
       store={store}
       sync={sync}
       demoData={demo}
-      spaceName={spaces.active.name}
-      onManageSpaces={() => setSpacesOpen(true)}
       onAdoptSpace={(s) => {
         spaces.adopt(s, s);
         spaces.switchTo(s);
@@ -321,10 +314,8 @@ export function App() {
         active={tab}
         onOpenSettings={toggleSettings}
         settingsOpen={desk && settingsOpen}
-        onSelect={desk ? show : undefined}
-        spaceSlot={
-          <div className="app-space-switcher min-w-0">{spaceSwitcher}</div>
-        }
+        onSelect={desk && !capturing ? show : undefined}
+        spaceSlot={spaceButton}
         syncSlot={
           sync.backend !== "local" ? (
             <SyncStatus
@@ -351,7 +342,6 @@ export function App() {
           >
             {tab === "record" && recordScreen}
             {tab === "library" && libraryScreen}
-            {tab === "folders" && foldersScreen}
             {tab === "settings" && settingsScreen}
           </div>
         </div>
@@ -394,7 +384,7 @@ export function App() {
         )}
       </div>
 
-      {!desk && <BottomNav active={tab} onSelect={show} />}
+      {!desk && !capturing && <BottomNav active={tab} onSelect={show} />}
 
       {open && (
         <PlayerModal
@@ -406,6 +396,11 @@ export function App() {
           skipSeconds={settings.skipSeconds}
           onExport={() => openExport(open.id)}
           onMove={() => setMoveId(open.id)}
+          folderName={
+            open.folderId
+              ? (store.data.folders[open.folderId]?.name ?? null)
+              : null
+          }
           onTrash={() => trash(open.id)}
           onClose={() => setOpenId(null)}
         />
@@ -415,6 +410,7 @@ export function App() {
         <ExportModal
           recording={exporting}
           blob={exportBlob}
+          locale={locale}
           settings={settings}
           update={update}
           onNotice={notice}
@@ -426,10 +422,14 @@ export function App() {
       )}
 
       {moveId && (
-        <MoveFolderSheet
+        <FolderPicker
+          mode="choose"
           data={store.data}
-          recordingId={moveId}
-          onMove={(folderId) => {
+          store={store}
+          title={t("library.move")}
+          noneLabel={t("record.noFolder")}
+          value={store.data.recordings[moveId]?.folderId ?? null}
+          onChoose={(folderId) => {
             store.patchRecording(moveId, { folderId });
             setMoveId(null);
           }}

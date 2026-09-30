@@ -11,6 +11,7 @@
 // is the one that touches the browser.
 
 import {
+  DEFAULT_FLAC_DEPTH,
   MIME_FLAC,
   MIME_WAV,
   decodeAudio,
@@ -27,6 +28,7 @@ import {
   type SaveFileOutcome,
 } from "@niclaslindstedt/oss-framework/files";
 
+import { FLAC_RATIO } from "./quality.ts";
 import type { Bitrate, ExportFormat, ExportRate } from "./useAppSettings.ts";
 import type { Recording } from "./types.ts";
 
@@ -74,6 +76,32 @@ export function exportPlan(
   // MP3 knows nine rates; anything else lands on the nearest.
   if (options.format === "mp3") sampleRate = nearestMp3Rate(sampleRate);
   return { channels, sampleRate };
+}
+
+/** Roughly how large the exported file will be, bytes — what the export
+ *  sheet prints before the encoder runs. WAV is exact (plus its header);
+ *  MP3 is its bitrate; FLAC is an estimate, since its size depends on the
+ *  sound. */
+export function estimateExportBytes(
+  take: Pick<Recording, "sampleRate" | "channels" | "durationMs">,
+  options: Pick<
+    ExportOptions,
+    "format" | "rate" | "mono" | "wavDepth" | "mp3Bitrate"
+  >,
+): number {
+  const plan = exportPlan(take, options);
+  const seconds = Math.max(0, take.durationMs) / 1000;
+  const frames = Math.round(seconds * plan.sampleRate);
+  switch (options.format) {
+    case "wav":
+      return 44 + frames * plan.channels * (options.wavDepth / 8);
+    case "flac":
+      return Math.round(
+        frames * plan.channels * (DEFAULT_FLAC_DEPTH / 8) * FLAC_RATIO,
+      );
+    case "mp3":
+      return Math.round((options.mp3Bitrate * 1000 * seconds) / 8);
+  }
 }
 
 const MP3_RATES = [

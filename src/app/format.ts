@@ -91,3 +91,41 @@ export function formatRate(hz: number): string {
   const khz = hz / 1000;
   return `${Number.isInteger(khz) ? khz : khz.toFixed(1)} kHz`;
 }
+
+/** A local calendar day as `YYYY-MM-DD` — what the list groups rows by. */
+export function dayKey(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Runs of items taken on the same local day, in the order given — the
+ *  list's day headings. The caller sorts; an item that returns to a day
+ *  already seen starts a new run rather than being moved. */
+export function groupByDay<T extends { createdAt: string }>(
+  items: readonly T[],
+): Array<{ key: string; items: T[] }> {
+  const groups: Array<{ key: string; items: T[] }> = [];
+  for (const item of items) {
+    const key = dayKey(item.createdAt);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) last.items.push(item);
+    else groups.push({ key, items: [item] });
+  }
+  return groups;
+}
+
+/** A long stretch of time in rough words — how long a device could still
+ *  record: "45 min", "3 h 20 min", past ten hours just "23 h". The units
+ *  come in from the catalog. */
+export function formatSpan(
+  ms: number,
+  units: { hours: string; minutes: string },
+): string {
+  const minutes = Math.max(0, Math.floor(ms / 60_000));
+  if (minutes < 60) return `${Math.max(1, minutes)} ${units.minutes}`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours >= 10 || rest === 0) return `${hours} ${units.hours}`;
+  return `${hours} ${units.hours} ${rest} ${units.minutes}`;
+}

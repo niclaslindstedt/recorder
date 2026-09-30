@@ -28,6 +28,16 @@ export type ThemeChoice = "light" | "dark" | "system";
 export type ExportFormat = "wav" | "flac" | "mp3";
 export const EXPORT_FORMATS: ExportFormat[] = ["wav", "flac", "mp3"];
 
+/** What the Record screen draws above the meter while listening and
+ *  recording: the sound's shape scrolling by, its frequencies now, or its
+ *  frequencies over time. */
+export type VisualizerKind = "wave" | "spectrum" | "spectrogram";
+export const VISUALIZERS: VisualizerKind[] = [
+  "wave",
+  "spectrum",
+  "spectrogram",
+];
+
 /** The bitrates offered for a compact take and for an MP3, kbit/s. */
 export const BITRATES = [64, 96, 128, 192, 256, 320] as const;
 export type Bitrate = (typeof BITRATES)[number];
@@ -50,8 +60,8 @@ export type AppSettings = {
    *  suppression, automatic gain) is asked for. Off records what the
    *  microphone hears. */
   voiceProcessing: boolean;
-  /** Whether the spectrum is drawn while recording. */
-  showSpectrum: boolean;
+  /** What the Record screen draws while listening and recording. */
+  visualizer: VisualizerKind;
   /** How many seconds the skip buttons move. */
   skipSeconds: SkipSeconds;
   /** What the export form starts on. */
@@ -74,7 +84,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   recordingKind: "compact",
   recordingBitrate: 128,
   voiceProcessing: false,
-  showSpectrum: true,
+  visualizer: "wave",
   skipSeconds: 15,
   exportFormat: "mp3",
   exportWavDepth: DEFAULT_WAV_DEPTH,
@@ -117,7 +127,7 @@ export function parseSettings(raw: string): AppSettings {
       DEFAULT_SETTINGS.recordingBitrate,
     ),
     voiceProcessing: m.voiceProcessing === true,
-    showSpectrum: m.showSpectrum !== false,
+    visualizer: oneOf(VISUALIZERS, m.visualizer, DEFAULT_SETTINGS.visualizer),
     skipSeconds: oneOf(
       SKIP_SECONDS,
       m.skipSeconds,

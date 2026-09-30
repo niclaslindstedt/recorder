@@ -1,8 +1,11 @@
 # Spaces
 
 A space is a separate library — its own recordings, its own folders, its own
-index on a backend. Personal and Work, or one per client. The switcher is in
-the top left corner; **Settings → Spaces** makes, renames and forgets them.
+index on a backend. Personal and Work, or one per client. The **space glyph**
+on the top bar, beside the cog, is the active space's own symbol in its own
+colour, so it says which space is open without a label. Press it for the
+spaces sheet, which switches between spaces, makes new ones, renames them,
+sets each one's colour and symbol, and forgets them.
 
 Every space is its own file on a backend (`recorder-<space>.json`) with its
 own folder of files beside it, so two spaces never meet in a merge and a

@@ -35,7 +35,7 @@ type Props = {
 };
 
 const LINE =
-  "min-w-0 rounded-md border border-line bg-surface-2 px-2 py-2 font-mono text-sm break-all text-fg-bright";
+  "min-w-0 rounded-md border border-line bg-surface-2 px-2 py-2 font-figures text-sm break-all text-fg-bright";
 
 export function SelfHostedSettings({
   selfHosted,
@@ -147,7 +147,7 @@ export function SelfHostedSettings({
                     >
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-fg">{d.name}</p>
-                        <p className="font-mono text-sm font-bold text-fg-bright tabular-nums">
+                        <p className="font-figures text-sm font-bold text-fg-bright tabular-nums">
                           {d.safetyCode}
                         </p>
                       </div>
@@ -308,7 +308,7 @@ function AddDeviceModal({
           readOnly
           value={payload}
           onFocus={(e) => e.currentTarget.select()}
-          className="w-full min-w-0 rounded-md border border-line bg-surface-2 px-2 py-1.5 font-mono text-xs text-fg"
+          className="w-full min-w-0 rounded-md border border-line bg-surface-2 px-2 py-1.5 font-figures text-xs text-fg"
           data-testid="add-device-payload"
         />
         <Button onClick={onClose}>{t("selfHosted.done")}</Button>
