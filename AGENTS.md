@@ -31,6 +31,8 @@ make lint          # eslint + tsc --noEmit
 make fmt           # prettier --write
 make fmt-check     # verify formatting (CI)
 make icons         # regenerate the PWA icons, favicon, og image and the shells' icons
+make shots         # screenshots of the demo on contact sheets — ARGS="--screen player --device phone"
+make shots-warm    # the first run's slow parts (deps, browser, demo build) ahead of time
 
 make native-install    # install the native wrapper's own dependencies
 make native-bundle     # build the web app into native/assets/webroot.zip
@@ -443,7 +445,10 @@ after midnight to just before the next. Use the Node `.nvmrc` pins (from nvm).
 A change to the model or the tree without a test that pins the new behaviour
 to real dates is not finished. UI changes should keep the boot smoke path
 working: `npm run build && npm run preview`, press Record, stop, save, and
-check that the recording plays from the list and exports.
+check that the recording plays from the list and exports. **A UI change is also
+looked at**: `make shots` (the `screenshot` skill) shoots the demo build on a
+phone, an iPad and a desk in both themes and lays the frames on contact
+sheets — read the sheet, fix what is wrong, shoot again, before the PR.
 
 ## Source file size
 
@@ -535,9 +540,10 @@ Skills live under `.agents/skills/`; `.claude/skills` is a symlink into that
 tree. Each has a `SKILL.md` with its discovery process, its source→output
 mapping, and a `.last-updated` marker.
 
-| Skill             | Runs when                                                     |
-| ----------------- | ------------------------------------------------------------- |
-| `maintenance`     | The registry and run order for every other skill — start here |
-| `write-changeset` | Any user-visible change, before opening the PR                |
-| `update-docs`     | `src/app/` changed in a way a `docs/` topic describes         |
-| `update-readme`   | Commands, configuration, or the feature set changed           |
+| Skill             | Runs when                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `maintenance`     | The registry and run order for every other skill — start here                             |
+| `write-changeset` | Any user-visible change, before opening the PR                                            |
+| `update-docs`     | `src/app/` changed in a way a `docs/` topic describes                                     |
+| `update-readme`   | Commands, configuration, or the feature set changed                                       |
+| `screenshot`      | While developing anything a person sees — shoots the app on contact sheets (`make shots`) |

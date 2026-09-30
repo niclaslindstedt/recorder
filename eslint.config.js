@@ -20,6 +20,11 @@ export default [
       "tauri/webroot/**",
       "tauri/node_modules/**",
       "native/node_modules/**",
+      // The screenshot skill's own dependency tree, demo build and output
+      // (all gitignored — see .agents/skills/screenshot/SKILL.md).
+      ".agents/skills/*/node_modules/**",
+      ".agents/skills/screenshot/.build/**",
+      ".agents/skills/screenshot/out/**",
       "native/ios/**",
       "native/android/**",
       "native/.expo/**",
@@ -33,7 +38,7 @@ export default [
     files: [
       "scripts/**/*.mjs",
       "tauri/scripts/**/*.mjs",
-      ".agent/skills/**/*.mjs",
+      ".agents/skills/**/*.mjs",
     ],
     languageOptions: {
       sourceType: "module",

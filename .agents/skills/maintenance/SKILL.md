@@ -31,6 +31,8 @@ The registry is the single source of truth for which sync skills exist in this r
 
 Run order matters: `update-readme` reads the docs that `update-docs` rewrites, so it must run after it. A new skill that reads files another skill rewrites goes after that skill.
 
+One skill directory is not a sync skill and is never scheduled here: `screenshot` is a tool — it shoots the app onto contact sheets while a UI change is being made (`make shots`, its own `SKILL.md`) — and keeps no `.last-updated`, since it rewrites nothing.
+
 ## Discovery process
 
 For each skill in the registry, decide whether it needs to run:
