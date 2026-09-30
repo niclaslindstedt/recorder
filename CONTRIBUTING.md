@@ -23,6 +23,7 @@ npm install
 ```sh
 make build
 make demo         # the dev server on the demo document (VITE_SEED=demo)
+make shots        # screenshots of the demo on contact sheets, for looking at a UI change
 make test
 make lint
 make fmt-check

@@ -1,4 +1,4 @@
-.PHONY: demo build test lint fmt fmt-check actionlint release clean docs website website-dev install icons changelog bump native-install native-bundle native-typecheck native-prebuild store-preflight store-metadata store-upload tauri tauri-bundle tauri-clean tauri-fast tauri-fmt tauri-fmt-check tauri-install tauri-lint tauri-package tauri-package-debug tauri-test
+.PHONY: demo build test lint fmt fmt-check actionlint release clean docs website website-dev install icons shots shots-warm changelog bump native-install native-bundle native-typecheck native-prebuild store-preflight store-metadata store-upload tauri tauri-bundle tauri-clean tauri-fast tauri-fmt tauri-fmt-check tauri-install tauri-lint tauri-package tauri-package-debug tauri-test
 
 build:
 	npm run build
@@ -32,6 +32,18 @@ demo:
 # Regenerate the PWA install icons + the Open Graph image from the app mark.
 icons:
 	npm run icons
+
+# Screenshots of the app on the demo — contact sheets of devices × themes ×
+# screens, or one frame — for looking at a UI change while making it
+# (.agents/skills/screenshot/SKILL.md). Pass shoot.mjs's options through ARGS:
+#   make shots ARGS="--screen player --device phone --theme dark"
+# `shots-warm` does the first run's slow parts (dependencies, the browser, the
+# demo build) ahead of time; every run after it starts shooting at once.
+shots:
+	node .agents/skills/screenshot/shoot.mjs $(ARGS)
+
+shots-warm:
+	node .agents/skills/screenshot/warm.mjs
 
 # --- the native wrapper (native/) -------------------------------------------
 #
