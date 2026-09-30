@@ -538,7 +538,8 @@ The player is a recording's page: listen, annotate, file, export.
 ## Settings
 
 Settings is for things you set once. After this change it holds: the
-theme, the Record screen's visualizer, the skip length, the export defaults,
+theme and its looks (a card per look, drawn in its own colours — by day
+and by night while following the device), the Record screen's visualizer, the skip length, the export defaults,
 storage and encryption, your data, developer mode, and About. What left:
 
 - **Recording quality and voice processing** moved to the Quality sheet on

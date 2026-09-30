@@ -83,7 +83,7 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
                 <span
                   aria-hidden
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                    on ? "border-accent bg-accent text-page" : "border-line"
+                    on ? "border-accent bg-accent text-page-bg" : "border-line"
                   }`}
                 >
                   {on && <CheckIcon className="h-3 w-3" />}

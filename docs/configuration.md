@@ -44,21 +44,23 @@ Per device, persisted in `localStorage` and clamped on read
 (`src/app/useAppSettings.ts`). How a take is kept and voice processing are
 set in the Record screen's **Quality** sheet; the rest under **Settings**:
 
-| Setting                      | Values                                 | Default     |
-| ---------------------------- | -------------------------------------- | ----------- |
-| Theme                        | Light, Dark, Device                    | Device      |
-| Quality: how a take is kept  | Compact, Lossless                      | Compact     |
-| Bitrate (compact)            | 64 · 96 · 128 · 192 · 256 · 320 kbit/s | 128         |
-| Voice processing             | on / off                               | off         |
-| Visualizer                   | Waveform, Spectrum, Spectrogram        | Waveform    |
-| Skip buttons move            | 5 · 10 · 15 · 30 s                     | 15          |
-| Export format                | WAV, FLAC, MP3                         | MP3         |
-| Export WAV depth             | 16 · 24 · 32-bit float                 | 16          |
-| Export FLAC compression      | Fast (0), Normal (5), Best (8)         | Normal      |
-| Export MP3 bitrate           | 64 · 96 · 128 · 192 · 256 · 320 kbit/s | 128         |
-| Export sample rate           | As recorded, 22.05, 44.1, 48 kHz       | As recorded |
-| Export mono                  | on / off                               | on          |
-| Developer mode, capture logs | on / off                               | off         |
+| Setting                      | Values                                                      | Default     |
+| ---------------------------- | ----------------------------------------------------------- | ----------- |
+| Theme                        | Light, Dark, Device                                         | Device      |
+| Look by day                  | Studio, Paper, Dawn, Watercolour                            | Studio      |
+| Look by night                | Studio, Vinyl, Neon, Velvet, Dusk, Fjord, Dream pop, Lagoon | Studio      |
+| Quality: how a take is kept  | Compact, Lossless                                           | Compact     |
+| Bitrate (compact)            | 64 · 96 · 128 · 192 · 256 · 320 kbit/s                      | 128         |
+| Voice processing             | on / off                                                    | off         |
+| Visualizer                   | Waveform, Spectrum, Spectrogram                             | Waveform    |
+| Skip buttons move            | 5 · 10 · 15 · 30 s                                          | 15          |
+| Export format                | WAV, FLAC, MP3                                              | MP3         |
+| Export WAV depth             | 16 · 24 · 32-bit float                                      | 16          |
+| Export FLAC compression      | Fast (0), Normal (5), Best (8)                              | Normal      |
+| Export MP3 bitrate           | 64 · 96 · 128 · 192 · 256 · 320 kbit/s                      | 128         |
+| Export sample rate           | As recorded, 22.05, 44.1, 48 kHz                            | As recorded |
+| Export mono                  | on / off                                                    | on          |
+| Developer mode, capture logs | on / off                                                    | off         |
 
 The export sheet starts on the export defaults and writes the choice it was
 used with back to them.

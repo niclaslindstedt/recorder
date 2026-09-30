@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   PLAYBACK_RATES,
   Waveform,
   usePlayer,
+  type Player,
 } from "@niclaslindstedt/oss-framework/audio";
 import {
   Button,
@@ -33,6 +34,7 @@ import {
 import { StarFilledIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import type { BlobStore } from "./blobStore.ts";
+import { stepPlayhead, type Playhead } from "./playhead.ts";
 import type { Recording } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 
@@ -90,7 +92,6 @@ export function PlayerModal({
   }, [blobs, recording.fileName, filesVersion]);
 
   const duration = player.duration || recording.durationMs / 1000;
-  const progress = duration > 0 ? player.time / duration : 0;
   const [title, setTitle] = useState(recording.title);
   const [notes, setNotes] = useState(recording.notes);
   useEffect(() => setTitle(recording.title), [recording.title]);
@@ -197,22 +198,13 @@ export function PlayerModal({
           </div>
         </div>
 
-        <div>
-          <div className="h-24 rounded-md bg-surface-2 px-2 py-1">
-            <Waveform
-              peaks={recording.peaks}
-              progress={progress}
-              onSeek={
-                blob ? (share) => player.seek(share * duration) : undefined
-              }
-              label={t("player.position")}
-            />
-          </div>
-          <div className="mt-1 flex items-center justify-between font-figures text-xs text-muted tabular-nums">
-            <span>{formatDuration(player.time * 1000)}</span>
-            <span>{formatDuration(duration * 1000)}</span>
-          </div>
-        </div>
+        <PlayerWave
+          player={player}
+          peaks={recording.peaks}
+          duration={duration}
+          canSeek={blob !== null}
+          label={t("player.position")}
+        />
 
         {missing && <p className="text-sm text-muted">{t("player.missing")}</p>}
         {player.error && (
@@ -240,7 +232,7 @@ export function PlayerModal({
             aria-label={player.playing ? t("player.pause") : t("player.play")}
             disabled={!blob}
             onClick={() => void player.toggle()}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-page transition-transform active:scale-95 disabled:opacity-50"
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-page-bg transition-transform active:scale-95 disabled:opacity-50"
           >
             {!blob && !missing ? (
               <SpinnerIcon className="h-6 w-6 animate-spin" />
@@ -331,5 +323,71 @@ export function PlayerModal({
         </div>
       </div>
     </Modal>
+  );
+}
+
+/** The recording's shape with the playhead over it, and the time under it.
+ *  Its own component, on its own animation frame, so the line moves on
+ *  every frame at the playback rate (`playhead.ts`) and only this redraws
+ *  for it. */
+function PlayerWave({
+  player,
+  peaks,
+  duration,
+  canSeek,
+  label,
+}: {
+  player: Player;
+  peaks: readonly number[];
+  duration: number;
+  canSeek: boolean;
+  label: string;
+}) {
+  const latest = useRef(player);
+  latest.current = player;
+  const head = useRef<Playhead | null>(null);
+  const [time, setTime] = useState(player.time);
+  const { playing, rate } = player;
+
+  // Paused, the line stands where the element says — a seek lands at once.
+  useEffect(() => {
+    if (playing) return;
+    head.current = null;
+    setTime(player.time);
+  }, [playing, player.time]);
+
+  useEffect(() => {
+    if (!playing) return;
+    let frame = 0;
+    const tick = (now: number) => {
+      head.current = stepPlayhead(head.current, latest.current.time, now, {
+        playing: true,
+        rate,
+        duration,
+      });
+      setTime(head.current.time);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [playing, rate, duration]);
+
+  return (
+    <div>
+      <div className="h-24 rounded-md bg-surface-2 px-2 py-1">
+        <Waveform
+          peaks={peaks}
+          progress={duration > 0 ? time / duration : 0}
+          onSeek={
+            canSeek ? (share) => player.seek(share * duration) : undefined
+          }
+          label={label}
+        />
+      </div>
+      <div className="mt-1 flex items-center justify-between font-figures text-xs text-muted tabular-nums">
+        <span>{formatDuration(time * 1000)}</span>
+        <span>{formatDuration(duration * 1000)}</span>
+      </div>
+    </div>
   );
 }

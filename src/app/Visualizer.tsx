@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import {
   SpectrumBars,
-  Waveform,
   meterFill,
   meterTone,
   readFrame,
@@ -14,6 +13,7 @@ import { WaveformIcon } from "@niclaslindstedt/oss-framework/components";
 
 import { SpectrogramIcon, SpectrumIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import { bucketShare } from "./pacing.ts";
 import type { VisualizerKind } from "./useAppSettings.ts";
 
 // The Record screen's big picture (docs/design.md, "Record"): the card that
@@ -43,8 +43,9 @@ type Props = {
   /** The frequency printed beside a band. */
   ticks: Array<{ band: number; label: string }>;
   bands: number;
-  /** The whole take so far, as a strip along the card's foot. */
-  overview?: readonly number[];
+  /** Draw the whole take so far as a strip along the card's foot, from the
+   *  frames' own thumbnail. */
+  overview?: boolean;
   className?: string;
 };
 
@@ -132,10 +133,10 @@ export function Visualizer({
       </div>
       {overview && (
         <div
-          className="h-8 shrink-0 rounded-sm bg-surface-2 px-1 text-danger/80"
+          className="h-8 shrink-0 rounded-sm bg-surface-2 px-1"
           title={t("visualizer.overview")}
         >
-          <Waveform peaks={overview} label={t("visualizer.overview")} />
+          <TakeOverview subscribe={subscribe} />
         </div>
       )}
     </div>
@@ -424,6 +425,61 @@ function Spectrogram({
           {l.label}
         </span>
       ))}
+    </div>
+  );
+}
+
+/** The whole take so far, redrawn on every frame: the thumbnail's buckets
+ *  laid out by the time each holds (`bucketShare`), so the picture narrows
+ *  smoothly as the take grows rather than re-flowing four times a second. */
+function TakeOverview({ subscribe }: { subscribe: Subscribe }) {
+  const t = useT();
+  const { box, canvas, size } = useCanvas();
+
+  useEffect(() => {
+    const el = canvas.current;
+    const ctx = el?.getContext("2d");
+    if (!el || !ctx || size.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const colours = palette(el);
+    let drawnCount = -1;
+    let drawnElapsed = -1;
+
+    return subscribe((frame) => {
+      const peaks = frame.peaks;
+      const n = peaks.length;
+      // Paused, nothing changes: leave the picture as it is.
+      if (n === drawnCount && frame.elapsedMs === drawnElapsed) return;
+      drawnCount = n;
+      drawnElapsed = frame.elapsedMs;
+      const w = el.width;
+      const h = el.height;
+      const mid = h / 2;
+      ctx.clearRect(0, 0, w, h);
+      if (n === 0) return;
+      const pitch = bucketShare(frame.elapsedMs, n) * w;
+      // Bars with a gap while there is room for one; a solid shape once
+      // the take is long enough that there is not.
+      const bar = pitch >= 3 * dpr ? pitch * 0.7 : pitch;
+      const inset = (pitch - bar) / 2;
+      ctx.fillStyle = colours.muted;
+      for (let i = 0; i < n; i++) {
+        const x = i * pitch + inset;
+        if (x >= w) break;
+        const half = Math.max(dpr / 2, Math.min(1, peaks[i]!) * mid);
+        ctx.fillRect(x, mid - half, Math.min(bar, w - x), half * 2);
+      }
+    });
+  }, [subscribe, size, canvas]);
+
+  return (
+    <div ref={box} className="relative h-full w-full">
+      <canvas
+        ref={canvas}
+        role="img"
+        aria-label={t("visualizer.overview")}
+        className="absolute inset-0 h-full w-full"
+      />
     </div>
   );
 }
