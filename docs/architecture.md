@@ -25,6 +25,9 @@ src/
     ├── eqChain.ts           the same EQ as the browser's filters, for the player and the monitor
     ├── useEqPlayer.ts       the player and Review's playback, through the EQ once one is wanted
     ├── useMonitor.ts        the microphone through the EQ into headphones; nothing kept
+    ├── devices.ts           the microphones and outputs as lists, and a remembered choice found among them
+    ├── useAudioRouting.ts   the chosen microphone and output made real: deviceId, setSinkId, or the host
+    ├── audioHost.ts         the capability a host (the phone app) may offer to route the device's sound
     ├── playhead.ts          the player's playhead as a smooth clock over the element's coarse time
     ├── export.ts            WAV / FLAC / MP3 out, through the framework's encoders; the size estimate
     ├── format.ts            durations, timers, day headings, container names
@@ -44,6 +47,7 @@ src/
     ├── Visualizer.tsx       the waveform, spectrum or spectrogram card
     ├── BigMeter.tsx         the framework's meter at the Record screen's size, with the target on it
     ├── QualitySheet.tsx     how the next take is kept, voice processing, and the target level (TargetLevel.tsx)
+    ├── MicrophoneSheet.tsx  which microphone a take records through, and where the sound comes out
     ├── TriggerSheet.tsx     the sound trigger: on or off, its level, the hold, the pre-roll, the quiet
     ├── LibraryScreen.tsx    the scope, the search glyph, the list under day headings
     ├── FolderPicker.tsx     the one folder picker: the library's scope, Move, a take's destination
@@ -122,6 +126,10 @@ site packed inside the download and served from a loopback origin into a
 `WebView`. It adds exactly two things a browser cannot do — being
 self-contained, and iCloud — and offers the second as a **capability** on
 `window` that `cloudHost.ts` looks for, never as a flag the web app checks.
+It also offers the phone's audio routes — which microphone and output the
+system prefers — the same way, through `audioHost.ts`; a browser has no such
+host, and the page chooses with `deviceId` and `setSinkId` on its own
+(`useAudioRouting.ts`).
 `tauri/` is the same shape of thing for the desktop. See
 [`features/native-app.md`](features/native-app.md) and
 [`features/desktop-app.md`](features/desktop-app.md).

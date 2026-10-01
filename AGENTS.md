@@ -264,7 +264,22 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   curve. Both the player and the monitor are candidates for the
   framework's `audio` module once it can route an element's or a capture's
   sound.
-- `src/app/useAppSettings.ts` — the per-device settings: the theme and its looks, the EQ new takes start with (`recordEq`), the sound trigger (`gate*`, on the Record screen's Trigger sheet), how a
+- `src/app/devices.ts` / `useAudioRouting.ts` / `audioHost.ts` — the
+  **microphone and output**, chosen on the Record screen's Microphone sheet
+  (`MicrophoneSheet.tsx`). `devices.ts` is pure: the browser's lists read
+  (`webDevices`, Chrome's `default` / `communications` aliases dropped) and
+  a remembered choice (`{ id, name }`, `null` is Automatic) found among
+  them by id, then by name. `useAudioRouting` makes it real, per side: the
+  page's own (`deviceId` into every capture — a take, Listening, the
+  monitor — and `setSinkId` on every player and audio context, where the
+  browser has it), or a **host's** when one offers that side
+  (`audioHost.ts`, the capability seam the phone app fills — never "am I
+  native?"). It is a context (`AudioRoutingContext`), provided in
+  `App.tsx`. **Automatic touches nothing**: a device never chosen on is
+  never told anything, so the app routes exactly as it did without the
+  sheet — keep it that way. Nothing here opens the microphone; the
+  browser names its devices only once Listen or Record has.
+- `src/app/useAppSettings.ts` — the per-device settings: the theme and its looks, the EQ new takes start with (`recordEq`), the microphone and output (`inputDevice`, `outputDevice`), the sound trigger (`gate*`, on the Record screen's Trigger sheet), how a
   take is kept (compact at a bitrate, or lossless) and voice processing —
   both chosen on the Record screen's Quality sheet, not in Settings — the
   visualizer (`wave`, `spectrum` or `spectrogram`), the skip length, the
@@ -415,21 +430,22 @@ the App Store and Google Play. It is a **separate npm project** with its own
 root does not touch it, and neither does `make install`. Reach it with
 `--prefix native` (or the `make native-*` targets).
 
-**Thin is a constraint, not an aspiration.** The wrapper does seven things:
+**Thin is a constraint, not an aspiration.** The wrapper does eight things:
 
 1. packs the built web app into `assets/webroot.zip` and serves it from a
    loopback HTTP server (`src/local-server.ts`) on the app's own port, 8331;
 2. points a `WebView` at that origin and otherwise gets out of the way — the
    microphone is the page's own `getUserMedia`, which the WebView grants
    (`app.config.js` declares the usage description);
-3. injects four scripts into the page — `src/injected.ts`, which reports the
+3. injects five scripts into the page — `src/injected.ts`, which reports the
    resolved theme colours so the native chrome follows them and unregisters
    the service worker, `src/icloudBridge.ts`, which offers the page a
    document store, `src/authSessionBridge.ts`, which offers it an
    authentication session for signing in to Dropbox, and
    `src/saveFileBridge.ts`'s descriptor, which tells the framework's
    `saveFile` the shell can take a file (and `src/scanQrBridge.ts`'s, which
-   tells its `scanQrCode` the shell can scan a QR code);
+   tells its `scanQrCode` the shell can scan a QR code), and
+   `src/audioRouteBridge.ts`, which offers it the phone's audio routes;
 4. answers those store requests against the app's own iCloud container
    (`src/icloud.ts` → `modules/icloud-store`) — text for the document, base64
    for the recordings' files;
@@ -441,7 +457,14 @@ root does not touch it, and neither does `make install`. Reach it with
    hand-clicked `download` link, which save nothing inside a WebView;
 7. opens the camera to read one pairing code when the page's `scanQrCode`
    asks (`src/QrScanner.tsx` → `expo-camera`) — only then, never at launch,
-   keeping no frame and logging no code.
+   keeping no frame and logging no code;
+8. prefers the microphone and output the page's Microphone sheet chose
+   (`src/audioRoute.ts` → `modules/audio-route`: `AVAudioSession` on iOS,
+   `AudioManager` on Android), and tells the page when the routes change.
+   It prefers and never holds: nothing is touched before a choice, the iOS
+   session is never activated from the wrapper, nothing is stored natively,
+   and Android's Bluetooth permission is asked for only when the sheet
+   opens.
 
 ### The two native-only features, and why there have to be two
 
@@ -470,6 +493,12 @@ browser can reach.
   mismatch: the backend simply never appears in the storage picker.
   `tests/native_icloud_test.ts` pins all of them against the app's own
   constants.
+- **The audio-route bridge is three strings that must agree with `src/`**:
+  `window.__recorderAudioHost`, `recorder:audio-host` and
+  `recorder:audio-routes` — plus the four method names and the `speaker` /
+  `earpiece` output ids the page names in its own words.
+  `tests/native_audio_route_test.ts` pins them; a mismatch is a sheet that
+  quietly falls back to the browser's lists.
 - **The auth-session bridge's names are the framework's**
   (`AUTH_SESSION_HOST_PROPERTY`, `AUTH_SESSION_HOST_EVENT`), spelled again in
   `native/src/authSessionBridge.ts`; `tests/native_auth_session_test.ts` pins
@@ -482,8 +511,9 @@ browser can reach.
 - **Nothing the root `tsc` can reach may import `expo`.** The wire shapes
   live in `native/src/icloudWire.ts` and the script escaping in
   `native/src/scriptText.ts`, which import nothing at all; only
-  `native/src/icloud.ts`, `authSession.ts`, `saveFile.ts` and `QrScanner.tsx`
-  reach for native modules. `tests/native_icloud_test.ts` reads the import
+  `native/src/icloud.ts`, `authSession.ts`, `saveFile.ts`, `audioRoute.ts` and
+  `QrScanner.tsx` reach for native modules (`audioRouteWire.ts` is the
+  import-free twin of `icloudWire.ts`). `tests/native_icloud_test.ts` reads the import
   lines.
 - **A failure crosses the bridge as DATA, never as a rejection.** `src/icloud.ts`
   answers `{ ok: false, kind }` and `cloudHost.ts` turns the kind back into
@@ -528,6 +558,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 | The sound trigger: when a take records         | `src/app/gate.ts` (pure, tested in `tests/gate_test.ts`) + `gateCapture` in `takes.ts` + `TriggerSheet.tsx` — the live view (`useGateLive.ts`) reads the same `stepGate`           |
 | Where a take's peaks should land               | `src/app/target.ts` (pure, tested in `tests/target_test.ts`) + `TargetLevel.tsx` — the ceiling stays under the framework's hot zone                                                |
 | What Listening reads, or its verdict           | `src/app/levels.ts` (pure, tested in `tests/levels_test.ts`) — read against the target (`target.ts`); hot and clipping are the framework's `meterTone` and lamp, never the range's |
+| The microphone or output, and how chosen       | `src/app/devices.ts` (pure, tested in `tests/devices_test.ts`) + `useAudioRouting.ts` + `MicrophoneSheet.tsx`; a host's side: `audioHost.ts` + `native/modules/audio-route`        |
 | How the meter shows the target                 | `src/app/BigMeter.tsx` + `.app-meter-big` in `styles.css` — the meter itself is the framework's `LevelMeter`, never a second one                                                   |
 | A look, or its name                            | `src/app/look.ts` (the table and the resolution, tested in `tests/look_test.ts`) + its words in `i18n/en.ts` under `look` — the palette itself is the framework's                  |
 | How a meter or a playhead keeps time on screen | `src/app/pacing.ts` / `src/app/playhead.ts` (pure, tested) — the ballistics stay the framework's `stepMeter`                                                                       |
@@ -551,14 +582,15 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
 `migrations`, `takes`, `export`, `format`, `levels`, `quality`, `target`, `pacing`,
-`playhead`, `look`, `eq`, `howl`, `gate`,
+`playhead`, `look`, `eq`, `howl`, `gate`, `devices`, `audioHost`,
 `useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
 `demoData`), which is where the app's
 real logic is. `native_icloud_test.ts` pins the strings the wrapper and the app
 have to agree on and guards the import discipline that lets it import from
 `native/` at all; `native_auth_session_test.ts`, `native_save_file_test.ts` and
 `native_scan_qr_test.ts` do the same for the other three bridges, against the
-framework's own halves. No DOM, no testing-library, no mocked clock:
+framework's own halves, and `native_audio_route_test.ts` for the audio-route
+bridge, against `audioHost.ts`. No DOM, no testing-library, no mocked clock:
 `tests/fixtures/shell.ts` stands in for a browser's download and the phone
 app's WebView, and `tests/fixtures/helpers.ts` holds the shared fixtures (a
 recording, a folder, a named-id `ctx`).

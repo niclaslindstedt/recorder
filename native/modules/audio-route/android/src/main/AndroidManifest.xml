@@ -1,0 +1,7 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Routing the output (communication device, mode). -->
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+  <!-- So the WebView can list a Bluetooth headset's microphone (Android 12+);
+       asked for only when the reader opens the Microphone sheet. -->
+  <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+</manifest>

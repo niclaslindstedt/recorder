@@ -37,6 +37,7 @@ import { EqIcon, StarFilledIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import type { BlobStore } from "./blobStore.ts";
 import { stepPlayhead, type Playhead } from "./playhead.ts";
+import { useRouting } from "./useAudioRouting.ts";
 import { useEqPlayer } from "./useEqPlayer.ts";
 import type { Recording } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
@@ -85,7 +86,8 @@ export function PlayerModal({
   useEffect(() => setEq(recording.eq ?? null), [recording.eq]);
   const [eqOpen, setEqOpen] = useState(false);
   const [bypassed, setBypassed] = useState(false);
-  const player = useEqPlayer(blob, bypassed ? null : eq);
+  const { sinkId } = useRouting();
+  const player = useEqPlayer(blob, bypassed ? null : eq, sinkId);
   // Kept on the way out too, should the player close under the sheet.
   const pending = useRef({ eq, recording, store });
   pending.current = { eq, recording, store };

@@ -11,6 +11,7 @@ import {
 } from "@niclaslindstedt/oss-framework/audio";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 
+import { parseChoice, type DeviceChoice } from "./devices.ts";
 import { normalizeEq, type Eq } from "./eq.ts";
 import {
   DEFAULT_GATE_DB,
@@ -34,7 +35,7 @@ import { TARGET_IDS, clampTarget, type TargetId } from "./target.ts";
 import type { RecordingKind } from "./types.ts";
 
 // The app's own (non-document) settings: the theme and its looks, how a take is kept, the
-// level a take aims for, the sound trigger, what
+// level a take aims for, the sound trigger, the microphone and output, what
 // an export defaults to, and the developer knobs. Per device on purpose —
 // which format your laptop exports in is not a fact about a recording — and
 // persisted to localStorage so a reload keeps your choices. Everything else
@@ -84,6 +85,12 @@ export type AppSettings = {
    *  suppression, automatic gain) is asked for. Off records what the
    *  microphone hears. */
   voiceProcessing: boolean;
+  /** The microphone a take records through and the output the app plays
+   *  through, set on the Record screen's Microphone sheet (`devices.ts`);
+   *  `null` is Automatic, the device's own choice. Per device by nature:
+   *  a headset is a fact about this phone. */
+  inputDevice: DeviceChoice | null;
+  outputDevice: DeviceChoice | null;
   /** The EQ a new take starts with, set (and monitored) from the Record
    *  screen's EQ sheet; `null` is flat. */
   recordEq: Eq | null;
@@ -130,6 +137,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   recordingKind: "compact",
   recordingBitrate: 128,
   voiceProcessing: false,
+  inputDevice: null,
+  outputDevice: null,
   recordEq: null,
   gate: false,
   gateDb: DEFAULT_GATE_DB,
@@ -188,6 +197,8 @@ export function parseSettings(raw: string): AppSettings {
       DEFAULT_SETTINGS.recordingBitrate,
     ),
     voiceProcessing: m.voiceProcessing === true,
+    inputDevice: parseChoice(m.inputDevice),
+    outputDevice: parseChoice(m.outputDevice),
     recordEq: normalizeEq(m.recordEq),
     gate: m.gate === true,
     gateDb: clampGateDb(m.gateDb),

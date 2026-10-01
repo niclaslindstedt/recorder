@@ -50,6 +50,7 @@ import { SidePanel } from "./app/SidePanel.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import type { Recording } from "./app/types.ts";
 import { useAppSettings } from "./app/useAppSettings.ts";
+import { AudioRoutingContext, useAudioRouting } from "./app/useAudioRouting.ts";
 import { createIdbDocBackend, useDocStore } from "./app/useDocStore.ts";
 import { useNamespaces } from "./app/useNamespaces.ts";
 import { useDesk, useStand } from "./app/useShape.ts";
@@ -87,6 +88,9 @@ const idbBackend = createIdbDocBackend();
 export function App() {
   const t = useT();
   const { settings, update } = useAppSettings();
+  // The microphone and the output chosen on the Microphone sheet, for the
+  // Record screen and every player.
+  const routing = useAudioRouting(settings.inputDevice, settings.outputDevice);
   const prefersDark = usePrefersDark();
   const appearance = useMemo(
     () =>
@@ -343,7 +347,7 @@ export function App() {
     />
   );
 
-  return (
+  const shell = (
     <div className="flex h-full flex-col bg-page-bg text-fg">
       <TopBar
         active={tab}
@@ -573,5 +577,10 @@ export function App() {
         />
       )}
     </div>
+  );
+  return (
+    <AudioRoutingContext.Provider value={routing}>
+      {shell}
+    </AudioRoutingContext.Provider>
   );
 }

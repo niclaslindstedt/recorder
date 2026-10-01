@@ -5,6 +5,7 @@ import type { Player } from "@niclaslindstedt/oss-framework/audio";
 
 import { isFlat, type Eq } from "./eq.ts";
 import { createEqChain, newAudioContext, type EqChain } from "./eqChain.ts";
+import { routeOutput } from "./useAudioRouting.ts";
 
 // A player that can be heard through an EQ.
 //
@@ -20,6 +21,10 @@ import { createEqChain, newAudioContext, type EqChain } from "./eqChain.ts";
 // audio context silent unless someone just touched the page. A recording
 // nobody equalises plays exactly as the framework's player would. Once taken
 // in, the element stays in: a flat EQ is a chain that changes nothing.
+//
+// It plays through the output chosen on the Microphone sheet, where the
+// page routes it (`sinkId`, `useAudioRouting.ts`): the element's own while
+// it plays as it is, the context's once the EQ has taken it in.
 
 export type EqPlayer = Player & {
   /** Take the sound through the EQ now — call it from a press, such as
@@ -34,11 +39,14 @@ type Graph = { ctx: AudioContext; chain: EqChain };
 export function useEqPlayer(
   source: Blob | string | null,
   eq: Eq | null,
+  sinkId: string | null = null,
 ): EqPlayer {
   const audio = useRef<HTMLAudioElement | null>(null);
   const graph = useRef<Graph | null>(null);
   const eqRef = useRef(eq);
   eqRef.current = eq;
+  const sinkRef = useRef(sinkId);
+  sinkRef.current = sinkId;
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -73,6 +81,7 @@ export function useEqPlayer(
       const chain = createEqChain(ctx, eqRef.current);
       src.connect(chain.input);
       chain.output.connect(ctx.destination);
+      routeOutput(ctx, sinkRef.current);
       graph.current = { ctx, chain };
       setAnalyser(chain.analyser);
       void ctx.resume();
@@ -85,6 +94,12 @@ export function useEqPlayer(
   useEffect(() => {
     graph.current?.chain.set(eq);
   }, [eq]);
+
+  useEffect(() => {
+    const el = element();
+    if (el) routeOutput(el, sinkId);
+    if (graph.current) routeOutput(graph.current.ctx, sinkId);
+  }, [element, sinkId]);
 
   useEffect(() => {
     const el = element();

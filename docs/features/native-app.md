@@ -15,10 +15,16 @@ Two things are different, and they are the reason the wrapper exists:
   app's own container under **Files → iCloud Drive → the app's name**, where
   you can open and copy them.
 
-Two more are phone conveniences: the **share sheet** takes an export or the
-original file, and the pairing sheet for your own server has a **Scan**
+Three more are phone conveniences: the **share sheet** takes an export or
+the original file; the pairing sheet for your own server has a **Scan**
 button that reads the code with the camera — only then, and keeping no
-picture.
+picture; and the **Microphone** sheet on the Record screen lists the
+phone's own microphones and outputs, so a take can be recorded on the phone
+while you listen on Bluetooth headphones (see
+[Microphone and output](record.md#microphone-and-output)). On Android 12
+and later, opening that sheet asks once for the **Nearby devices**
+permission, which is what lets the app see a Bluetooth headset you have
+already paired; it never scans for new ones.
 
 The microphone is asked for the first time you press Record, with the app's
 own sentence about what it is for, and never at launch. Refusing it leaves

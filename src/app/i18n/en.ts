@@ -206,6 +206,37 @@ export const en = {
     },
   },
 
+  // The Microphone sheet (`MicrophoneSheet.tsx`, `devices.ts`): which
+  // microphone a take records through, and where the app's sound comes out.
+  devices: {
+    title: "Microphone",
+    caption: "Microphone",
+    automatic: "Automatic",
+    automaticHint: "Whatever the device picks",
+    // On the Record screen's button, beside the caption, when an output
+    // has been chosen too.
+    playsOn: "Out: {name}",
+    now: "Now: {name}",
+    absent: "{name} — not connected",
+    absentHint: "Automatic until it is back",
+    recordWith: "Record with",
+    recordWithHint:
+      "Every take, Listening and the monitor listen through this microphone.",
+    playThrough: "Play through",
+    playThroughHint:
+      "Where the monitor, a take's listen-back and the player sound. To record on the phone and listen on Bluetooth headphones, choose the phone's own microphone above and the headphones here.",
+    unnamed:
+      "Press Listen once and the microphones are listed here by name. Until then, Automatic is the device's own.",
+    unnamedInput: "Microphone {n}",
+    unnamedOutput: "Output {n}",
+    noOutputs:
+      "This browser plays wherever the device sends its sound. Choose the output in the device's own controls — on an iPhone or iPad, in Control Center.",
+    picker: "More outputs…",
+    // The device's own loudspeaker and earpiece, as a host lists them.
+    speaker: "Speaker",
+    earpiece: "Earpiece",
+  },
+
   // The equalizer (`eq.ts`, `EqSheet.tsx`): a low cut and five bands named
   // for what they do, heard in the player and baked into an export, never
   // written into the recording.

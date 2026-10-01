@@ -102,6 +102,19 @@ export const SCREENS = {
       await h.settle();
     },
   },
+  microphone: {
+    label: "Microphone sheet",
+    async stage(page, h) {
+      await page.getByRole("button", { name: /^Microphone: / }).click();
+      await page
+        .getByRole("dialog")
+        .last()
+        .getByRole("radio", { name: /Automatic/ })
+        .first()
+        .waitFor();
+      await h.settle();
+    },
+  },
   trigger: {
     label: "Trigger sheet",
     async stage(page, h) {
@@ -307,6 +320,7 @@ export const SCREEN_SETS = {
     "record",
     "listening",
     "quality",
+    "microphone",
     "trigger",
     "eq",
     "recording",

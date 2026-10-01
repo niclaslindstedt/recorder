@@ -26,7 +26,9 @@ import type { TargetRange } from "./target.ts";
 // written anywhere, at any point.
 //
 // It opens only when asked: no listening at launch, no listening behind a
-// setting.
+// setting. It listens through the microphone a take would (`deviceId`, from
+// the Microphone sheet), and starts over on another, so the meter reads the
+// one the take will record through.
 
 /** How long one listening capture runs before it is started over. */
 export const LISTEN_RECYCLE_MS = 5 * 60_000;
@@ -50,20 +52,31 @@ export type Listen = {
   stop: () => Promise<void>;
 };
 
+/** The microphone, as `useAudioRouting` says: the page's `deviceId`, the
+ *  host's routes made before it opens, the lists read again once it has. */
+export type ListenRoute = {
+  deviceId: string | undefined;
+  prepare: () => Promise<void>;
+  refresh: () => void;
+};
+
 export function useListen(
   processing: boolean,
   bands: number,
   target: TargetRange,
+  route: ListenRoute,
 ): Listen {
+  const { deviceId, prepare, refresh } = route;
   const recorder = useRecorder(
     useMemo(
       () => ({
         mode: "encoded" as const,
         bitsPerSecond: LISTEN_BITS_PER_SECOND,
         processing,
+        deviceId,
         bands,
       }),
-      [processing, bands],
+      [processing, deviceId, bands],
     ),
   );
   const [wanted, setWanted] = useState(false);
@@ -96,12 +109,17 @@ export function useListen(
     setAmbient(null);
     setWanted(true);
     try {
+      await prepare();
       await recorder.start();
+      // Open now: the system has re-decided its routes, and the browser
+      // names its devices.
+      void prepare();
+      refresh();
     } catch {
       // `recorder.error` says which; the screen prints it.
       setWanted(false);
     }
-  }, [recorder]);
+  }, [recorder, prepare, refresh]);
 
   const stop = useCallback(async () => {
     setWanted(false);
@@ -111,8 +129,8 @@ export function useListen(
   }, [recorder]);
 
   // Start over every few minutes, so what the recorder is holding never
-  // grows past that; and start over when voice processing is switched, so
-  // the meter reads what a take would.
+  // grows past that; and start over when voice processing or the microphone
+  // is switched, so the meter reads what a take would.
   const { state, cancel, start: open } = recorder;
   useEffect(() => {
     if (!wanted || state !== "recording") return;
@@ -122,13 +140,14 @@ export function useListen(
     return () => clearTimeout(timer);
   }, [wanted, state, cancel, open]);
 
-  const processingRef = useRef(processing);
+  const openedWith = useRef({ processing, deviceId });
   useEffect(() => {
-    if (processingRef.current === processing) return;
-    processingRef.current = processing;
+    const was = openedWith.current;
+    if (was.processing === processing && was.deviceId === deviceId) return;
+    openedWith.current = { processing, deviceId };
     if (!wanted) return;
     void cancel().then(() => open().catch(() => setWanted(false)));
-  }, [processing, wanted, cancel, open]);
+  }, [processing, deviceId, wanted, cancel, open]);
 
   return {
     on: wanted,

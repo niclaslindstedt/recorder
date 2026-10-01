@@ -123,6 +123,13 @@ build without it launches to a blank screen.
 - [ ] On a real device, the first press on Record asks for the microphone
       with the app's own sentence (`NSMicrophoneUsageDescription`), and a
       refusal leaves the meter dark with the app saying why.
+- [ ] With Bluetooth headphones connected (AirPods, Pixel Buds…), on both
+      platforms: **Record → Microphone**, choose the phone's own microphone,
+      Listen and turn the monitor on. The meter moves when you speak at the
+      phone (not at the headset), and the monitor plays in the headphones
+      at full quality, not the narrow call sound. Back to **Automatic**, the
+      headset's microphone records again. On Android 12+, opening the sheet
+      the first time asks for Nearby devices, and only then.
 - [ ] **Settings → Cloud sync → Dropbox** opens Dropbox in a sheet over the
       app (not in Safari), and approving closes the sheet and connects.
       Closing the sheet instead leaves the backend as it was.
