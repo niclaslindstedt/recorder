@@ -8,8 +8,10 @@ import { HowlDetector } from "./howl.ts";
 // Monitoring: the microphone, through the EQ, into the headphones — so the
 // EQ a take will start with can be set by ear before pressing Record.
 //
-// It opens only when someone presses Monitor in the EQ sheet, and closes
-// when they press it again or the sheet closes. It keeps nothing: there is
+// It opens only when someone presses Monitor — in the EQ sheet, or the
+// headphones glyph while Listening and Recording — and closes when they
+// press it again or the Record screen has no microphone open for it to sit
+// beside. It is a stream of its own, never the capture's. It keeps nothing: there is
 // no recorder on this path, only the microphone, the filters and the
 // output. It asks the device for what a take would ask for — voice
 // processing on or off as the Quality sheet says — so it sounds like the
@@ -160,5 +162,6 @@ export function useMonitor(eq: Eq | null, processing: boolean): Monitor {
   // Closed on leaving, whatever else happened.
   useEffect(() => () => stop(), [stop]);
 
-  return { state, analyser, start, stop: () => stop() };
+  const stopOff = useCallback(() => stop(), [stop]);
+  return { state, analyser, start, stop: stopOff };
 }

@@ -252,8 +252,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   since the framework's `usePlayer` keeps its element and an element's
   sound can only be routed by its holder — taken through the chain only
   once an EQ is wanted, and only on a press; `useMonitor.ts` is the
-  microphone through the EQ into headphones, opened on Monitor and keeping
-  nothing, with `howl.ts` (pure, tested in `tests/howl_test.ts`) listening
+  microphone through the EQ into headphones, opened on Monitor (the EQ
+  sheet's, or the headphones glyph while Listening and Recording — one
+  monitor, a stream of its own beside the capture) and keeping nothing,
+  with `howl.ts` (pure, tested in `tests/howl_test.ts`) listening
   to what it sends out and stopping it the moment it hears feedback — one
   dominant, steady, loud tone; never loosen that guard into something a
   speaker loop gets past. `EqSheet.tsx` / `EqParts.tsx` are the sheet, its knobs and its
@@ -628,9 +630,11 @@ with `doc: <slug>` in the front matter; the collator renders that as a
   take on Stop "to be safe". Listening keeps nothing at all: it is a capture
   that is only ever cancelled, never saved, started over every few minutes
   so it holds no more than that in memory — never add a way to keep what it
-  heard. The microphone opens only on Listen, Record or the EQ sheet's
-  Monitor, never at launch; the monitor is microphone → filters →
-  headphones, with no recorder on the path — never add one.
+  heard. The microphone opens only on Listen, Record or a Monitor (the EQ
+  sheet's, or the headphones glyph while Listening or Recording), never at
+  launch; the monitor is microphone → filters → headphones, with no
+  recorder on the path — never add one, and never route the monitor into
+  the take.
 - **One target, everywhere a level is judged.** The waveform's band and
   colours, the meter's band and colour and Listening's verdict all read the
   same range (`target.ts`); a new place that judges a level reads it too,

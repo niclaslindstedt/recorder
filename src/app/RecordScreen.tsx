@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -39,7 +40,9 @@ import { QualitySheet } from "./QualitySheet.tsx";
 import {
   AmbientReadout,
   ChoiceButton,
+  HeadphonesCheck,
   ListenCard,
+  MonitorGlyph,
   RoundGlyph,
   TakeReview,
   TakeStats,
@@ -139,26 +142,37 @@ export function RecordScreen({
     null,
   );
 
-  // The EQ new takes start with, heard through the monitor while the EQ
-  // sheet is open — or flat while Compare is held.
+  // The monitor: the microphone through the EQ new takes start with, into
+  // headphones — from the EQ sheet's Monitor, or the headphones glyph while
+  // Listening and Recording. One monitor, whichever switched it on; flat
+  // while the sheet's Compare is held. It runs beside the capture, never
+  // in it: nothing it plays is kept.
   const [eqBypassed, setEqBypassed] = useState(false);
   const monitor = useMonitor(
     eqBypassed ? null : settings.recordEq,
     settings.voiceProcessing,
   );
+  // On speakers it howls, and a howl while recording is in the take: the
+  // glyph asks once whether headphones are on. The sheet's panel says so
+  // before its button, so starting it there is the same answer.
+  const headphonesOn = useRef(false);
+  const [askHeadphones, setAskHeadphones] = useState(false);
   const monitorControls = useMemo(
     () => ({
       ...monitor,
-      // One microphone at a time: Listening hands it over.
       start: () => {
-        if (listen.on) void listen.stop();
+        headphonesOn.current = true;
         monitor.start();
       },
     }),
-    [monitor, listen],
+    [monitor],
   );
+  const toggleMonitor = () => {
+    if (monitor.state === "on" || monitor.state === "starting") monitor.stop();
+    else if (headphonesOn.current) monitor.start();
+    else setAskHeadphones(true);
+  };
   const closeEq = () => {
-    monitor.stop();
     setEqBypassed(false);
     setSheet(null);
   };
@@ -205,16 +219,49 @@ export function RecordScreen({
   const freeBytes = useFreeBytes(live);
   useEffect(() => () => onCaptureChange(false), [onCaptureChange]);
 
+  // Listening handing the microphone to a take: the monitor keeps running
+  // across the gap.
+  const [handingOver, setHandingOver] = useState(false);
   const start = useCallback(async () => {
     setClipped(false);
-    // Listening hands the microphone over: the level is already set.
-    if (listen.on) await listen.stop();
+    setHandingOver(true);
     try {
+      // Listening hands the microphone over: the level is already set.
+      if (listen.on) await listen.stop();
       await recorder.start();
     } catch {
       // `recorder.error` says which; the screen prints it.
+    } finally {
+      setHandingOver(false);
     }
   }, [recorder, listen]);
+
+  // The monitor runs only beside an open microphone — Listening, a take
+  // running or paused — or in the EQ sheet. Stop, Discard, Review and
+  // leaving Listening close it.
+  const monitorWanted =
+    listen.on || live || state === "starting" || handingOver || sheet === "eq";
+  const { state: monitorState, stop: stopMonitor } = monitor;
+  useEffect(() => {
+    if (monitorWanted) return;
+    setAskHeadphones(false);
+    if (monitorState !== "off") stopMonitor();
+  }, [monitorWanted, monitorState, stopMonitor]);
+
+  // A monitor that could not open, or stopped itself on hearing feedback,
+  // says so; the sheet says it in its panel.
+  const lastMonitorState = useRef(monitorState);
+  useEffect(() => {
+    const was = lastMonitorState.current;
+    lastMonitorState.current = monitorState;
+    if (was === monitorState || sheet === "eq") return;
+    if (monitorState === "denied") onNotice(t("eq.monitor.denied"));
+    if (monitorState === "failed") onNotice(t("eq.monitor.failed"));
+    if (monitorState === "feedback") onNotice(t("eq.monitor.feedback"));
+  }, [monitorState, sheet, onNotice, t]);
+  const monitorGlyph = (
+    <MonitorGlyph state={monitorState} onToggle={toggleMonitor} />
+  );
 
   const stop = useCallback(async () => {
     const result = await recorder.stop();
@@ -424,21 +471,28 @@ export function RecordScreen({
           />
           {formatTimer(recorder.elapsedMs)}
         </div>
-        <div
-          className="max-w-full truncate text-sm text-muted"
-          role="status"
-          aria-live="polite"
-        >
-          {state === "starting"
-            ? t("record.starting")
-            : state === "paused"
-              ? t("record.paused")
-              : state === "stopping"
-                ? t("record.saving")
-                : t("record.recordingTo", {
-                    quality: qualityValue,
-                    folder: destinationValue,
-                  })}
+        {/* The monitor at the end of the line, not in a corner: a long
+            take's timer needs the width. Upright, a spacer of its size on
+            the other end keeps the line centred. */}
+        <div className="flex max-w-full items-center gap-2">
+          {!stand && <span aria-hidden className="w-11 shrink-0" />}
+          <div
+            className="min-w-0 truncate text-sm text-muted"
+            role="status"
+            aria-live="polite"
+          >
+            {state === "starting"
+              ? t("record.starting")
+              : state === "paused"
+                ? t("record.paused")
+                : state === "stopping"
+                  ? t("record.saving")
+                  : t("record.recordingTo", {
+                      quality: qualityValue,
+                      folder: destinationValue,
+                    })}
+          </div>
+          {monitorGlyph}
         </div>
       </div>
     );
@@ -565,6 +619,7 @@ export function RecordScreen({
           </span>{" "}
           <span className="text-muted">{t("listen.nothingKept")}</span>
         </p>
+        {monitorGlyph}
         <RoundGlyph
           size="sm"
           label={t("listen.stop")}
@@ -711,6 +766,15 @@ export function RecordScreen({
         />
       )}
 
+      <HeadphonesCheck
+        open={askHeadphones}
+        onMonitor={() => {
+          setAskHeadphones(false);
+          headphonesOn.current = true;
+          monitor.start();
+        }}
+        onCancel={() => setAskHeadphones(false)}
+      />
       <ConfirmDialog
         open={confirmDiscard}
         title={t("record.discardConfirm")}

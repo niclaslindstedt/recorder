@@ -13,6 +13,7 @@ import {
   Button,
   CheckIcon,
   ChevronRightIcon,
+  Modal,
   PauseIcon,
   PlayIcon,
   TrashIcon,
@@ -22,9 +23,11 @@ import {
 import { formatDuration } from "./format.ts";
 import { ClipIcon, HeadphonesIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import { SheetTitle } from "./ModalHeader.tsx";
 import type { Eq } from "./eq.ts";
 import type { Ambient, Verdict } from "./levels.ts";
 import { useEqPlayer } from "./useEqPlayer.ts";
+import type { MonitorState } from "./useMonitor.ts";
 
 // The pieces the Record screen's four modes are built from
 // (docs/design.md, "Record"). The screen itself (`RecordScreen.tsx`) owns
@@ -205,6 +208,98 @@ export function RoundGlyph({
     >
       {children}
     </button>
+  );
+}
+
+/** The monitor as a glyph, for Listening and Recording: the microphone
+ *  through the take's EQ, into headphones. Lit while it runs, red once the
+ *  feedback guard has stopped it; a press switches it. Its name says what a
+ *  press will do. */
+export function MonitorGlyph({
+  state,
+  onToggle,
+}: {
+  state: MonitorState;
+  onToggle: () => void;
+}) {
+  const t = useT();
+  const on = state === "on" || state === "starting";
+  // Stopped by the feedback guard or refused: off, in the danger colour,
+  // until it is pressed again — the notice says why in words.
+  const trouble =
+    state === "feedback" || state === "denied" || state === "failed";
+  const label = on ? t("eq.monitor.toggleOff") : t("eq.monitor.toggle");
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={on}
+      title={label}
+      onClick={onToggle}
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
+        on
+          ? "border-accent/60 bg-accent/15 text-accent"
+          : trouble
+            ? "border-danger/60 bg-surface text-danger hover:bg-danger/10"
+            : "border-line bg-surface text-fg hover:bg-surface-2"
+      }`}
+    >
+      <HeadphonesIcon
+        className={`h-5 w-5 ${state === "starting" ? "animate-pulse" : ""}`}
+      />
+    </button>
+  );
+}
+
+/** Asked before the glyph first starts the monitor: on speakers it howls,
+ *  and while recording the howl is in the take. Monitor starts it inside
+ *  the press itself — a browser lets sound start only there — which is why
+ *  this is not the framework's `ConfirmDialog`, whose confirm lands a
+ *  couple of frames later. */
+export function HeadphonesCheck({
+  open,
+  onMonitor,
+  onCancel,
+}: {
+  open: boolean;
+  onMonitor: () => void;
+  onCancel: () => void;
+}) {
+  const t = useT();
+  return (
+    <Modal
+      open={open}
+      onClose={onCancel}
+      labelledBy="headphones-title"
+      role="alertdialog"
+      centered
+      closeLabel={t("common.close")}
+    >
+      <SheetTitle
+        titleId="headphones-title"
+        title={t("eq.monitor.confirmTitle")}
+        onClose={onCancel}
+      />
+      <div className="flex flex-col gap-4 p-4">
+        <div className="flex items-start gap-3">
+          <HeadphonesIcon className="mt-0.5 h-6 w-6 shrink-0 text-accent" />
+          <p className="text-sm text-fg">{t("eq.monitor.confirmHint")}</p>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onCancel}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={onMonitor}
+            className="flex items-center gap-1.5"
+          >
+            <HeadphonesIcon className="h-4 w-4" />
+            {t("eq.monitor.start")}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 

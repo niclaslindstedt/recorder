@@ -70,8 +70,9 @@ count, a repeated date on every row or an explanatory paragraph under every
 control do not, so they are gone or folded into a heading.
 
 **8. Privacy is a behaviour, not a banner.** The microphone opens only when
-someone presses Listen, Record or the EQ sheet's Monitor, and closes when
-they stop. Nothing listens
+someone presses Listen, Record or a Monitor (the EQ sheet's, or the
+headphones glyph while Listening or Recording), and closes when they stop.
+Nothing listens
 at launch. Nothing is written until Save.
 
 ## The shell
@@ -209,7 +210,7 @@ level, placing a microphone, checking a room, or just watching sound.
 
 ```
 ┌───────────────────────────────────────────┐
-│  ● Listening — nothing is kept      ( ■ ) │  status: what mode, and a stop glyph to leave it
+│  ● Listening — nothing is kept (🎧) ( ■ ) │  status: what mode, monitor, and a stop glyph to leave it
 │  ┌─────────────────────────────────────┐  │
 │  │ Waveform · the last few seconds ≋▥▦ │  │  the visualizer, and its switcher
 │  │ −6  - - - - - - - - - - - - - - -   │  │
@@ -229,6 +230,14 @@ level, placing a microphone, checking a room, or just watching sound.
 
 - **The visualizer** gets the stage (see _The visualizers_ below): the
   card grows to fill whatever height is left.
+- **The headphones glyph** in the status line is the monitor: the
+  microphone through the take's EQ into headphones, so a level is set by
+  ear as well as by eye. It is a toggle, lit while it runs, beside the stop
+  glyph because both are about the open microphone rather than the take.
+  The first press asks whether headphones are on (a sheet with Monitor
+  inside it, so the sound starts within the press); the EQ sheet's own
+  Monitor, which says so beside its button, counts as the answer. It
+  carries on into a take started from here, and closes when Listening does.
 - **The big meter** is the framework's level meter at the Record screen's
   size: a bar 24 px tall, the reading beside it in the text colour, and a
   larger clip lamp that shows a **glyph instead of the word CLIP**: a wave
@@ -278,7 +287,7 @@ level, placing a microphone, checking a room, or just watching sound.
 ```
 ┌───────────────────────────────────────────┐
 │               ● 0:42.3                    │  the timer is the headline (60 px)
-│      Standard · 128 kbit/s · to Ideas     │  what this take is, read-only
+│    Standard · 128 kbit/s · to Ideas (🎧)  │  what this take is, read-only; the monitor
 │  ┌─────────────────────────────────────┐  │
 │  │ Waveform · the last few seconds ≋▥▦ │  │  the visualizer — fills the room
 │  │        ▂▅█▅▂    ▃▇▃   ▂▃▅▃▂        │  │
@@ -300,6 +309,14 @@ level, placing a microphone, checking a room, or just watching sound.
   glance says "yes, it is running". The red dot beside it pulses.
 - **The context line** repeats the quality and the destination read-only,
   because they can't change mid-take but a journalist wants to be sure.
+- **The headphones glyph** is the monitor, the same toggle as Listening's,
+  at the end of the context line (upright, a spacer of its width at the
+  other end keeps the line centred). Not in the timer's corner: an hour's
+  take, `1:00:00.0`, needs the whole width on a small phone. Not in the
+  action row: that
+  row is the button and one neighbour either side, and the monitor is about
+  hearing the take, not what happens to it. Stop, Discard and leaving
+  close it; Pause does not, because the room is still worth hearing.
 - **The visualizer** takes all the height the other rows leave. Along its
   foot runs **the whole take** as a thin strip: the same thumbnail the list
   will show, so the take is recognisable later, and the long view beside the
@@ -479,8 +496,11 @@ whole screen on two fields and put a big red Discard under a small Save.
   judging a change; it changes nothing.
 - **Monitor** (Record screen only) says to put headphones on before it
   starts, stops itself the moment it hears feedback (and says so, in the
-  place the hint was), opens the microphone only on the press, keeps nothing, and hands
-  the microphone over from Listening. In the player, the same place holds
+  place the hint was), opens the microphone only on the press, and keeps
+  nothing. It is the same monitor as the headphones glyph while Listening
+  and Recording: it runs beside Listening rather than taking the microphone
+  from it, and closing the sheet closes it only when nothing else has the
+  microphone open. In the player, the same place holds
   the transport, so a change is heard without leaving the sheet.
 
 ## Recordings

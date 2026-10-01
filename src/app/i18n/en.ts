@@ -261,6 +261,12 @@ export const en = {
       failed: "The microphone could not be opened here.",
       feedback:
         "Stopped: it was hearing itself through the speaker. Put headphones on and start it again.",
+      // The headphones glyph while Listening and Recording.
+      toggle: "Monitor on headphones",
+      toggleOff: "Stop monitoring",
+      confirmTitle: "Headphones on?",
+      confirmHint:
+        "You will hear the microphone through the EQ. On speakers it will howl — and while recording, the howl goes into the take.",
     },
   },
 

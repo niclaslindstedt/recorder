@@ -13,7 +13,7 @@ buttons. Side by side, how it will sound: **Quality** (the preset's name,
 with its bitrate on the caption) opens the Quality sheet, and **EQ** (Flat,
 a preset's name, or Custom) opens the [equalizer](equalizer.md) — the EQ
 new takes start with, which you can **Monitor** on headphones before you
-record. Under them, the whole width, **Save to** (the folder a new take is
+record (and while Listening or Recording, from the headphones glyph). Under them, the whole width, **Save to** (the folder a new take is
 filed in) opens the folder picker. Save to starts on the folder the library
 is showing, so pressing Record while you are in Interviews files the take
 there.
@@ -47,10 +47,19 @@ and it quietly starts over every five minutes, so it never holds more than
 that in memory and writes nothing, ever. Pressing record from Listening
 starts the take with the level already set.
 
+The **headphones glyph** beside Stop monitors the microphone: you hear it
+through the take's EQ in your headphones, so a level and a placement can be
+judged by ear too. It asks whether your headphones are on the first time,
+and carries on into the take if you press record. See
+[Monitoring](equalizer.md#monitoring).
+
 ## Recording
 
 The timer is the headline, in tenths, with a pulsing dot; the line under it
-repeats the quality and the folder, read-only. The visualizer takes the
+repeats the quality and the folder, read-only. The **headphones glyph** by
+the timer monitors the take as it goes down, through its EQ, into your
+headphones; the take is the same with it on or off, and Stop closes it. The
+visualizer takes the
 height the other rows leave, with **the whole take so far** as a thin strip
 along its foot. Under the meter, four figures say what the take is so far:
 
