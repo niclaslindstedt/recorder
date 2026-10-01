@@ -23,6 +23,10 @@ import { targetTone, type TargetRange, type TargetTone } from "./target.ts";
 //   through `data-target`, set here on every frame without a render. The
 //   peak, not the bar's length, because the target is a range for peaks:
 //   the bar is the average, which sits well under them.
+//
+// Over the meter, the target in words — its name and its range, beside a
+// swatch drawn like the band — so "under the target" and "over the
+// target" in Listening's verdict have something on screen to point at.
 
 type Subscribe = (
   listener: (frame: { meter: MeterState }) => void,
@@ -32,9 +36,11 @@ type Props = {
   subscribe: Subscribe;
   labels: Partial<LevelMeterLabels>;
   target: TargetRange;
+  /** The target in words: "Target", and what it is — "Voice · −18 to −6 dB". */
+  targetLabel: { caption: string; value: string };
 };
 
-export function BigMeter({ subscribe, labels, target }: Props) {
+export function BigMeter({ subscribe, labels, target, targetLabel }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const { lowDb, highDb } = target;
 
@@ -55,15 +61,26 @@ export function BigMeter({ subscribe, labels, target }: Props) {
   }, [subscribe, lowDb, highDb]);
 
   return (
-    <div
-      ref={box}
-      className="app-meter-big"
-      style={{
-        ["--target-from" as string]: `${meterFill(lowDb) * 100}%`,
-        ["--target-to" as string]: `${meterFill(highDb) * 100}%`,
-      }}
-    >
-      <LevelMeter subscribe={subscribe} labels={labels} />
+    <div className="flex flex-col gap-1.5">
+      <p className="flex min-w-0 items-center gap-2 text-xs">
+        <span aria-hidden className="app-target-swatch h-3 w-5 shrink-0" />
+        <span className="shrink-0 text-[0.6875rem] font-semibold tracking-wide text-muted uppercase">
+          {targetLabel.caption}
+        </span>
+        <span className="min-w-0 truncate font-medium text-fg-bright">
+          {targetLabel.value}
+        </span>
+      </p>
+      <div
+        ref={box}
+        className="app-meter-big"
+        style={{
+          ["--target-from" as string]: `${meterFill(lowDb) * 100}%`,
+          ["--target-to" as string]: `${meterFill(highDb) * 100}%`,
+        }}
+      >
+        <LevelMeter subscribe={subscribe} labels={labels} />
+      </div>
     </div>
   );
 }

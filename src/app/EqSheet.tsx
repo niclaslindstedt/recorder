@@ -10,9 +10,10 @@ import {
   normalizeEq,
   presetOf,
   withGain,
+  withPreset,
   type Eq,
 } from "./eq.ts";
-import { EqCurve, Knob } from "./EqParts.tsx";
+import { EqCurve, Knob, useEqName } from "./EqParts.tsx";
 import { HeadphonesIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { SheetTitle } from "./ModalHeader.tsx";
@@ -22,7 +23,9 @@ import type { Monitor } from "./useMonitor.ts";
 // from the Record screen for the EQ new takes start with, and from the
 // player for one recording's. The curve on top, the starting points, a
 // knob per band, the low cut and Compare; under them whatever hears it —
-// the monitor on the Record screen, the transport in the player.
+// the monitor on the Record screen, the transport in the player. A starting
+// point sets the five bands and never the low cut, which is its own switch:
+// the two never undo each other.
 //
 // Every move is heard at once; the sheet's owner keeps the EQ (the Record
 // screen in settings as it moves, the player when the sheet closes).
@@ -55,6 +58,7 @@ export function EqSheet({
   const t = useT();
   const current = eq ?? FLAT_EQ;
   const preset = presetOf(eq);
+  const eqName = useEqName();
   const set = (next: Eq) => onChange(normalizeEq(next));
 
   const pill = (on: boolean) =>
@@ -78,7 +82,7 @@ export function EqSheet({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <span className="min-w-0 flex-1 truncate text-sm font-semibold text-fg-bright">
-              {preset ? t(`eq.preset.${preset}`) : t("eq.custom")}
+              {eqName(eq)}
             </span>
             <button
               type="button"
@@ -106,7 +110,7 @@ export function EqSheet({
               type="button"
               role="radio"
               aria-checked={preset === p.id}
-              onClick={() => onChange(normalizeEq(p.eq))}
+              onClick={() => set(withPreset(eq, p.id))}
               className={pill(preset === p.id)}
             >
               {t(`eq.preset.${p.id}`)}

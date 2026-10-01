@@ -30,7 +30,8 @@ import {
   formatSize,
   formatWhen,
 } from "./format.ts";
-import { presetOf, sameEq, type Eq } from "./eq.ts";
+import { sameEq, type Eq } from "./eq.ts";
+import { EqLine, useEqName } from "./EqParts.tsx";
 import { EqSheet } from "./EqSheet.tsx";
 import { EqIcon, StarFilledIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
@@ -102,12 +103,7 @@ export function PlayerModal({
     if (!sameEq(eq, recording.eq ?? null))
       store.setRecordingEq(recording.id, eq);
   };
-  const eqName = eq
-    ? (() => {
-        const id = presetOf(eq);
-        return id ? t(`eq.preset.${id}`) : t("eq.custom");
-      })()
-    : t("eq.preset.flat");
+  const eqName = useEqName()(eq);
 
   useEffect(() => {
     let live = true;
@@ -266,7 +262,11 @@ export function PlayerModal({
                   : "border-line text-fg hover:bg-surface-2"
               }`}
             >
-              <EqIcon className="h-5 w-5" />
+              {eq ? (
+                <EqLine eq={eq} className="h-5 w-8" />
+              ) : (
+                <EqIcon className="h-5 w-5" />
+              )}
             </button>
             <Button
               variant="secondary"

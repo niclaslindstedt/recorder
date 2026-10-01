@@ -36,10 +36,12 @@ function Glyph({ className, children }: IconProps & { children: ReactNode }) {
 export function AppMarkIcon({ className }: IconProps) {
   return (
     <Glyph className={className}>
-      <circle cx="10" cy="12" r="7" />
-      <circle cx="10" cy="12" r="2.5" fill="currentColor" stroke="none" />
-      <path d="M20 8.5a6 6 0 0 1 0 7" />
-      <path d="M22.5 6a9.5 9.5 0 0 1 0 12" />
+      {/* public/icons/icon.svg's geometry at 0.24: the outer arc's crown,
+          stroke included, ends at 23.3 — inside the box, never cut off. */}
+      <circle cx="9.6" cy="12" r="6.48" />
+      <circle cx="9.6" cy="12" r="2.4" fill="currentColor" stroke="none" />
+      <path d="M18.31 9.21a4.8 4.8 0 0 1 0 5.58" />
+      <path d="M20.56 7.02a7.92 7.92 0 0 1 0 9.96" />
     </Glyph>
   );
 }

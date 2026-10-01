@@ -29,7 +29,8 @@ import { folderPath } from "./folders.ts";
 import { formatSize, formatSpan, formatTimer } from "./format.ts";
 import { presetOf } from "./eq.ts";
 import { EqSheet, MonitorPanel } from "./EqSheet.tsx";
-import { ClipIcon, EqIcon } from "./icons.tsx";
+import { EqLine } from "./EqParts.tsx";
+import { ClipIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { liveCtx } from "./ids.ts";
 import { paced } from "./pacing.ts";
@@ -45,7 +46,7 @@ import {
   useFreeBytes,
 } from "./RecordParts.tsx";
 import { defaultTitle, finishTake } from "./takes.ts";
-import { targetRange } from "./target.ts";
+import { formatTargetDb, targetRange } from "./target.ts";
 import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
@@ -312,12 +313,16 @@ export function RecordScreen({
       onClick={() => setSheet("quality")}
     />
   );
+  // The EQ's own curve stands where a glyph would, so the button shows
+  // what new takes will sound like and not only what it is called; the low
+  // cut, a switch of its own, is said beside the caption.
   const eqPreset = presetOf(settings.recordEq);
   const eqButton = (slim = false) => (
     <ChoiceButton
       slim={slim}
-      icon={<EqIcon className="h-5 w-5" />}
+      icon={<EqLine eq={settings.recordEq} className="h-7 w-11" />}
       caption={t("eq.caption")}
+      detail={settings.recordEq?.lowCut ? t("eq.lowCut") : undefined}
       value={eqPreset ? t(`eq.preset.${eqPreset}`) : t("eq.custom")}
       onClick={() => setSheet("eq")}
     />
@@ -367,6 +372,16 @@ export function RecordScreen({
     <BigMeter
       subscribe={subscribe}
       target={target}
+      targetLabel={{
+        caption: t("target.onMeter"),
+        value: t("target.named", {
+          name: t(`target.preset.${settings.levelTarget}`),
+          range: t("target.range", {
+            low: formatTargetDb(target.lowDb),
+            high: formatTargetDb(target.highDb),
+          }),
+        }),
+      }}
       labels={{
         meter: t("record.level"),
         clip: t("record.clip"),
