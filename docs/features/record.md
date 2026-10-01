@@ -171,6 +171,9 @@ container it offers (Opus in a WebM on most browsers, AAC in an MP4 on
 Safari). **Lossless** is encoded to FLAC on the device; its size is an
 estimate, since FLAC's depends on the sound. **Bitrate, kbit/s** fine-tunes
 a compact take (64 to 320); a bitrate no preset offers shows as **Custom**.
+Each preset also says how long this device has **room for** at that quality,
+from the browser's own estimate of its free space — the same figure as "Room
+for" while recording, rounded to the hour.
 
 Either way an export can produce WAV, FLAC or MP3 (see
 [`export.md`](export.md)); what the sheet decides is what the app keeps. The

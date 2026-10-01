@@ -7,6 +7,7 @@ import {
 
 import { MinusIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import { SEGMENTS_FIT } from "./RecordParts.tsx";
 import {
   TARGET_IDS,
   TARGET_MAX_DB,
@@ -66,6 +67,7 @@ export function TargetLevel({ settings, update }: Props) {
         onChange={(next) => update("levelTarget", next)}
         ariaLabel={t("target.title")}
         fullWidth
+        className={SEGMENTS_FIT}
       />
       <TargetScale range={range} />
       <p className="text-xs text-muted">
