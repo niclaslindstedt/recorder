@@ -17,6 +17,7 @@ src/
     ├── takes.ts             a take finished: what the microphone handed back → a record + bytes
     ├── quality.ts           the four ways a take is kept (Memo, Standard, High, Lossless) and a minute's cost
     ├── levels.ts            Listening's readings: the room, the peak, the headroom, a verdict
+    ├── target.ts            the target level: where a take's peaks should land, by source, and a peak's tone against it
     ├── pacing.ts            the capture's frames paced to the display, so the meter moves every frame
     ├── playhead.ts          the player's playhead as a smooth clock over the element's coarse time
     ├── export.ts            WAV / FLAC / MP3 out, through the framework's encoders; the size estimate
@@ -35,7 +36,8 @@ src/
     ├── RecordScreen.tsx     Record, in four modes: Ready, Listening, Recording, Review
     ├── RecordParts.tsx      the pieces those modes are drawn from; the free-space estimate
     ├── Visualizer.tsx       the waveform, spectrum or spectrogram card
-    ├── QualitySheet.tsx     how the next take is kept, and voice processing
+    ├── BigMeter.tsx         the framework's meter at the Record screen's size, with the target on it
+    ├── QualitySheet.tsx     how the next take is kept, voice processing, and the target level (TargetLevel.tsx)
     ├── LibraryScreen.tsx    the scope, the search glyph, the list under day headings
     ├── FolderPicker.tsx     the one folder picker: the library's scope, Move, a take's destination
     ├── SearchSheet.tsx      search across the space's titles, notes and folder names
@@ -86,8 +88,9 @@ is its first consumer of the `audio` module:
 - **The spectrum** — the analyser's bins folded onto log-spaced bands with a
   little smoothing, drawn with `SpectrumBars`. The Record screen's other two
   views, the scrolling waveform and the spectrogram, are the app's own
-  (`Visualizer.tsx`), drawn from the same frames on the meter's own scale
-  and zones.
+  (`Visualizer.tsx`), drawn from the same frames on the meter's own scale,
+  and coloured against the target level (`target.ts`) with red from the
+  framework's hot zone.
 - **The encoders** — WAV (16, 24 or 32-bit float), FLAC (fixed predictors and
   Rice coding, three levels), and MP3 through an optional entry
   (`audio/mp3`) that pulls the encoder package on first use. Decoding goes

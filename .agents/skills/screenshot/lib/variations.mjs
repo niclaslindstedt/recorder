@@ -40,6 +40,14 @@ export const VARIANTS = {
     label: "Spectrogram",
     settings: { visualizer: "spectrogram" },
   },
+  "target-music": {
+    label: "Target level: Music",
+    settings: { levelTarget: "music" },
+  },
+  "target-custom": {
+    label: "Target level: Custom −30 to −12",
+    settings: { levelTarget: "custom", targetLowDb: -30, targetHighDb: -12 },
+  },
   "voice-processing": {
     label: "Voice processing on",
     settings: { voiceProcessing: true },

@@ -282,13 +282,32 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   and on leaving, started over every five minutes (`LISTEN_RECYCLE_MS`) so
   it never holds more than that in memory. Nothing it hears is kept.
   `src/app/levels.ts` reads the last four seconds of meter readings as the
-  room's noise floor, the peak, the headroom and a verdict on the
-  framework's own zones. Pure and clock-free.
+  room's noise floor, the peak, the headroom and a verdict against the
+  target level (`target.ts`) — quiet under it, good in it, loud over it —
+  with hot and clipping the framework's. Pure and clock-free.
 - `src/app/quality.ts` — the four presets (Memo 64, Standard 128, High 256
   kbit/s, Lossless) over `recordingKind` / `recordingBitrate`, and what a
   minute of each costs; pure, so the Record screen's button and
   `QualitySheet.tsx`'s ticked row never disagree. The sheet also carries the
-  bitrate fine-tune and voice processing.
+  bitrate fine-tune, voice processing and the target level.
+- `src/app/target.ts` — the target level: where a take's peaks should land,
+  as a range in dBFS, by what is being recorded (Voice, Music, Loud,
+  Ambience, or a clamped Custom range), and `targetTone`, where a peak lands
+  against it (under / in / over / hot — hot is the framework's `meterTone`,
+  never the range's). **One range, read in four places**: the waveform's
+  band and its bar colours, the big meter (`BigMeter.tsx`), Listening's
+  verdict (`levels.ts`) and the Quality sheet's `TargetLevel.tsx` all draw
+  from here, so the picture, the bar and the words never disagree. The
+  default, Voice, is exactly the framework's good zone.
+- `src/app/BigMeter.tsx` — the Record screen's meter: the framework's
+  `LevelMeter`, with the target as a band on its track and the bar coloured
+  by where the held peak sits against it (a `data-target` attribute set per
+  frame, and `--target-from` / `--target-to`; the drawing is
+  `.app-meter-big` in `styles.css`). The ballistics, the held peak, the
+  lamp and the status region stay the framework's. The colour reaches the
+  bar through the track's `origin-left` child — if the framework's markup
+  moves, the bar falls back to the framework's own colours, so check it on
+  a framework upgrade.
 - `src/app/FolderPicker.tsx` — the one folder picker, in two modes.
   _Browse_ is the library's scope: All, Favorites, the tree with counts and
   each folder's ⋯ menu (rename, new folder inside, move, move up / down,
@@ -460,37 +479,39 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 
 ## Where new code goes
 
-| Change                                         | Goes in                                                                                                                                                                           |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A new fact about a recording                   | `src/app/types.ts` (model) + the validation in `migrations.ts` (an additive optional field needs no step) — and ask what reads it                                                 |
-| A change to what a take becomes                | `src/app/takes.ts`, with tests in `tests/export_test.ts`                                                                                                                          |
-| A change to the tree, or an edit to a record   | `src/app/folders.ts` (pure, tested in `tests/folders_test.ts`) + the store method in `useDocStore.ts`                                                                             |
-| A change to what is deleted, or when           | `src/app/types.ts` (`TRASH_DAYS`, `TOMBSTONE_DAYS`, `wantedFiles`, `purgeAfter`) — never a record removed outright, see "A deletion is a tombstone"                               |
-| A new export format or quality                 | `src/app/export.ts` (tested) + `useAppSettings.ts` (the default) + `ExportModal.tsx` + `SettingsScreen.tsx` — the encoder itself is the framework's                               |
-| A preset for how a take is kept                | `src/app/quality.ts` (pure, tested in `tests/quality_test.ts`) + `QualitySheet.tsx` — the capture reads `recordingKind` / `recordingBitrate`, nothing else                        |
-| What Listening reads, or its verdict           | `src/app/levels.ts` (pure, tested in `tests/levels_test.ts`) — the zones are the framework's `meterTone`, never a second set                                                      |
-| A look, or its name                            | `src/app/look.ts` (the table and the resolution, tested in `tests/look_test.ts`) + its words in `i18n/en.ts` under `look` — the palette itself is the framework's                 |
-| How a meter or a playhead keeps time on screen | `src/app/pacing.ts` / `src/app/playhead.ts` (pure, tested) — the ballistics stay the framework's `stepMeter`                                                                      |
-| Anything done to a folder from the UI          | `src/app/FolderPicker.tsx` (browse mode's ⋯ menu, or New folder) over the edits in `folders.ts` — there is no folders page                                                        |
-| Where an element goes, or a screen's layout    | `docs/design.md` first — the answer should be derivable from it, and if it isn't, it is added there before the code                                                               |
-| A change to the meter, the spectrum, capture   | The framework's `audio` module, not here — this app draws what it is handed                                                                                                       |
-| A new setting                                  | `src/app/useAppSettings.ts` (shape + clamping, tested) + a `Section` in `SettingsScreen.tsx`                                                                                      |
-| A new screen                                   | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                         |
-| Something only the desk does                   | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                             |
-| A new storage backend                          | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                                                                   |
-| A backend only some hosts can offer            | `src/app/cloudHost.ts` (the capability, tested in `tests/cloudHost_test.ts`) + a row in `useSyncEngine.ts`'s `PROVIDER_NAMES` and its `available` — never a check for the wrapper |
-| A change to what the sweep moves               | `src/app/types.ts` (`wantedFiles`) and `useSyncEngine.ts`'s `sweep` — the transfer itself is the framework's `reconcileFiles`                                                     |
-| A change to what the demo shows                | `src/app/dev/demoData.ts` (offsets from `now`, never fixed dates), with tests in `tests/demo_test.ts`, which opens it on every day of a year and at hours around the clock        |
-| A new developer-only affordance                | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                                                        |
-| Anything in the native wrapper                 | `native/...` — and read "The native wrapper" above first                                                                                                                          |
-| Any user-facing string                         | `src/app/i18n/en.ts`, never inline in a component                                                                                                                                 |
-| A shared UI primitive                          | The framework, if it is domain-free; `src/app/` only if it is recorder-specific                                                                                                   |
+| Change                                         | Goes in                                                                                                                                                                            |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A new fact about a recording                   | `src/app/types.ts` (model) + the validation in `migrations.ts` (an additive optional field needs no step) — and ask what reads it                                                  |
+| A change to what a take becomes                | `src/app/takes.ts`, with tests in `tests/export_test.ts`                                                                                                                           |
+| A change to the tree, or an edit to a record   | `src/app/folders.ts` (pure, tested in `tests/folders_test.ts`) + the store method in `useDocStore.ts`                                                                              |
+| A change to what is deleted, or when           | `src/app/types.ts` (`TRASH_DAYS`, `TOMBSTONE_DAYS`, `wantedFiles`, `purgeAfter`) — never a record removed outright, see "A deletion is a tombstone"                                |
+| A new export format or quality                 | `src/app/export.ts` (tested) + `useAppSettings.ts` (the default) + `ExportModal.tsx` + `SettingsScreen.tsx` — the encoder itself is the framework's                                |
+| A preset for how a take is kept                | `src/app/quality.ts` (pure, tested in `tests/quality_test.ts`) + `QualitySheet.tsx` — the capture reads `recordingKind` / `recordingBitrate`, nothing else                         |
+| Where a take's peaks should land               | `src/app/target.ts` (pure, tested in `tests/target_test.ts`) + `TargetLevel.tsx` — the ceiling stays under the framework's hot zone                                                |
+| What Listening reads, or its verdict           | `src/app/levels.ts` (pure, tested in `tests/levels_test.ts`) — read against the target (`target.ts`); hot and clipping are the framework's `meterTone` and lamp, never the range's |
+| How the meter shows the target                 | `src/app/BigMeter.tsx` + `.app-meter-big` in `styles.css` — the meter itself is the framework's `LevelMeter`, never a second one                                                   |
+| A look, or its name                            | `src/app/look.ts` (the table and the resolution, tested in `tests/look_test.ts`) + its words in `i18n/en.ts` under `look` — the palette itself is the framework's                  |
+| How a meter or a playhead keeps time on screen | `src/app/pacing.ts` / `src/app/playhead.ts` (pure, tested) — the ballistics stay the framework's `stepMeter`                                                                       |
+| Anything done to a folder from the UI          | `src/app/FolderPicker.tsx` (browse mode's ⋯ menu, or New folder) over the edits in `folders.ts` — there is no folders page                                                         |
+| Where an element goes, or a screen's layout    | `docs/design.md` first — the answer should be derivable from it, and if it isn't, it is added there before the code                                                                |
+| A change to the meter, the spectrum, capture   | The framework's `audio` module, not here — this app draws what it is handed                                                                                                        |
+| A new setting                                  | `src/app/useAppSettings.ts` (shape + clamping, tested) + a `Section` in `SettingsScreen.tsx`                                                                                       |
+| A new screen                                   | `src/app/<Name>Screen.tsx` + a tab in `src/app/BottomNav.tsx`, or a button in `src/app/TopBar.tsx` if it is an action rather than a place                                          |
+| Something only the desk does                   | Behind `useDesk()` in `App.tsx`, or a `lg:` class / `@media (min-width: 64rem)` rule — the phone shell stays as it is                                                              |
+| A new storage backend                          | The framework, not here — this app only wires adapters up in `useSyncEngine.ts`                                                                                                    |
+| A backend only some hosts can offer            | `src/app/cloudHost.ts` (the capability, tested in `tests/cloudHost_test.ts`) + a row in `useSyncEngine.ts`'s `PROVIDER_NAMES` and its `available` — never a check for the wrapper  |
+| A change to what the sweep moves               | `src/app/types.ts` (`wantedFiles`) and `useSyncEngine.ts`'s `sweep` — the transfer itself is the framework's `reconcileFiles`                                                      |
+| A change to what the demo shows                | `src/app/dev/demoData.ts` (offsets from `now`, never fixed dates), with tests in `tests/demo_test.ts`, which opens it on every day of a year and at hours around the clock         |
+| A new developer-only affordance                | `src/app/dev/`, revealed behind `settings.devMode` in `SettingsScreen.tsx`                                                                                                         |
+| Anything in the native wrapper                 | `native/...` — and read "The native wrapper" above first                                                                                                                           |
+| Any user-facing string                         | `src/app/i18n/en.ts`, never inline in a component                                                                                                                                  |
+| A shared UI primitive                          | The framework, if it is domain-free; `src/app/` only if it is recorder-specific                                                                                                    |
 
 ## Test conventions
 
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
-`migrations`, `takes`, `export`, `format`, `levels`, `quality`, `pacing`,
+`migrations`, `takes`, `export`, `format`, `levels`, `quality`, `target`, `pacing`,
 `playhead`, `look`,
 `useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
 `demoData`), which is where the app's
@@ -588,6 +609,11 @@ with `doc: <slug>` in the front matter; the collator renders that as a
   that is only ever cancelled, never saved, started over every few minutes
   so it holds no more than that in memory — never add a way to keep what it
   heard. The microphone opens only on Listen or Record, never at launch.
+- **One target, everywhere a level is judged.** The waveform's band and
+  colours, the meter's band and colour and Listening's verdict all read the
+  same range (`target.ts`); a new place that judges a level reads it too,
+  never the framework's good zone on its own. Red stays the framework's
+  (over −3 dB, or a clip): no target can make a hot reading look safe.
 - **The clip lamp is never the only signal.** The meter's red zone, the
   latched clip lamp (on the Record screen a glyph — a wave with its tops cut
   flat, `ClipIcon` and `.app-meter-big` — rather than a word), the "Too

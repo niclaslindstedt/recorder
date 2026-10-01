@@ -9,6 +9,7 @@ import {
   verdictFor,
   type Reading,
 } from "../src/app/levels.ts";
+import { targetRange } from "../src/app/target.ts";
 
 const reading = (at: number, over: Partial<Reading> = {}): Reading => ({
   at,
@@ -95,5 +96,41 @@ describe("reading a room", () => {
   it("never reports negative headroom", () => {
     const w = [reading(0, { peakDb: 0.4, clipping: true })];
     expect(readAmbient(w)!.headroomDb).toBe(0);
+  });
+});
+
+describe("the verdict against a target", () => {
+  const voice = targetRange("voice", { lowDb: -18, highDb: -6 });
+  const music = targetRange("music", voice);
+  const ambience = targetRange("ambience", voice);
+
+  it("reads Voice exactly as the meter's own zones", () => {
+    for (const peak of [-45, -19, -18, -12, -6, -5, -4, -3, -1]) {
+      expect(verdictFor(peak, false, voice)).toBe(verdictFor(peak, false));
+    }
+  });
+
+  it("calls the same room too quiet for music and good for a voice", () => {
+    const w = room(-55, -15);
+    expect(readAmbient(w, voice)!.verdict).toBe("good");
+    expect(readAmbient(w, music)!.verdict).toBe("quiet");
+  });
+
+  it("calls birdsong at −24 good for ambience, and a voice over it", () => {
+    expect(readAmbient(room(-58, -24), ambience)!.verdict).toBe("good");
+    expect(readAmbient(room(-55, -10), ambience)!.verdict).toBe("loud");
+  });
+
+  it("keeps hot and clipping the framework's, whatever the target", () => {
+    const wide = targetRange("custom", { lowDb: -40, highDb: -3 });
+    expect(verdictFor(-2, false, wide)).toBe("hot");
+    expect(verdictFor(-20, true, wide)).toBe("clipping");
+  });
+
+  it("still says silent under any target's floor", () => {
+    const lowest = targetRange("custom", { lowDb: -48, highDb: -30 });
+    expect(verdictFor(SILENT_DB, false, lowest)).toBe("silent");
+    expect(verdictFor(-49, false, lowest)).toBe("quiet");
+    expect(verdictFor(-40, false, lowest)).toBe("good");
   });
 });

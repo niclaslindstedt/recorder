@@ -12,6 +12,7 @@ import {
   type Ambient,
   type Reading,
 } from "./levels.ts";
+import type { TargetRange } from "./target.ts";
 
 // Listening: the microphone open, nothing kept (docs/design.md,
 // "Listening: ambient mode").
@@ -49,7 +50,11 @@ export type Listen = {
   stop: () => Promise<void>;
 };
 
-export function useListen(processing: boolean, bands: number): Listen {
+export function useListen(
+  processing: boolean,
+  bands: number,
+  target: TargetRange,
+): Listen {
   const recorder = useRecorder(
     useMemo(
       () => ({
@@ -64,6 +69,10 @@ export function useListen(processing: boolean, bands: number): Listen {
   const [wanted, setWanted] = useState(false);
   const [ambient, setAmbient] = useState<Ambient | null>(null);
   const readings = useRef<Reading[]>([]);
+  // The verdict is read against the target as it is now; a change shows
+  // on the next reading, without starting the microphone over.
+  const targetRef = useRef(target);
+  targetRef.current = target;
 
   useEffect(() => {
     let last = 0;
@@ -77,7 +86,7 @@ export function useListen(processing: boolean, bands: number): Listen {
       });
       if (at - last >= READ_MS) {
         last = at;
-        setAmbient(readAmbient(readings.current));
+        setAmbient(readAmbient(readings.current, targetRef.current));
       }
     });
   }, [recorder]);

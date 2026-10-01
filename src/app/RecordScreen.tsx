@@ -8,7 +8,6 @@ import {
 } from "react";
 
 import {
-  LevelMeter,
   bandTicks,
   layoutBands,
   useRecorder,
@@ -44,12 +43,14 @@ import {
   useFreeBytes,
 } from "./RecordParts.tsx";
 import { defaultTitle, finishTake } from "./takes.ts";
+import { targetRange } from "./target.ts";
 import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
 import { useListen } from "./useListen.ts";
 import { useStand } from "./useShape.ts";
 import { Visualizer } from "./Visualizer.tsx";
+import { BigMeter } from "./BigMeter.tsx";
 
 // The Record screen, an instrument in four modes (docs/design.md, "Record"):
 //
@@ -117,7 +118,15 @@ export function RecordScreen({
       ],
     ),
   );
-  const listen = useListen(settings.voiceProcessing, BANDS);
+  // Where the peaks should land: the waveform's band, the meter's colour and
+  // Listening's verdict all read it.
+  const { levelTarget, targetLowDb, targetHighDb } = settings;
+  const target = useMemo(
+    () =>
+      targetRange(levelTarget, { lowDb: targetLowDb, highDb: targetHighDb }),
+    [levelTarget, targetLowDb, targetHighDb],
+  );
+  const listen = useListen(settings.voiceProcessing, BANDS, target);
   const [take, setTake] = useState<CaptureResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -314,16 +323,15 @@ export function RecordScreen({
   );
 
   const meter = (subscribe: typeof recorder.subscribe) => (
-    <div className="app-meter-big">
-      <LevelMeter
-        subscribe={subscribe}
-        labels={{
-          meter: t("record.level"),
-          clip: t("record.clip"),
-          clipping: t("record.clipping"),
-        }}
-      />
-    </div>
+    <BigMeter
+      subscribe={subscribe}
+      target={target}
+      labels={{
+        meter: t("record.level"),
+        clip: t("record.clip"),
+        clipping: t("record.clipping"),
+      }}
+    />
   );
   const visualizerSize = stand ? "min-h-32 flex-1" : "min-h-44 flex-1";
 
@@ -387,6 +395,7 @@ export function RecordScreen({
         running={state === "recording"}
         ticks={ticks}
         bands={BANDS}
+        target={target}
         overview
         className={visualizerSize}
       />
@@ -516,6 +525,7 @@ export function RecordScreen({
         running
         ticks={ticks}
         bands={BANDS}
+        target={target}
         className={visualizerSize}
       />
     );
