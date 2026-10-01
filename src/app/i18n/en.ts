@@ -93,9 +93,8 @@ export const en = {
 
   // Listening: the microphone open, nothing kept — for setting a level.
   listen: {
-    invite: "Check your level",
     inviteHint:
-      "Hear the room and set your input before you record. Nothing is kept.",
+      "Listen first to hear the room and set your level — nothing is kept.",
     start: "Listen",
     stop: "Stop",
     title: "Listening",
@@ -119,6 +118,8 @@ export const en = {
     clips: "Clips",
     size: "Size",
     left: "Room for",
+    // Ready's face, before a take: what a minute of this quality costs.
+    perMinute: "Per minute",
   },
 
   // What the Record screen draws while listening and recording.
@@ -211,6 +212,8 @@ export const en = {
   devices: {
     title: "Microphone",
     caption: "Microphone",
+    // The tile's caption on the Record screen, where four share a row.
+    short: "Mic",
     automatic: "Automatic",
     automaticHint: "Whatever the device picks",
     // On the Record screen's button, beside the caption, when an output
@@ -290,6 +293,8 @@ export const en = {
         "Stopped: it was hearing itself through the speaker. Put headphones on and start it again.",
       // The headphones glyph: Listening, Recording and the EQ sheet.
       toggle: "Monitor on headphones",
+      // The word under the glyph in Listening's action row.
+      caption: "Monitor",
       toggleOff: "Stop monitoring",
       confirmTitle: "Headphones on?",
       confirmHint:
@@ -325,6 +330,9 @@ export const en = {
     title: "Sound trigger",
     caption: "Trigger",
     off: "Off — records everything",
+    // The Record screen's tile: the value in a word or two.
+    tileOff: "Off",
+    tileOn: "On sound",
     onCut: "On sound · quiet cut out",
     onSilence: "On sound · quiet kept silent",
     detail: "{db} dB · {hold}",
@@ -399,6 +407,11 @@ export const en = {
     searchPlaceholder: "Search titles, notes and folders",
     searchHint: "Looks through every folder in this space.",
     scope: "Showing {scope} — change",
+    // The star beside the scope: favorites at a press, and back.
+    showFavorites: "Show favorites only",
+    showAll: "Show all recordings",
+    // The ⋯ at a row's end — the same menu a hold opens.
+    more: "More for {title}",
     all: "All recordings",
     favorites: "Favorites",
     trash: "Recently deleted",
@@ -464,6 +477,11 @@ export const en = {
       "This recording's file is not on this device yet. It arrives with the next sync.",
     playFailed: "The recording could not be played: {reason}",
     rename: "Rename",
+    // The toolbar at the player's foot: a glyph with its word under it.
+    exportShort: "Export",
+    shareShort: "Share",
+    moveShort: "Move",
+    deleteShort: "Delete",
   },
 
   // The export sheet.
@@ -633,6 +651,19 @@ export const en = {
     captureLogsHint: "Mirror console messages into the log panel below.",
     documentSize: "Document size",
     about: "About",
+    // The glyph index at the top of Settings: a word under each glyph.
+    index: "Sections",
+    jump: "Go to {section}",
+    short: {
+      appearance: "Look",
+      recording: "Record",
+      playback: "Playback",
+      exportDefaults: "Export",
+      sync: "Storage",
+      data: "Data",
+      developer: "Developer",
+      about: "About",
+    },
     version: "Version",
     build: "Build",
     privacy: `${APP_NAME} keeps your recordings on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there. The microphone is used only while you record, and the phone app's camera only when you tap Scan to read a pairing code; no picture is kept.`,

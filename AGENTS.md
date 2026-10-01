@@ -294,27 +294,36 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the three screens. Record and Recordings are the two destinations; Settings
   is reached from the cog on the top bar, because it is a thing you do and
   leave rather than a place you are. Record is an instrument in four modes
-  (`docs/design.md`, "Record"): **Ready** (the Quality and Save-to buttons,
-  the "Check your level" card, the latest recordings, the big button),
-  **Listening** (the microphone open and nothing kept: the visualizer, the
-  big meter, Room / Peak / Headroom and a verdict in words), **Recording**
-  (the timer, the visualizer with the whole take along its foot, the meter
-  with its clip lamp, and the take's four figures — Peak, Clips, Size, Room
-  for), and **Review** (inline: the title, a listen-back, the facts, Save
-  to, the big Save and a Discard glyph that asks first — nothing is written
-  until Save). While a take runs or waits for review, the bottom bar is
-  hidden and the swipe and the tabs are off. Recordings is the scope button
-  (where you are and how many; it opens the folder picker), the search
-  glyph, and the list under day headings; a tap opens the player, a swipe
-  deletes, a hold offers the rest.
+  (`docs/design.md`, "Record"): **Ready** (four choice tiles — Quality,
+  EQ, Mic, Trigger — the instrument at rest, and the action row: Listen,
+  the big button, the folder glyph), **Listening** (the microphone open and
+  nothing kept: the visualizer, the big meter, Room / Peak / Headroom and a
+  verdict in words; Stop, Record and Monitor in the action row),
+  **Recording** (the timer, the visualizer with the whole take along its
+  foot, the meter with its clip lamp, and the take's four figures — Peak,
+  Clips, Size, Room for), and **Review** (inline: the title, the folder
+  chip, a listen-back, the facts as chips, the big Save and a Discard glyph
+  that asks first — nothing is written until Save). While a take runs or
+  waits for review, the bottom bar is hidden and the swipe and the tabs are
+  off. Recordings is the scope button (where you are and how many; it opens
+  the folder picker), the favorites star and the search glyph, and the list
+  under day headings; a tap opens the player, a swipe deletes, a row's ⋯ or
+  a hold offers the rest.
 - `src/app/RecordParts.tsx` — the pieces the Record screen's modes are
-  drawn from (the choice buttons, the listen card, the ambient readout, the
-  take's figures, the review) and `useFreeBytes`, the browser's own estimate
+  drawn from (Ready's standby face, the ambient readout, the take's
+  figures, the review) and `useFreeBytes`, the browser's own estimate
   of its free space behind "Room for" (`navigator.storage.estimate`, read on
   the device, sent nowhere). `Visualizer.tsx` is the card that fills the
   stage while listening and recording: a scrolling waveform on the meter's
   decibel scale, the framework's spectrum bars, or a spectrogram, switched
   in its corner.
+- `src/app/recordChoices.tsx` / `Glyphs.tsx` — the take's choices
+  (quality, EQ, microphone, trigger, folder) said once and drawn as Ready's
+  four tiles and folder glyph, Listening's glyph strip and Review's folder
+  chip; and the glyph-shaped controls the whole app draws with — a choice
+  tile, a round glyph with its word under it, a toolbar's glyph, a chip.
+  A new control that a symbol says plainly is one of these, not a
+  full-width row.
 - `src/app/useListen.ts` — Listening: a throwaway capture through the
   framework's `useRecorder`, on the same path a take uses, cancelled on Stop
   and on leaving, started over every five minutes (`LISTEN_RECYCLE_MS`) so

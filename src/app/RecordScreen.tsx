@@ -18,39 +18,35 @@ import {
 import {
   ConfirmDialog,
   FolderIcon,
-  MicIcon,
   PauseIcon,
   PlayIcon,
-  SlidersIcon,
   StopIcon,
   TrashIcon,
+  WaveformIcon,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { FolderPicker } from "./FolderPicker.tsx";
-import { folderPath } from "./folders.ts";
 import {
   formatDuration,
   formatSize,
   formatSpan,
   formatTimer,
 } from "./format.ts";
-import { presetOf } from "./eq.ts";
 import { EqSheet } from "./EqSheet.tsx";
-import { EqLine } from "./EqParts.tsx";
-import { ClipIcon, TriggerIcon } from "./icons.tsx";
+import { Chip, RoundGlyph } from "./Glyphs.tsx";
+import { ClipIcon, QualityIcon } from "./icons.tsx";
 import { MicrophoneSheet } from "./MicrophoneSheet.tsx";
 import { useT } from "./i18n/index.ts";
 import { liveCtx } from "./ids.ts";
 import { paced } from "./pacing.ts";
-import { bytesPerSecond, presetFor, recordingTimeLeft } from "./quality.ts";
+import { bytesPerSecond, recordingTimeLeft } from "./quality.ts";
 import { QualitySheet } from "./QualitySheet.tsx";
+import { useRecordChoices, type ChoiceSheet } from "./recordChoices.tsx";
 import {
   AmbientReadout,
-  ChoiceButton,
   HeadphonesCheck,
-  ListenCard,
   MonitorGlyph,
-  RoundGlyph,
+  StandbyFace,
   TakeReview,
   TakeStats,
   useFreeBytes,
@@ -71,13 +67,16 @@ import { BigMeter } from "./BigMeter.tsx";
 
 // The Record screen, an instrument in four modes (docs/design.md, "Record"):
 //
-// - Ready: the microphone is closed. The take's two choices (quality and
-//   where it goes) as buttons at the top, the invitation to listen, and the
-//   one button centred in the room left. What was recorded is the
+// - Ready: the microphone is closed. The take's choices as four tiles
+//   across the top (quality, EQ, microphone, trigger — `recordChoices.tsx`),
+//   the instrument at rest in the room left (the timer at nought, what a
+//   minute costs, how long there is room for), and the action row: Listen,
+//   the big button, and where the take goes. What was recorded is the
 //   Recordings screen's, not this one's.
 // - Listening: the microphone is open and nothing is kept. The visualizer,
 //   the big meter, the room's noise floor, the peak, the headroom and a
 //   verdict in words — the mode for setting a level before a take.
+//   Stop, Record and the monitor in the action row.
 // - Recording: the timer, the visualizer with the whole take along its
 //   foot, the big meter with its clip lamp, and the take's four figures;
 //   Pause, Stop and Discard, all glyphs. With the sound trigger on, the
@@ -159,9 +158,7 @@ export function RecordScreen({
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [clipped, setClipped] = useState(false);
-  const [sheet, setSheet] = useState<
-    "quality" | "eq" | "mic" | "trigger" | "destination" | null
-  >(null);
+  const [sheet, setSheet] = useState<ChoiceSheet | null>(null);
   // Stopped, and the trigger's stretches being cut out and encoded: still
   // the take's, so the shell keeps the reader here.
   const [finishing, setFinishing] = useState(false);
@@ -235,7 +232,11 @@ export function RecordScreen({
     finishing ||
     take !== null;
   useEffect(() => onCaptureChange(capturing), [capturing, onCaptureChange]);
-  const freeBytes = useFreeBytes(live);
+  // Read before the take, on Ready, for its face and the take's "Room
+  // for" — it changes slowly, and asking is not free.
+  const freeBytes = useFreeBytes(!capturing);
+  const span = (ms: number) =>
+    formatSpan(ms, { hours: t("common.hours"), minutes: t("common.minutes") });
   useEffect(() => () => onCaptureChange(false), [onCaptureChange]);
 
   // Listening handing the microphone to a take: the monitor keeps running
@@ -400,116 +401,24 @@ export function RecordScreen({
           ? t("record.failed", { reason: "" })
           : null;
 
-  // The two choices, as the buttons say them.
-  const preset = presetFor(settings);
-  const qualityName =
-    settings.recordingKind === "lossless"
-      ? t("quality.preset.lossless")
-      : preset
-        ? t(`quality.preset.${preset}`)
-        : t("quality.custom");
-  const qualityDetail =
-    settings.recordingKind === "lossless"
-      ? t("quality.flac")
-      : t("export.kbps", { kbps: String(settings.recordingBitrate) });
-  const qualityValue = `${qualityName} · ${qualityDetail}`;
-  const destinationValue = destinationLive
-    ? folderPath(data, destinationLive)
-        .map((f) => f.name)
-        .join(" › ")
-    : t("record.noFolder");
-
-  const qualityButton = (slim = false) => (
-    <ChoiceButton
-      slim={slim}
-      icon={<SlidersIcon className="h-5 w-5" />}
-      caption={t("quality.title")}
-      detail={qualityDetail}
-      value={qualityName}
-      onClick={() => setSheet("quality")}
-    />
-  );
-  // The EQ's own curve stands where a glyph would, so the button shows
-  // what new takes will sound like and not only what it is called; the low
-  // cut, a switch of its own, is said beside the caption.
-  const eqPreset = presetOf(settings.recordEq);
-  const eqButton = (slim = false) => (
-    <ChoiceButton
-      slim={slim}
-      icon={<EqLine eq={settings.recordEq} className="h-7 w-11" />}
-      caption={t("eq.caption")}
-      detail={settings.recordEq?.lowCut ? t("eq.lowCut") : undefined}
-      value={eqPreset ? t(`eq.preset.${eqPreset}`) : t("eq.custom")}
-      onClick={() => setSheet("eq")}
-    />
-  );
-  // Which microphone, and — once one is chosen — where the sound comes
-  // out, on the caption's line. A chosen device that is away is said to be.
-  const micName = (
-    choice: AppSettings["inputDevice"],
-    found: { name: string } | null,
-    named = true,
-  ) =>
-    found
-      ? found.name
-      : choice
-        ? named
-          ? t("devices.absent", { name: choice.name })
-          : choice.name
-        : t("devices.automatic");
-  const micButton = (slim = false) => (
-    <ChoiceButton
-      slim={slim}
-      icon={<MicIcon className="h-5 w-5" />}
-      caption={t("devices.caption")}
-      detail={
-        settings.outputDevice
-          ? t("devices.playsOn", {
-              name: micName(settings.outputDevice, routing.output),
-            })
-          : undefined
-      }
-      value={micName(settings.inputDevice, routing.input, routing.named)}
-      onClick={() => {
-        routing.refresh(true);
-        setSheet("mic");
-      }}
-    />
-  );
-  // When a take records: always, or only on sound — and then what becomes
-  // of the quiet, with the level and the hold on the caption's line.
-  const triggerButton = (slim = false) => (
-    <ChoiceButton
-      slim={slim}
-      icon={<TriggerIcon className="h-5 w-5" />}
-      caption={t("trigger.caption")}
-      detail={
-        gate
-          ? t("trigger.detail", {
-              db: formatTargetDb(gateDb),
-              hold: t("trigger.seconds", { n: String(gateHoldMs / 1000) }),
-            })
-          : undefined
-      }
-      value={
-        !gate
-          ? t("trigger.off")
-          : gateQuiet === "cut"
-            ? t("trigger.onCut")
-            : t("trigger.onSilence")
-      }
-      onClick={() => setSheet("trigger")}
-    />
-  );
-  const destinationButton = (slim = false) => (
-    <ChoiceButton
-      slim={slim}
-      icon={<FolderIcon className="h-5 w-5" />}
-      caption={t("record.saveTo")}
-      value={destinationValue}
-      onClick={() => setSheet("destination")}
-    />
-  );
+  const {
+    qualityName,
+    qualityDetail,
+    qualityBars,
+    destinationValue,
+    destinationShort,
+    tiles,
+    glyphStrip,
+    folderGlyph,
+    destinationChip,
+  } = useRecordChoices({
+    settings,
+    data,
+    destinationLive,
+    routing,
+    saving,
+    setSheet,
+  });
 
   // Upright, one column; a phone on its side (`useStand`, 956×440 and the
   // like) is far too short to stack it, so the instrument stands on the left
@@ -525,21 +434,41 @@ export function RecordScreen({
   );
   const bigButton = stand ? "h-20 w-20" : "h-24 w-24";
 
-  const recordButton = (
-    <div className="flex items-center justify-center pb-2">
-      <button
-        type="button"
-        className={`app-record-button flex ${bigButton} items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95`}
-        aria-label={t("record.start")}
-        disabled={state !== "idle" || saving}
-        onClick={() => void start()}
-      >
-        <span
-          aria-hidden
-          className={`block rounded-full bg-fg-bright/90 ${stand ? "h-8 w-8" : "h-10 w-10"}`}
-        />
-      </button>
+  // The action row, in the thumb's reach: the one big button, a glyph
+  // either side, each with its word under it.
+  const actionRow = (left: ReactNode, big: ReactNode, right: ReactNode) => (
+    <div
+      className={`flex items-center justify-center pb-2 ${stand ? "gap-4" : "gap-8"}`}
+    >
+      {left}
+      {big}
+      {right}
     </div>
+  );
+  const big = (button: ReactNode, caption?: string) => (
+    <div className="flex flex-col items-center gap-1">
+      {button}
+      {caption && (
+        <span aria-hidden className="text-xs text-muted">
+          {caption}
+        </span>
+      )}
+    </div>
+  );
+
+  const recordButton = (
+    <button
+      type="button"
+      className={`app-record-button flex ${bigButton} items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95`}
+      aria-label={t("record.start")}
+      disabled={state !== "idle" || saving}
+      onClick={() => void start()}
+    >
+      <span
+        aria-hidden
+        className={`block rounded-full bg-fg-bright/90 ${stand ? "h-8 w-8" : "h-10 w-10"}`}
+      />
+    </button>
   );
 
   const meter = (subscribe: typeof recorder.subscribe) => (
@@ -583,16 +512,16 @@ export function RecordScreen({
         saving={saving}
         eq={settings.recordEq}
         beside={stand}
-        destination={destinationButton()}
+        destination={destinationChip}
         onSave={(title) => void save(title)}
         onDiscard={() => setConfirmDiscard(true)}
       />
     );
   } else if (capturing) {
     // The timer is the headline; tenths tick so the screen is seen to be
-    // counting. Under it, what this take is — read-only now.
+    // counting. Under it, what this take is — read-only now — as chips.
     const timer = (
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-1.5">
         <div
           className={`flex items-center gap-3 font-figures font-light tracking-tight text-fg-bright tabular-nums ${
             stand ? "text-5xl" : "text-6xl"
@@ -617,27 +546,48 @@ export function RecordScreen({
         <div className="flex max-w-full items-center gap-2">
           {!stand && <span aria-hidden className="w-11 shrink-0" />}
           <div
-            className="min-w-0 truncate text-sm text-muted"
+            className="flex min-w-0 items-center justify-center gap-1.5 text-sm text-muted"
             role="status"
             aria-live="polite"
           >
-            {finishing
-              ? t("trigger.finishing")
-              : state === "starting"
-                ? t("record.starting")
-                : state === "paused"
-                  ? t("record.paused")
-                  : state === "stopping"
-                    ? t("record.saving")
-                    : gate
-                      ? `${gateLive.open ? t("trigger.hearing") : t("trigger.waiting")} · ${t(
-                          "trigger.kept",
-                          { time: formatDuration(gateLive.keptMs) },
-                        )}`
-                      : t("record.recordingTo", {
-                          quality: qualityValue,
-                          folder: destinationValue,
-                        })}
+            {finishing ? (
+              t("trigger.finishing")
+            ) : state === "starting" ? (
+              t("record.starting")
+            ) : state === "paused" ? (
+              t("record.paused")
+            ) : state === "stopping" ? (
+              t("record.saving")
+            ) : gate ? (
+              `${gateLive.open ? t("trigger.hearing") : t("trigger.waiting")} · ${t(
+                "trigger.kept",
+                { time: formatDuration(gateLive.keptMs) },
+              )}`
+            ) : (
+              <>
+                <span className="sr-only">
+                  {t("record.recordingTo", {
+                    quality: `${qualityName} · ${qualityDetail}`,
+                    folder: destinationValue,
+                  })}
+                </span>
+                <span aria-hidden className="contents">
+                  <Chip
+                    icon={
+                      <QualityIcon
+                        level={qualityBars}
+                        className="h-3.5 w-3.5"
+                      />
+                    }
+                  >
+                    {qualityName} · {qualityDetail}
+                  </Chip>
+                  <Chip icon={<FolderIcon className="h-3.5 w-3.5" />}>
+                    {destinationShort}
+                  </Chip>
+                </span>
+              </>
+            )}
           </div>
           {monitorGlyph}
         </div>
@@ -686,55 +636,46 @@ export function RecordScreen({
             1000,
           locale,
         )}
-        left={
-          ms === null
-            ? null
-            : formatSpan(ms, {
-                hours: t("common.hours"),
-                minutes: t("common.minutes"),
-              })
-        }
+        left={ms === null ? null : span(ms)}
       />
     );
     // Pause · Stop · Discard. Stop sits where Record was, so the thumb does
     // not move; Discard is a glyph, and asks.
-    const controls = (
-      <div
-        className={`flex items-center justify-center pb-2 ${stand ? "gap-5" : "gap-10"}`}
+    const controls = actionRow(
+      <RoundGlyph
+        label={state === "paused" ? t("record.resume") : t("record.pause")}
+        caption={state === "paused" ? t("record.resume") : t("record.pause")}
+        disabled={!live}
+        onClick={() =>
+          state === "paused" ? recorder.resume() : recorder.pause()
+        }
       >
-        <RoundGlyph
-          label={state === "paused" ? t("record.resume") : t("record.pause")}
-          disabled={!live}
-          onClick={() =>
-            state === "paused" ? recorder.resume() : recorder.pause()
-          }
-        >
-          {state === "paused" ? (
-            <PlayIcon className="h-6 w-6" />
-          ) : (
-            <PauseIcon className="h-6 w-6" />
-          )}
-        </RoundGlyph>
-        <button
-          type="button"
-          className={`app-record-button flex ${bigButton} items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95`}
-          aria-label={t("record.stop")}
-          disabled={!live}
-          onClick={() => void stop()}
-        >
-          <StopIcon
-            className={`text-fg-bright ${stand ? "h-8 w-8" : "h-10 w-10"}`}
-          />
-        </button>
-        <RoundGlyph
-          label={t("record.discard")}
-          tone="danger"
-          disabled={!live}
-          onClick={() => setConfirmDiscard(true)}
-        >
-          <TrashIcon className="h-6 w-6" />
-        </RoundGlyph>
-      </div>
+        {state === "paused" ? (
+          <PlayIcon className="h-6 w-6" />
+        ) : (
+          <PauseIcon className="h-6 w-6" />
+        )}
+      </RoundGlyph>,
+      <button
+        type="button"
+        className={`app-record-button flex ${bigButton} items-center justify-center rounded-full bg-danger ring-4 ring-line ring-offset-2 ring-offset-page transition-transform active:scale-95`}
+        aria-label={t("record.stop")}
+        disabled={!live}
+        onClick={() => void stop()}
+      >
+        <StopIcon
+          className={`text-fg-bright ${stand ? "h-8 w-8" : "h-10 w-10"}`}
+        />
+      </button>,
+      <RoundGlyph
+        label={t("record.discard")}
+        caption={t("record.discard")}
+        tone="danger"
+        disabled={!live}
+        onClick={() => setConfirmDiscard(true)}
+      >
+        <TrashIcon className="h-6 w-6" />
+      </RoundGlyph>,
     );
     body = stand ? (
       split(
@@ -772,14 +713,6 @@ export function RecordScreen({
           </span>{" "}
           <span className="text-muted">{t("listen.nothingKept")}</span>
         </p>
-        {monitorGlyph}
-        <RoundGlyph
-          size="sm"
-          label={t("listen.stop")}
-          onClick={() => void listen.stop()}
-        >
-          <StopIcon className="h-5 w-5" />
-        </RoundGlyph>
       </div>
     );
     const picture = (
@@ -794,6 +727,24 @@ export function RecordScreen({
         className={visualizerSize}
       />
     );
+    // Stop listening · Record · Monitor: the open microphone's two glyphs
+    // either side of the button that turns it into a take.
+    const controls = actionRow(
+      <RoundGlyph
+        label={t("listen.stop")}
+        caption={t("listen.stop")}
+        onClick={() => void listen.stop()}
+      >
+        <StopIcon className="h-6 w-6" />
+      </RoundGlyph>,
+      big(recordButton, t("nav.record")),
+      <MonitorGlyph
+        state={monitorState}
+        onToggle={toggleMonitor}
+        size="md"
+        caption={t("eq.monitor.caption")}
+      />,
+    );
     body = stand ? (
       split(
         <>
@@ -803,7 +754,7 @@ export function RecordScreen({
         </>,
         <>
           <AmbientReadout ambient={listen.ambient} />
-          {recordButton}
+          {controls}
         </>,
       )
     ) : (
@@ -814,59 +765,57 @@ export function RecordScreen({
         <AmbientReadout ambient={listen.ambient} />
         {/* Still changeable, no longer the subject — and on a small phone
             left to Ready, so the button stays in reach. */}
-        <div className="hidden grid-cols-2 gap-2 tall:grid">
-          {qualityButton(true)}
-          {eqButton(true)}
-          <div className="col-span-2 flex flex-col">{micButton(true)}</div>
-          <div className="col-span-2 flex flex-col">{triggerButton(true)}</div>
-          <div className="col-span-2 flex flex-col">
-            {destinationButton(true)}
-          </div>
-        </div>
-        {recordButton}
+        <div className="hidden tall:block">{glyphStrip}</div>
+        {controls}
       </>
     );
   } else {
-    // The take's choices, decided before it and never during: how it
-    // sounds side by side — its quality and its EQ — then what it records
-    // through, when it records, and where it goes, each the whole width: a
-    // device's name, the trigger's value and a folder's path are long.
-    const choices = (
-      <div className="grid grid-cols-2 gap-2">
-        {qualityButton()}
-        {eqButton()}
-        <div className="col-span-2 flex flex-col">{micButton()}</div>
-        <div className="col-span-2 flex flex-col">{triggerButton()}</div>
-        <div className="col-span-2 flex flex-col">{destinationButton()}</div>
-      </div>
+    // Ready: the four choices as tiles at the top, the instrument at rest
+    // in the room left, and the action row — Listen · Record · Save to.
+    const left = recordingTimeLeft(
+      freeBytes,
+      settings.recordingKind,
+      settings.recordingBitrate,
     );
-    const listenCard = (
-      <ListenCard
+    const face = (
+      <StandbyFace
         compact={stand}
-        busy={listen.starting}
-        onListen={() => void listen.start()}
+        timer={formatTimer(0)}
+        perMinute={formatSize(
+          bytesPerSecond(settings.recordingKind, settings.recordingBitrate) *
+            60,
+          locale,
+        )}
+        left={left === null ? null : span(left)}
+        hint={t("listen.inviteHint")}
       />
     );
-    // The rest of the room is the button's: centred in it, large, with the
-    // one word it needs.
-    const go = (
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 py-2">
-        {recordButton}
-        <span className="text-sm text-muted">{t("record.tapToRecord")}</span>
-      </div>
+    const go = actionRow(
+      <RoundGlyph
+        label={t("listen.start")}
+        caption={t("listen.start")}
+        disabled={listen.starting}
+        onClick={() => void listen.start()}
+      >
+        <WaveformIcon className="h-6 w-6" />
+      </RoundGlyph>,
+      big(recordButton, t("record.tapToRecord")),
+      folderGlyph,
     );
     body = stand ? (
       split(
         <>
-          {choices}
-          {listenCard}
+          {tiles}
+          <div className="flex flex-1 items-center justify-center">{face}</div>
         </>,
         go,
       )
     ) : (
       <>
-        {choices}
-        {listenCard}
+        {tiles}
+        <div className="flex flex-1 flex-col items-center justify-center py-2">
+          {face}
+        </div>
         {go}
       </>
     );

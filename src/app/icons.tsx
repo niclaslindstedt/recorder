@@ -201,3 +201,33 @@ export function TriggerIcon({ className }: IconProps) {
     </Glyph>
   );
 }
+
+/** How a take is kept, as a level: four bars rising, the first `level` of
+ *  them filled — Memo one, Lossless all four. */
+export function QualityIcon({
+  className,
+  level = 3,
+}: IconProps & { level?: number }) {
+  const bars = [
+    [3, 17, 4],
+    [8, 13, 8],
+    [13, 9, 12],
+    [18, 5, 16],
+  ] as const;
+  return (
+    <Glyph className={className}>
+      {bars.map(([x, y, h], i) => (
+        <rect
+          key={x}
+          x={x}
+          y={y}
+          width="3.5"
+          height={h}
+          rx="1"
+          fill={i < level ? "currentColor" : "none"}
+          strokeWidth={1.6}
+        />
+      ))}
+    </Glyph>
+  );
+}

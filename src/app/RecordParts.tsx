@@ -12,15 +12,14 @@ import {
   AlertTriangleIcon,
   Button,
   CheckIcon,
-  ChevronRightIcon,
   Modal,
   PauseIcon,
   PlayIcon,
   TrashIcon,
-  WaveformIcon,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { formatDuration } from "./format.ts";
+import { Chip, RoundGlyph } from "./Glyphs.tsx";
 import { ClipIcon, HeadphonesIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { SheetTitle } from "./ModalHeader.tsx";
@@ -33,91 +32,6 @@ import type { MonitorState } from "./useMonitor.ts";
 // The pieces the Record screen's four modes are built from
 // (docs/design.md, "Record"). The screen itself (`RecordScreen.tsx`) owns
 // the state; these only draw.
-
-/** A choice made before a take — its quality, where it goes — drawn as
- *  what it is: a button, bordered, with a caption, the value and a chevron.
- *  `slim` is the Listening mode's one-line form. */
-export function ChoiceButton({
-  icon,
-  caption,
-  detail,
-  value,
-  onClick,
-  slim = false,
-}: {
-  icon: ReactNode;
-  caption: string;
-  /** A fact beside the caption — the quality's bitrate — kept off the
-   *  value's line so the value is never cut short. */
-  detail?: string;
-  value: string;
-  onClick: () => void;
-  slim?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-haspopup="dialog"
-      aria-label={`${caption}: ${value}${detail ? `, ${detail}` : ""}`}
-      className={`flex min-w-0 items-center gap-2.5 rounded-lg border border-line bg-surface text-left shadow-sm transition-colors hover:border-accent/60 hover:bg-surface-2 ${
-        slim ? "px-3 py-2" : "px-3 py-2.5"
-      }`}
-    >
-      <span className="shrink-0 text-accent">{icon}</span>
-      <span className="min-w-0 flex-1">
-        {!slim && (
-          <span className="block truncate text-[0.6875rem] text-muted">
-            <span className="font-semibold tracking-wide uppercase">
-              {caption}
-            </span>
-            {detail && <span> · {detail}</span>}
-          </span>
-        )}
-        <span className="block truncate text-sm font-semibold text-fg-bright">
-          {value}
-        </span>
-      </span>
-      <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted" />
-    </button>
-  );
-}
-
-/** Ready's invitation to Listening: what it is, in one sentence, and the
- *  button. The sentence's job is to say that nothing is kept. */
-export function ListenCard({
-  onListen,
-  busy,
-  compact = false,
-}: {
-  onListen: () => void;
-  busy: boolean;
-  /** Less padding, for a phone on its side. A short phone upright gets
-   *  the same, so the record button's word stays above the bottom bar. */
-  compact?: boolean;
-}) {
-  const t = useT();
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-lg border border-dashed border-line bg-surface/60 ${compact ? "px-4 py-2.5" : "px-4 py-2.5 tall:py-4"}`}
-    >
-      <WaveformIcon className="h-8 w-8 shrink-0 text-accent" />
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-fg-bright">{t("listen.invite")}</p>
-        <p className="text-xs text-muted">{t("listen.inviteHint")}</p>
-      </div>
-      <Button
-        variant="primary"
-        onClick={onListen}
-        disabled={busy}
-        className="flex shrink-0 items-center gap-1.5"
-      >
-        <HeadphonesIcon className="h-4 w-4" />
-        {t("listen.start")}
-      </Button>
-    </div>
-  );
-}
 
 /** Listening's three numbers — the room, the peak, the headroom — and the
  *  verdict in words. Colour is never the only signal: the verdict is a
@@ -177,42 +91,6 @@ export function AmbientReadout({ ambient }: { ambient: Ambient | null }) {
   );
 }
 
-/** A round glyph button beside the big one — Pause, Discard — or, `sm`, in
- *  a line of text: Listening's Stop. The name is the accessible name and the
- *  tooltip; there is no word on it. */
-export function RoundGlyph({
-  label,
-  onClick,
-  disabled,
-  children,
-  tone = "plain",
-  size = "md",
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  children: ReactNode;
-  tone?: "plain" | "danger";
-  size?: "sm" | "md";
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex ${size === "sm" ? "h-11 w-11" : "h-14 w-14"} shrink-0 items-center justify-center rounded-full border border-line bg-surface transition-colors disabled:opacity-40 ${
-        tone === "danger"
-          ? "text-danger hover:border-danger/60 hover:bg-danger/10"
-          : "text-fg hover:bg-surface-2"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 /** The monitor as a glyph, for Listening and Recording: the microphone
  *  through the take's EQ, into headphones. Lit while it runs, red once the
  *  feedback guard has stopped it; a press switches it. Its name says what a
@@ -220,9 +98,14 @@ export function RoundGlyph({
 export function MonitorGlyph({
   state,
   onToggle,
+  caption,
+  size = "sm",
 }: {
   state: MonitorState;
   onToggle: () => void;
+  /** The word under it, in an action row. */
+  caption?: string;
+  size?: "sm" | "md";
 }) {
   const t = useT();
   const on = state === "on" || state === "starting";
@@ -232,24 +115,18 @@ export function MonitorGlyph({
     state === "feedback" || state === "denied" || state === "failed";
   const label = on ? t("eq.monitor.toggleOff") : t("eq.monitor.toggle");
   return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={on}
-      title={label}
+    <RoundGlyph
+      label={label}
       onClick={onToggle}
-      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
-        on
-          ? "border-accent/60 bg-accent/15 text-accent"
-          : trouble
-            ? "border-danger/60 bg-surface text-danger hover:bg-danger/10"
-            : "border-line bg-surface text-fg hover:bg-surface-2"
-      }`}
+      pressed={on}
+      tone={trouble ? "danger" : "plain"}
+      size={size}
+      caption={caption}
     >
       <HeadphonesIcon
-        className={`h-5 w-5 ${state === "starting" ? "animate-pulse" : ""}`}
+        className={`${size === "sm" ? "h-5 w-5" : "h-6 w-6"} ${state === "starting" ? "animate-pulse" : ""}`}
       />
-    </button>
+    </RoundGlyph>
   );
 }
 
@@ -325,7 +202,7 @@ export function TakeReview({
   /** A phone on its side: the take on the left, where it goes and Save in
    *  a rail on the right. */
   beside?: boolean;
-  /** The "Save to" choice, drawn by the screen. */
+  /** Where it goes — the folder chip, drawn by the screen. */
   destination: ReactNode;
   saving: boolean;
   /** The EQ the take is saved with, and heard through here. */
@@ -391,10 +268,10 @@ export function TakeReview({
     </label>
   );
   const hear = (
-    <div className={`flex flex-col gap-2 ${beside ? "min-h-0 flex-1" : ""}`}>
+    <div className="flex min-h-0 flex-1 flex-col gap-2">
       <div
         className={`rounded-md bg-surface-2 px-2 py-1 text-accent ${
-          beside ? "min-h-16 flex-1" : "h-24 tall:h-40"
+          beside ? "min-h-16 flex-1" : "max-h-72 min-h-24 flex-1"
         }`}
       >
         <Waveform
@@ -422,25 +299,26 @@ export function TakeReview({
             <PlayIcon className="h-5 w-5 translate-x-px" />
           )}
         </button>
-        <p className="flex min-w-0 flex-wrap items-center gap-x-2 text-sm text-muted">
-          <span className="font-figures text-fg tabular-nums">
-            {formatDuration(player.time * 1000)} /{" "}
-            {formatDuration(take.durationMs)}
-          </span>
-          <span aria-hidden>·</span>
-          <span>
+        <span className="font-figures text-sm text-fg tabular-nums">
+          {formatDuration(player.time * 1000)} /{" "}
+          {formatDuration(take.durationMs)}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-wrap justify-end gap-1.5">
+          <Chip>
             {t("record.peak")}{" "}
             <span className="font-figures tabular-nums">
               {formatDb(take.maxPeakDb)} dB
             </span>
-          </span>
-          <span aria-hidden>·</span>
-          <span className={clipped ? "font-medium text-danger" : ""}>
+          </Chip>
+          <Chip
+            tone={clipped ? "danger" : "plain"}
+            icon={clipped ? <ClipIcon className="h-3.5 w-3.5" /> : undefined}
+          >
             {clipped
               ? t("record.clippedTimes", { count: String(take.clipCount) })
               : t("player.clippedNone")}
-          </span>
-        </p>
+          </Chip>
+        </span>
       </div>
     </div>
   );
@@ -480,7 +358,7 @@ export function TakeReview({
             {hear}
           </div>
           <div className="flex w-64 shrink-0 flex-col justify-end gap-3">
-            {destination}
+            <div className="flex">{destination}</div>
             <div className="flex-1" />
             {keep}
           </div>
@@ -488,8 +366,8 @@ export function TakeReview({
       ) : (
         <>
           {name}
+          <div className="flex">{destination}</div>
           {hear}
-          {destination}
           <div className="flex-1" />
           {keep}
         </>
@@ -534,6 +412,20 @@ export function TakeStats({
     [t("stats.size"), size, "text-fg-bright"],
     [t("stats.left"), left ?? "—", "text-fg-bright"],
   ];
+  return <Figures columns={columns} cells={cells} />;
+}
+
+/** Figures in a row of cells: a small caption over a number. The take's
+ *  four while recording, and Ready's two before it, drawn alike so the
+ *  standby face turns into the running one where it stands. */
+export function Figures({
+  cells,
+  columns,
+}: {
+  /** Caption, value, the value's colour class. */
+  cells: Array<[string, string, string]>;
+  columns: 2 | 4;
+}) {
   return (
     <dl
       className={`grid gap-2 ${columns === 2 ? "grid-cols-2" : "grid-cols-4"}`}
@@ -543,15 +435,59 @@ export function TakeStats({
           key={label}
           className="flex min-w-0 flex-col items-center gap-0.5 rounded-md bg-surface-2 px-1 py-2"
         >
-          <dt className="text-[0.625rem] font-semibold tracking-wide text-muted uppercase">
+          <dt className="max-w-full truncate text-[0.625rem] font-semibold tracking-wide text-muted uppercase">
             {label}
           </dt>
-          <dd className={`truncate font-figures text-sm tabular-nums ${tone}`}>
+          <dd
+            className={`max-w-full truncate font-figures text-sm tabular-nums ${tone}`}
+          >
             {value}
           </dd>
         </div>
       ))}
     </dl>
+  );
+}
+
+/** Ready's face: the instrument at rest — the timer at nought, where the
+ *  running one will stand, what a minute of this quality costs and how
+ *  long this device has room for, and the one line that says Listen keeps
+ *  nothing. A face, not an empty card: every figure on it is one a person
+ *  acts on before the take. */
+export function StandbyFace({
+  timer,
+  perMinute,
+  left,
+  hint,
+  compact = false,
+}: {
+  timer: string;
+  perMinute: string;
+  left: string | null;
+  hint: string;
+  compact?: boolean;
+}) {
+  const t = useT();
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div
+        aria-hidden
+        className={`flex items-center gap-3 font-figures font-light tracking-tight text-muted/70 tabular-nums ${compact ? "text-4xl" : "text-6xl"}`}
+      >
+        <span className="inline-block h-4 w-4 rounded-full border-2 border-current" />
+        {timer}
+      </div>
+      <div className="w-full max-w-xs">
+        <Figures
+          columns={2}
+          cells={[
+            [t("stats.perMinute"), perMinute, "text-fg-bright"],
+            [t("stats.left"), left ?? "—", "text-fg-bright"],
+          ]}
+        />
+      </div>
+      <p className="max-w-xs text-center text-xs text-muted">{hint}</p>
+    </div>
   );
 }
 

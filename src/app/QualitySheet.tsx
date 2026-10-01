@@ -7,6 +7,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 
 import { formatSize, formatSpan } from "./format.ts";
+import { QualityIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { SheetTitle } from "./ModalHeader.tsx";
 import { SEGMENTS_FIT, useFreeBytes } from "./RecordParts.tsx";
@@ -15,6 +16,7 @@ import {
   QUALITY_PRESETS,
   bytesPerMinute,
   presetFor,
+  qualityLevel,
   recordingTimeLeft,
   type QualityId,
   type QualityPreset,
@@ -81,10 +83,13 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
         onClose={onClose}
       />
       <div className="flex flex-col gap-4 p-3">
+        {/* The four presets as tiles, two by two: the glyph's bars say
+            the step, the words who it is for, the figures what a minute
+            costs and how long this device has room for. */}
         <div
           role="radiogroup"
           aria-labelledby="quality-title"
-          className="flex flex-col gap-1.5"
+          className="grid grid-cols-2 gap-2"
         >
           {QUALITY_PRESETS.map((p) => {
             const on = current === p.id;
@@ -96,21 +101,29 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
                 role="radio"
                 aria-checked={on}
                 onClick={() => choose(p.id)}
-                className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                className={`relative flex min-w-0 flex-col gap-1.5 rounded-xl border p-3 text-left transition-colors ${
                   on
                     ? "border-accent bg-accent/10"
                     : "border-line bg-surface hover:bg-surface-2"
                 }`}
               >
-                <span
-                  aria-hidden
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                    on ? "border-accent bg-accent text-page-bg" : "border-line"
-                  }`}
-                >
-                  {on && <CheckIcon className="h-3 w-3" />}
+                <span className="flex items-center justify-between gap-2">
+                  <QualityIcon
+                    level={qualityLevel(p.kind, p.bitrate)}
+                    className={`h-6 w-6 ${on ? "text-accent" : "text-fg"}`}
+                  />
+                  <span
+                    aria-hidden
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      on
+                        ? "border-accent bg-accent text-page-bg"
+                        : "border-line"
+                    }`}
+                  >
+                    {on && <CheckIcon className="h-3 w-3" />}
+                  </span>
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0">
                   <span className="block font-semibold text-fg-bright">
                     {t(`quality.preset.${p.id}`)}
                   </span>
@@ -118,11 +131,13 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
                     {t(`quality.presetHint.${p.id}`)}
                   </span>
                 </span>
-                <span className="shrink-0 text-right font-figures text-xs text-muted tabular-nums">
-                  {p.kind === "lossless"
-                    ? t("quality.flac")
-                    : t("export.kbps", { kbps: String(p.bitrate) })}
-                  <span className="block">
+                <span className="mt-auto flex flex-wrap gap-x-2 font-figures text-[0.6875rem] text-muted tabular-nums">
+                  <span className="text-fg">
+                    {p.kind === "lossless"
+                      ? t("quality.flac")
+                      : t("export.kbps", { kbps: String(p.bitrate) })}
+                  </span>
+                  <span>
                     {t("quality.perMinute", {
                       size: formatSize(
                         bytesPerMinute(p.kind, p.bitrate),
@@ -131,9 +146,7 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
                     })}
                   </span>
                   {room !== null && (
-                    <span className="block">
-                      {t("quality.roomFor", { span: room })}
-                    </span>
+                    <span>{t("quality.roomFor", { span: room })}</span>
                   )}
                 </span>
               </button>

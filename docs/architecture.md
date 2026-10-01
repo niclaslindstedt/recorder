@@ -44,6 +44,8 @@ src/
     ├── useListen.ts         Listening: a capture that is never kept, recycled every five minutes
     ├── RecordScreen.tsx     Record, in four modes: Ready, Listening, Recording, Review
     ├── RecordParts.tsx      the pieces those modes are drawn from; the free-space estimate
+    ├── recordChoices.tsx    the take's choices as tiles, glyphs and chips — one place says them all
+    ├── Glyphs.tsx           the glyph-shaped controls: choice tiles, round glyphs, a toolbar's glyphs, chips
     ├── Visualizer.tsx       the waveform, spectrum or spectrogram card
     ├── BigMeter.tsx         the framework's meter at the Record screen's size, with the target on it
     ├── QualitySheet.tsx     how the next take is kept, voice processing, and the target level (TargetLevel.tsx)
@@ -53,7 +55,7 @@ src/
     ├── FolderPicker.tsx     the one folder picker: the library's scope, Move, a take's destination
     ├── SearchSheet.tsx      search across the space's titles, notes and folder names
     ├── RecordingRow.tsx     a recording as a row, wherever one is listed
-    ├── PlayerModal.tsx      the title, the folder chip, the shape, the transport, the note, the facts
+    ├── PlayerModal.tsx      the title, the folder chip, the shape, the transport, the note, the facts, the toolbar
     ├── EqSheet.tsx          the EQ sheet; EqParts.tsx is its knob and its curve
     ├── ExportModal.tsx      the export sheet, and what the file will be
     ├── SettingsScreen.tsx   settings; SidePanel.tsx is the same on a desk

@@ -6,6 +6,7 @@ import {
   bytesPerMinute,
   bytesPerSecond,
   presetFor,
+  qualityLevel,
   recordingTimeLeft,
 } from "../src/app/quality.ts";
 
@@ -77,5 +78,19 @@ describe("recording time left", () => {
     expect(recordingTimeLeft(null, "compact", 128)).toBeNull();
     expect(recordingTimeLeft(Number.NaN, "compact", 128)).toBeNull();
     expect(recordingTimeLeft(-1, "compact", 128)).toBeNull();
+  });
+});
+
+describe("qualityLevel", () => {
+  it("fills one bar per preset step, all four for lossless", () => {
+    expect(QUALITY_PRESETS.map((p) => qualityLevel(p.kind, p.bitrate))).toEqual(
+      [1, 2, 3, 4],
+    );
+  });
+
+  it("puts a custom bitrate on the step it reaches", () => {
+    expect(qualityLevel("compact", 96)).toBe(1);
+    expect(qualityLevel("compact", 192)).toBe(2);
+    expect(qualityLevel("compact", 320)).toBe(3);
   });
 });
