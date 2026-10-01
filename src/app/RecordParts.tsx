@@ -212,8 +212,9 @@ export function RoundGlyph({
 }
 
 /** The monitor as a glyph, for Listening and Recording: the microphone
- *  through the take's EQ, into headphones. Lit while it runs; a press
- *  switches it. Its name says what a press will do. */
+ *  through the take's EQ, into headphones. Lit while it runs, red once the
+ *  feedback guard has stopped it; a press switches it. Its name says what a
+ *  press will do. */
 export function MonitorGlyph({
   state,
   onToggle,
@@ -223,6 +224,10 @@ export function MonitorGlyph({
 }) {
   const t = useT();
   const on = state === "on" || state === "starting";
+  // Stopped by the feedback guard or refused: off, in the danger colour,
+  // until it is pressed again — the notice says why in words.
+  const trouble =
+    state === "feedback" || state === "denied" || state === "failed";
   const label = on ? t("eq.monitor.toggleOff") : t("eq.monitor.toggle");
   return (
     <button
@@ -234,7 +239,9 @@ export function MonitorGlyph({
       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors ${
         on
           ? "border-accent/60 bg-accent/15 text-accent"
-          : "border-line bg-surface text-fg hover:bg-surface-2"
+          : trouble
+            ? "border-danger/60 bg-surface text-danger hover:bg-danger/10"
+            : "border-line bg-surface text-fg hover:bg-surface-2"
       }`}
     >
       <HeadphonesIcon

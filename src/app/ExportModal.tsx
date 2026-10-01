@@ -20,7 +20,7 @@ import {
   type ExportOptions,
 } from "./export.ts";
 import { formatContainer, formatRate, formatSize } from "./format.ts";
-import { presetOf, type Eq } from "./eq.ts";
+import { useEqName } from "./EqParts.tsx";
 import { useT } from "./i18n/index.ts";
 import { EqIcon, ShareIcon } from "./icons.tsx";
 import { ModalHeader } from "./ModalHeader.tsx";
@@ -68,10 +68,7 @@ export function ExportModal({
     mono: settings.exportMono,
   };
 
-  const eqName = (eq: Eq) => {
-    const id = presetOf(eq);
-    return id ? t(`eq.preset.${id}`) : t("eq.custom");
-  };
+  const eqName = useEqName();
   const plan = exportPlan(recording, options);
   const outcome = t("export.outcome", {
     size: formatSize(estimateExportBytes(recording, options), locale),

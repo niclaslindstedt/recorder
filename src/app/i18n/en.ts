@@ -220,7 +220,8 @@ export const en = {
       "Drag up or down, or use the arrow keys. Double-tap to put it back to 0.",
     lowCut: "Low cut",
     lowCutHint:
-      "Takes out rumble under 80 Hz — traffic, handling, the air conditioning.",
+      "Takes out rumble under 80 Hz — traffic, handling, the air conditioning. A switch of its own: picking a starting point leaves it as it is.",
+    withLowCut: "{name} · Low cut",
     compare: "Compare",
     compareHint: "Hear it without the EQ while this is on.",
     reset: "Flat",
@@ -241,7 +242,6 @@ export const en = {
       podcast: "Podcast",
       warm: "Warm",
       bright: "Bright",
-      rumble: "No rumble",
       lofi: "Lo-fi",
     },
     forRecord:
@@ -252,13 +252,15 @@ export const en = {
     exportLine: "Through its EQ: {name}",
     monitor: {
       title: "Hear yourself through it",
-      hint: "Put headphones on first — on speakers it will howl.",
+      hint: "Put headphones on first. If it hears itself through a speaker, it stops.",
       start: "Monitor",
       stop: "Stop",
       starting: "Opening the microphone…",
       on: "Monitoring. Nothing is kept.",
       denied: "The microphone is blocked for this site.",
       failed: "The microphone could not be opened here.",
+      feedback:
+        "Stopped: it was hearing itself through the speaker. Put headphones on and start it again.",
       // The headphones glyph while Listening and Recording.
       toggle: "Monitor on headphones",
       toggleOff: "Stop monitoring",
@@ -296,6 +298,9 @@ export const en = {
     hint: "Where the peaks should land, shaded on the waveform. Over −3 dB is always too hot.",
     range: "{low} to {high} dB",
     value: "{db} dB",
+    // Over the Record screen's meter while listening and recording.
+    onMeter: "Target",
+    named: "{name} · {range}",
     preset: {
       voice: "Voice",
       music: "Music",

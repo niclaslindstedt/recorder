@@ -11,9 +11,11 @@ it was.
 One sheet, opened in two places:
 
 - **Record screen → EQ** sets the EQ new takes start with. A take is saved
-  with it, and Review plays the take through it.
-- **Player → the EQ glyph** (left of the transport, lit when the recording
-  has an EQ) sets one recording's. The change is kept when the sheet closes.
+  with it, and Review plays the take through it. The button shows the EQ's
+  curve, small, beside its name — and "Low cut" when that is on.
+- **Player → the EQ button** (left of the transport, lit and showing the
+  curve when the recording has an EQ) sets one recording's. The change is
+  kept when the sheet closes.
 
 In it, top to bottom:
 
@@ -21,9 +23,9 @@ In it, top to bottom:
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **The curve**       | What the EQ does from 20 Hz to 20 kHz, each band marked on it. While something plays — or the microphone is monitored — the sound itself is drawn behind it, after the EQ, so a cut can be seen taking a hum out. |
 | **Compare**         | Hear it without the EQ while it is on, to judge the difference. Nothing is changed.                                                                                                                               |
-| **Starting points** | Flat, Podcast, Warm, Bright, No rumble, Lo-fi. Turning a knob afterwards makes it Custom.                                                                                                                         |
+| **Starting points** | Flat, Podcast, Warm, Bright, Lo-fi: a setting of the five knobs. Turning a knob afterwards makes it Custom. Picking one leaves the low cut as it was.                                                             |
 | **Five knobs**      | Drag up to boost and down to cut, ±12 dB in half-dB steps; double-tap for 0. Arrow keys work, Page Up / Down move three.                                                                                          |
-| **Low cut**         | Takes out what is under 80 Hz — traffic, handling noise, the air conditioning.                                                                                                                                    |
+| **Low cut**         | Takes out what is under 80 Hz — traffic, handling noise, the air conditioning. A switch of its own: no starting point turns it on or off, and the name says it beside the starting point ("Podcast · Low cut").   |
 
 | Knob     | Where   | What it does to a voice or an instrument         |
 | -------- | ------- | ------------------------------------------------ |
@@ -43,6 +45,19 @@ output. It asks for the same voice processing the Quality sheet says a take
 will have, so it sounds like the take. How quickly you hear yourself
 depends on the device; a wireless headset adds its own delay.
 
+It doesn't trust that you put them on. While it runs it listens to what it
+is sending out, twenty times a second, for the sound of feedback: one tone
+standing far above everything else, holding its pitch, loud, for about a
+third of a second. A voice or a sung note has harmonics and wavers, so it
+passes; a loop rings at one pure pitch. The moment it hears one it cuts the
+sound and stops, and says why: "Stopped: it was hearing itself through the
+speaker." Start it again with headphones on. It also fades in over a moment
+rather than starting at full level, so a loop has to build where the guard
+can hear it, and it stops when the app goes to the background. A long,
+steady whistle right at the microphone can look like feedback too; then it
+stops just the same, and can be started again. While recording, the guard
+stops the monitor, not the take: what the take already heard stays in it.
+
 It can be switched on in three places, and it is one monitor whichever
 switched it on:
 
@@ -57,9 +72,10 @@ The first time the glyph starts it, it asks whether your headphones are
 on; starting it in the EQ sheet, which says so beside its button, counts
 as the answer. Started while Listening, it carries on into the take when
 you press record. Stopping Listening, stopping or discarding the take, and
-leaving the Record screen all close it. It runs beside the capture, never in
-it, so a take is the same with it on or off — the EQ is still kept beside
-the recording, not written into it.
+leaving the Record screen all close it; if the guard stops it outside the
+sheet, a notice says why. It runs beside the capture, never in it, so a
+take is the same with it on or off — the EQ is still kept beside the
+recording, not written into it.
 
 ## What is kept, and where
 

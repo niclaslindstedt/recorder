@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { decodeWav } from "@niclaslindstedt/oss-framework/audio";
 
-import { EQ_PRESETS, FLAT_EQ, withGain } from "../src/app/eq.ts";
+import { FLAT_EQ, withGain, withPreset } from "../src/app/eq.ts";
 import { encodeExport } from "../src/app/export.ts";
 import { setRecordingEq } from "../src/app/folders.ts";
 import { mergeDocs } from "../src/app/merge.ts";
@@ -15,7 +15,7 @@ import { finishTake } from "../src/app/takes.ts";
 import { DEFAULT_SETTINGS, parseSettings } from "../src/app/useAppSettings.ts";
 import { ctx, doc, recording } from "./fixtures/helpers.ts";
 
-const podcast = EQ_PRESETS.find((p) => p.id === "podcast")!.eq;
+const podcast = { ...withPreset(null, "podcast"), lowCut: true };
 
 const take = {
   mode: "encoded" as const,

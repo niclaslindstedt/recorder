@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import {
   useEffect,
+  useMemo,
   useRef,
   type KeyboardEvent,
   type PointerEvent,
@@ -11,6 +12,7 @@ import {
   EQ_MAX_DB,
   EQ_STEP_DB,
   clampGain,
+  presetOf,
   responseDb,
   type Eq,
 } from "./eq.ts";
@@ -19,7 +21,8 @@ import { palette, useCanvas } from "./Visualizer.tsx";
 
 // The equalizer's two instruments: a knob per band, and the curve the
 // knobs make, drawn over what the sound is doing now when there is a sound
-// to show (`EqSheet.tsx`).
+// to show (`EqSheet.tsx`). And the curve small, for a button that opens
+// the sheet, with the EQ's name in words.
 
 /** How far a knob turns for a pixel dragged, dB — the whole range in a
  *  thumb's comfortable reach. */
@@ -369,5 +372,89 @@ export function EqCurve({
         −{RANGE_DB}
       </span>
     </div>
+  );
+}
+
+/** An EQ in words: its starting point (or Custom), and the low cut beside
+ *  it when it is on — "Podcast · Low cut", or "Low cut" alone over flat
+ *  bands. The low cut is a switch of its own, never part of a starting
+ *  point, so it is said apart. */
+export function useEqName(): (eq: Eq | null) => string {
+  const t = useT();
+  return (eq) => {
+    const id = presetOf(eq);
+    const name = id ? t(`eq.preset.${id}`) : t("eq.custom");
+    if (!eq?.lowCut) return name;
+    return id === "flat" ? t("eq.lowCut") : t("eq.withLowCut", { name });
+  };
+}
+
+/** How many points the small curve is drawn through. */
+const LINE_POINTS = 40;
+/** The small curve's dB range either side of 0, at least: a gentle EQ
+ *  still bends visibly at a button's size, and a steep one is shown to
+ *  the sheet's own range and no further. */
+const LINE_MIN_DB = 6;
+
+/** The EQ's curve at a glyph's size, 20 Hz to 20 kHz: what a button that
+ *  opens the sheet shows, so the EQ is seen and not only named. Flat is a
+ *  straight line along the middle. Drawn in the accent; decorative, so the
+ *  button's own name says what it is. */
+export function EqLine({
+  eq,
+  className,
+}: {
+  eq: Eq | null;
+  className?: string;
+}) {
+  const W = 48;
+  const H = 32;
+  const { line, fill } = useMemo(() => {
+    const dbs = Array.from({ length: LINE_POINTS + 1 }, (_, i) =>
+      Math.max(
+        -RANGE_DB,
+        Math.min(RANGE_DB, responseDb(eq, hzOf(i, LINE_POINTS))),
+      ),
+    );
+    const range = Math.max(LINE_MIN_DB, ...dbs.map(Math.abs));
+    const pad = 3;
+    const pts = dbs.map((db, i) => {
+      const x = (i / LINE_POINTS) * W;
+      const y = H / 2 - (db / range) * (H / 2 - pad);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+    return {
+      line: `M${pts.join("L")}`,
+      fill: `M0,${H / 2}L${pts.join("L")}L${W},${H / 2}Z`,
+    };
+  }, [eq]);
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <line
+        x1={0}
+        y1={H / 2}
+        x2={W}
+        y2={H / 2}
+        stroke="var(--line)"
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
+      />
+      <path d={fill} fill="currentColor" fillOpacity={0.16} />
+      <path
+        d={line}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   );
 }
