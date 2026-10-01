@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The local Expo module behind the Microphone sheet's routes (see ../index.ts).
+// Autolinked from ../expo-module.config.json — there is no npm package here.
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'se.agilator.recorder'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.audioroute"
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}

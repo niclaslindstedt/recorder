@@ -114,10 +114,16 @@ module.exports = () => ({
       // (react-native-webview grants a page's media request once the app
       // holds the permission), so nothing is asked for at launch. iCloud is
       // Apple's, so on Android the app is otherwise the web app served from
-      // inside the download.
+      // inside the download. BLUETOOTH_CONNECT is what lets the WebView list
+      // a Bluetooth headset's microphone (Android 12+); it is asked for when
+      // the reader opens the Microphone sheet, never at launch, and
+      // MODIFY_AUDIO_SETTINGS is what lets that sheet choose the output
+      // (`modules/audio-route`). No Bluetooth scanning: only devices the
+      // reader already paired are ever seen.
       permissions: [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.BLUETOOTH_CONNECT",
         "android.permission.CAMERA",
       ],
       adaptiveIcon: {

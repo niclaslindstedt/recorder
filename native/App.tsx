@@ -6,8 +6,9 @@
 // off-origin links to the system browser, answers the page when it asks its
 // iCloud container for the document, opens a provider's sign-in in an
 // authentication session when the page asks for one, hands an export to the
-// share sheet when the page saves a file, and opens the camera to read a
-// pairing code when the reader taps Scan. There is no native UI at all beyond
+// share sheet when the page saves a file, opens the camera to read a
+// pairing code when the reader taps Scan, and prefers the microphone and
+// output the page's Microphone sheet chose. There is no native UI at all beyond
 // a spinner, a failure screen and that scanner — everything else a reader
 // sees is the web app, unchanged.
 //
@@ -81,6 +82,14 @@ import {
   type ScanQrRequest,
 } from "./src/scanQrBridge";
 import { QrScanner } from "./src/QrScanner";
+import {
+  AUDIO_ROUTE_SCRIPT,
+  ROUTES_CHANGED_SCRIPT,
+  audioRouteResolveScript,
+  isAudioRouteRequest,
+  type AudioRouteRequest,
+} from "./src/audioRouteBridge";
+import { answerAudioRouteRequest, onRoutesChanged } from "./src/audioRoute";
 
 // Hold the native splash until the WebView actually paints. Called at module
 // scope so the auto-hide never wins the race; a rejection only means the
@@ -210,6 +219,26 @@ export default function App() {
     );
   }, []);
 
+  // One question about the microphone and the output (see
+  // `audioRouteBridge.ts`): the routes as they are, or a port to prefer. The
+  // wrapper keeps no choice — the page remembers it and says it again each
+  // time it opens the microphone.
+  const answerAudioRoute = useCallback(async (request: AudioRouteRequest) => {
+    const result = await answerAudioRouteRequest(request);
+    webViewRef.current?.injectJavaScript(
+      audioRouteResolveScript(request.id, result),
+    );
+  }, []);
+
+  // A headset connected or gone: the page reads its lists again.
+  useEffect(
+    () =>
+      onRoutesChanged(() =>
+        webViewRef.current?.injectJavaScript(ROUTES_CHANGED_SCRIPT),
+      ),
+    [],
+  );
+
   // One scan, open while the page waits on it (see `scanQrBridge.ts`). The
   // camera is mounted only while this holds a request.
   const [scan, setScan] = useState<ScanQrRequest | null>(null);
@@ -241,6 +270,12 @@ export default function App() {
         saveFile(parsed);
         return;
       }
+      if (isAudioRouteRequest(parsed)) {
+        // Only the bundled page may route the device's sound.
+        if (!origin || !isFromOrigin(event.nativeEvent.url, origin)) return;
+        void answerAudioRoute(parsed);
+        return;
+      }
       if (isScanQrRequest(parsed)) {
         // Only the bundled page may open the camera.
         if (!origin || !isFromOrigin(event.nativeEvent.url, origin)) return;
@@ -262,7 +297,7 @@ export default function App() {
         setPageBackground(reported.trim());
       }
     },
-    [answerCloud, signIn, saveFile, answerScan, origin],
+    [answerCloud, signIn, saveFile, answerAudioRoute, answerScan, origin],
   );
 
   // --- navigation -----------------------------------------------------------
@@ -366,12 +401,13 @@ export default function App() {
             // file (so its `saveFile` hands exports to the share sheet) and
             // scan a QR code (so the pairing sheet offers Scan).
             injectedJavaScriptBeforeContentLoaded={`${BEFORE_LOAD_SCRIPT}\n${SAVE_FILE_DESCRIPTOR}\n${SCAN_QR_DESCRIPTOR}`}
-            // Three scripts, one prop: the theme reporter the chrome follows,
-            // the iCloud host the page looks for, and the auth-session
-            // provider its Dropbox sign-in looks for. All run once the page
-            // has loaded, and all are guarded against a second injection (a
-            // reload re-runs this).
-            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CLOUD_SCRIPT}\n${AUTH_SESSION_SCRIPT}`}
+            // Four scripts, one prop: the theme reporter the chrome follows,
+            // the iCloud host the page looks for, the auth-session provider
+            // its Dropbox sign-in looks for, and the audio-route host its
+            // Microphone sheet looks for. All run once the page has loaded,
+            // and all are guarded against a second injection (a reload
+            // re-runs this).
+            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CLOUD_SCRIPT}\n${AUTH_SESSION_SCRIPT}\n${AUDIO_ROUTE_SCRIPT}`}
             onMessage={onMessage}
             onLoadEnd={hideSplash}
             onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}

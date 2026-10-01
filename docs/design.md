@@ -159,6 +159,10 @@ columns across the whole width, not the reading column:
 │  │   Standard      │ │ ╯  Podcast       │ │
 │  └─────────────────┘ └──────────────────┘ │
 │  ┌─────────────────────────────────────┐  │
+│  │ 🎙 MICROPHONE·Out: AirPods          │  │  what it records through, the whole width
+│  │    iPhone Microphone              › │  │
+│  └─────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────┐  │
 │  │ ⌇ TRIGGER·−40dB·2s  On sound · cut› │  │  when it records, the whole width
 │  └─────────────────────────────────────┘  │
 │  ┌─────────────────────────────────────┐  │
@@ -188,6 +192,15 @@ columns across the whole width, not the reading column:
   like and not only what the EQ is called. It sits beside Quality because
   the two together are how the take will sound. It opens **the EQ sheet**
   (below).
+- **Microphone** (under them, the whole width, because a device's name —
+  "MacBook Pro Microphone (Built-in)" — does not fit half of it) is the
+  same shape: Automatic or the microphone a take records through, and once
+  an output has been chosen, "Out:" and its name on the caption's line. It
+  opens **the Microphone sheet** (below). It is on Ready, not in Settings,
+  because the microphone is chosen at the microphone: a lapel mic for an
+  interview, the phone's own for a memo, an interface for a rehearsal. It
+  sits under how the take sounds because it is the first thing that
+  decides it.
 - **Trigger** (under them, the whole width, because "On sound · quiet cut
   out" and its level and hold on the caption's line do not fit half of it)
   is the same shape again: whether a take records everything or only while
@@ -204,7 +217,10 @@ columns across the whole width, not the reading column:
   lets the Review mode ask nothing it doesn't have to.
 - **Check your level** invites you into the Listening mode. It is a card
   with one sentence and one button, because the one thing a first-timer
-  needs to know is that Listen records nothing.
+  needs to know is that Listen records nothing. Below a tall window it is
+  the slimmer card a phone on its side gets, and the rows sit a little
+  closer, so on the smallest phone "Tap to record" stays above the bottom
+  bar with five choices over it.
 - **No recordings.** What was recorded is the Recordings screen's, one
   swipe or one tab away. A list here gave the screen two subjects and
   pushed the button down on a small phone; the room it took is the
@@ -473,6 +489,48 @@ whole screen on two fields and put a big red Discard under a small Save.
 - The choice is remembered on this device and is what the next take starts
   on. It is not a per-space or per-folder setting. A quality is a fact about
   a take, and the take records it (Player → facts).
+
+### The Microphone sheet
+
+```
+┌───────────────────────────────────────────┐
+│  Microphone                           ✕   │
+│  RECORD WITH                              │
+│  Every take, Listening and the monitor…   │
+│  ◉ Automatic      Now: AirPods Pro        │  the device's own choice
+│  ○ iPhone Microphone                      │
+│  ○ AirPods Pro                            │
+│  PLAY THROUGH                             │
+│  Where the monitor and the player sound.  │  and the one case it is for
+│  ◉ Automatic      Now: AirPods Pro        │
+│  ○ AirPods Pro                            │
+│  ○ Speaker                                │
+│  More outputs…                            │  the system's own picker (phone app)
+└───────────────────────────────────────────┘
+```
+
+- **Two lists, each starting on Automatic.** Automatic is the device's own
+  choice, and what the app did before there was a sheet: nothing about the
+  device's sound is touched until something else is chosen, so a person
+  who never opens the sheet gets exactly the app they had. Under it, where
+  the phone app can say, where the sound is right now ("Now: AirPods Pro").
+- **The sentence under "Play through" names the one case** a person comes
+  here for — record on the phone, listen on Bluetooth headphones — and
+  which two rows make it, because "choose the phone's microphone to get
+  the headphones back" is not something anyone would guess.
+- **A chosen device that is away stays ticked**, listed as "not connected"
+  with Automatic standing in, so a headset left in a bag does not quietly
+  lose its place — and the Ready button says so too.
+- **Before the microphone has been allowed**, a browser will not name its
+  devices; the sheet says to press Listen once rather than opening the
+  microphone itself, because the microphone opens only on Listen, Record
+  or a Monitor.
+- **Where the output cannot be chosen** (Safari, so every iPhone browser),
+  the second list is a sentence saying where it is chosen instead: Control
+  Center. A list of one row that did nothing would be worse.
+- Choosing does not close the sheet — there are two choices in it — and
+  both are remembered on this device: a headset is a fact about this phone,
+  not about a take.
 
 ### The Trigger sheet
 

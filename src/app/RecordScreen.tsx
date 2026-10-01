@@ -18,6 +18,7 @@ import {
 import {
   ConfirmDialog,
   FolderIcon,
+  MicIcon,
   PauseIcon,
   PlayIcon,
   SlidersIcon,
@@ -37,6 +38,7 @@ import { presetOf } from "./eq.ts";
 import { EqSheet } from "./EqSheet.tsx";
 import { EqLine } from "./EqParts.tsx";
 import { ClipIcon, TriggerIcon } from "./icons.tsx";
+import { MicrophoneSheet } from "./MicrophoneSheet.tsx";
 import { useT } from "./i18n/index.ts";
 import { liveCtx } from "./ids.ts";
 import { paced } from "./pacing.ts";
@@ -58,6 +60,7 @@ import { formatTargetDb, targetRange } from "./target.ts";
 import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
+import { useRouting } from "./useAudioRouting.ts";
 import { useListen } from "./useListen.ts";
 import { useMonitor } from "./useMonitor.ts";
 import { useStand } from "./useShape.ts";
@@ -116,6 +119,9 @@ export function RecordScreen({
   onCaptureChange,
 }: Props) {
   const t = useT();
+  // The microphone and the output chosen on the Microphone sheet — the
+  // take, Listening and the monitor all go through them.
+  const routing = useRouting();
   // A take with the sound trigger on is captured as samples whatever its
   // kind: the stretches worth keeping are cut from them at Stop
   // (`gateCapture`), and the browser's encoder cannot be handed them back.
@@ -128,6 +134,7 @@ export function RecordScreen({
             : ("encoded" as const),
         bitsPerSecond: settings.recordingBitrate * 1000,
         processing: settings.voiceProcessing,
+        deviceId: routing.deviceId,
         bands: BANDS,
       }),
       [
@@ -135,6 +142,7 @@ export function RecordScreen({
         settings.recordingBitrate,
         settings.voiceProcessing,
         settings.gate,
+        routing.deviceId,
       ],
     ),
   );
@@ -146,13 +154,13 @@ export function RecordScreen({
       targetRange(levelTarget, { lowDb: targetLowDb, highDb: targetHighDb }),
     [levelTarget, targetLowDb, targetHighDb],
   );
-  const listen = useListen(settings.voiceProcessing, BANDS, target);
+  const listen = useListen(settings.voiceProcessing, BANDS, target, routing);
   const [take, setTake] = useState<CaptureResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [clipped, setClipped] = useState(false);
   const [sheet, setSheet] = useState<
-    "quality" | "eq" | "trigger" | "destination" | null
+    "quality" | "eq" | "mic" | "trigger" | "destination" | null
   >(null);
   // Stopped, and the trigger's stretches being cut out and encoded: still
   // the take's, so the shell keeps the reader here.
@@ -168,6 +176,7 @@ export function RecordScreen({
   const monitor = useMonitor(
     eqBypassed ? null : settings.recordEq,
     settings.voiceProcessing,
+    routing,
   );
   // On speakers it howls, and a howl while recording is in the take: the
   // glyph asks once whether headphones are on.
@@ -238,13 +247,18 @@ export function RecordScreen({
     try {
       // Listening hands the microphone over: the level is already set.
       if (listen.on) await listen.stop();
+      await routing.prepare();
       await recorder.start();
+      // Open now: the system has re-decided its routes, and the browser
+      // names its devices.
+      void routing.prepare();
+      routing.refresh();
     } catch {
       // `recorder.error` says which; the screen prints it.
     } finally {
       setHandingOver(false);
     }
-  }, [recorder, listen]);
+  }, [recorder, listen, routing]);
 
   // The monitor runs only beside an open microphone — Listening, a take
   // running or paused — or in the EQ sheet. Stop, Discard, Review and
@@ -427,6 +441,39 @@ export function RecordScreen({
       detail={settings.recordEq?.lowCut ? t("eq.lowCut") : undefined}
       value={eqPreset ? t(`eq.preset.${eqPreset}`) : t("eq.custom")}
       onClick={() => setSheet("eq")}
+    />
+  );
+  // Which microphone, and — once one is chosen — where the sound comes
+  // out, on the caption's line. A chosen device that is away is said to be.
+  const micName = (
+    choice: AppSettings["inputDevice"],
+    found: { name: string } | null,
+    named = true,
+  ) =>
+    found
+      ? found.name
+      : choice
+        ? named
+          ? t("devices.absent", { name: choice.name })
+          : choice.name
+        : t("devices.automatic");
+  const micButton = (slim = false) => (
+    <ChoiceButton
+      slim={slim}
+      icon={<MicIcon className="h-5 w-5" />}
+      caption={t("devices.caption")}
+      detail={
+        settings.outputDevice
+          ? t("devices.playsOn", {
+              name: micName(settings.outputDevice, routing.output),
+            })
+          : undefined
+      }
+      value={micName(settings.inputDevice, routing.input, routing.named)}
+      onClick={() => {
+        routing.refresh(true);
+        setSheet("mic");
+      }}
     />
   );
   // When a take records: always, or only on sound — and then what becomes
@@ -770,6 +817,7 @@ export function RecordScreen({
         <div className="hidden grid-cols-2 gap-2 tall:grid">
           {qualityButton(true)}
           {eqButton(true)}
+          <div className="col-span-2 flex flex-col">{micButton(true)}</div>
           <div className="col-span-2 flex flex-col">{triggerButton(true)}</div>
           <div className="col-span-2 flex flex-col">
             {destinationButton(true)}
@@ -780,13 +828,14 @@ export function RecordScreen({
     );
   } else {
     // The take's choices, decided before it and never during: how it
-    // sounds side by side — its quality and its EQ — then when it records,
-    // and where it goes, each the whole width: the trigger's value and a
-    // folder's path are long.
+    // sounds side by side — its quality and its EQ — then what it records
+    // through, when it records, and where it goes, each the whole width: a
+    // device's name, the trigger's value and a folder's path are long.
     const choices = (
       <div className="grid grid-cols-2 gap-2">
         {qualityButton()}
         {eqButton()}
+        <div className="col-span-2 flex flex-col">{micButton()}</div>
         <div className="col-span-2 flex flex-col">{triggerButton()}</div>
         <div className="col-span-2 flex flex-col">{destinationButton()}</div>
       </div>
@@ -825,7 +874,7 @@ export function RecordScreen({
 
   return (
     <div
-      className={`app-record flex min-h-full flex-1 flex-col gap-4 px-4 ${stand ? "py-3" : "py-4"}`}
+      className={`app-record flex min-h-full flex-1 flex-col gap-3 px-4 tall:gap-4 ${stand ? "py-3" : "py-4"}`}
     >
       {body}
 
@@ -843,6 +892,14 @@ export function RecordScreen({
           settings={settings}
           update={update}
           locale={locale}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === "mic" && (
+        <MicrophoneSheet
+          settings={settings}
+          update={update}
+          routing={routing}
           onClose={() => setSheet(null)}
         />
       )}

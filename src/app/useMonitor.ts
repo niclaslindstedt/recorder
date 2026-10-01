@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Eq } from "./eq.ts";
 import { createEqChain, newAudioContext, type EqChain } from "./eqChain.ts";
 import { HowlDetector } from "./howl.ts";
+import { routeOutput } from "./useAudioRouting.ts";
 
 // Monitoring: the microphone, through the EQ, into the headphones — so the
 // EQ a take will start with can be set by ear before pressing Record.
@@ -27,6 +28,12 @@ import { HowlDetector } from "./howl.ts";
 // background, where nobody is watching it. The browser's lowest output
 // latency is asked for; what a device delivers varies, and a wireless
 // headset adds its own.
+//
+// It listens through the microphone a take would (`deviceId`) and plays
+// through the output chosen on the Microphone sheet (`sinkId`, where the
+// page routes it) — the phone's microphone into Bluetooth headphones is
+// the case it exists for. A microphone changed while it runs stops it,
+// since what it would be playing is no longer what a take hears.
 
 export type MonitorState =
   | "off"
@@ -58,12 +65,27 @@ type Open = {
   guard: ReturnType<typeof setInterval>;
 };
 
-export function useMonitor(eq: Eq | null, processing: boolean): Monitor {
+/** Which microphone, and which output, as `useAudioRouting` says. */
+export type MonitorRoute = {
+  deviceId: string | undefined;
+  sinkId: string | null;
+  prepare: () => Promise<void>;
+};
+
+export function useMonitor(
+  eq: Eq | null,
+  processing: boolean,
+  route: MonitorRoute,
+): Monitor {
   const [state, setState] = useState<MonitorState>("off");
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   const open = useRef<Open | null>(null);
   const eqRef = useRef(eq);
   eqRef.current = eq;
+  const { deviceId, sinkId, prepare } = route;
+  // Read once `prepare` has run: it may have just named the microphones.
+  const deviceRef = useRef(deviceId);
+  deviceRef.current = deviceId;
   const run = useRef(0);
 
   const stop = useCallback((why: "off" | "feedback" = "off") => {
@@ -95,15 +117,20 @@ export function useMonitor(eq: Eq | null, processing: boolean): Monitor {
       return;
     }
     void ctx.resume();
+    routeOutput(ctx, sinkId);
     const mine = ++run.current;
     setState("starting");
-    media
-      .getUserMedia({
-        audio: {
-          echoCancellation: processing,
-          noiseSuppression: processing,
-          autoGainControl: processing,
-        },
+    prepare()
+      .then(() => {
+        const device = deviceRef.current;
+        return media.getUserMedia({
+          audio: {
+            echoCancellation: processing,
+            noiseSuppression: processing,
+            autoGainControl: processing,
+            ...(device ? { deviceId: { exact: device } } : {}),
+          },
+        });
       })
       .then((stream) => {
         if (run.current !== mine) {
@@ -138,6 +165,8 @@ export function useMonitor(eq: Eq | null, processing: boolean): Monitor {
         open.current = { ctx, stream, chain, out, guard };
         setAnalyser(chain.analyser);
         setState("on");
+        // The system re-decides its routes as a microphone opens.
+        void prepare();
       })
       .catch((err: unknown) => {
         void ctx.close();
@@ -149,11 +178,23 @@ export function useMonitor(eq: Eq | null, processing: boolean): Monitor {
             : "failed",
         );
       });
-  }, [processing, stop]);
+  }, [processing, sinkId, prepare, stop]);
 
   useEffect(() => {
     open.current?.chain.set(eq);
   }, [eq]);
+
+  useEffect(() => {
+    if (open.current) routeOutput(open.current.ctx, sinkId);
+  }, [sinkId]);
+
+  // Another microphone: what is playing is no longer what a take hears.
+  const lastDevice = useRef(deviceId);
+  useEffect(() => {
+    if (lastDevice.current === deviceId) return;
+    lastDevice.current = deviceId;
+    if (state === "on" || state === "starting") stop();
+  }, [deviceId, state, stop]);
 
   // Not left running where nobody can hear what it is doing.
   useEffect(() => {

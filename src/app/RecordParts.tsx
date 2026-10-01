@@ -26,6 +26,7 @@ import { useT } from "./i18n/index.ts";
 import { SheetTitle } from "./ModalHeader.tsx";
 import type { Eq } from "./eq.ts";
 import type { Ambient, Verdict } from "./levels.ts";
+import { useRouting } from "./useAudioRouting.ts";
 import { useEqPlayer } from "./useEqPlayer.ts";
 import type { MonitorState } from "./useMonitor.ts";
 
@@ -91,13 +92,14 @@ export function ListenCard({
 }: {
   onListen: () => void;
   busy: boolean;
-  /** Less padding, for a phone on its side. */
+  /** Less padding, for a phone on its side. A short phone upright gets
+   *  the same, so the record button's word stays above the bottom bar. */
   compact?: boolean;
 }) {
   const t = useT();
   return (
     <div
-      className={`flex items-center gap-3 rounded-lg border border-dashed border-line bg-surface/60 ${compact ? "px-4 py-2.5" : "p-4"}`}
+      className={`flex items-center gap-3 rounded-lg border border-dashed border-line bg-surface/60 ${compact ? "px-4 py-2.5" : "px-4 py-2.5 tall:py-4"}`}
     >
       <WaveformIcon className="h-8 w-8 shrink-0 text-accent" />
       <div className="min-w-0 flex-1">
@@ -347,7 +349,8 @@ export function TakeReview({
   );
   const [wantPlay, setWantPlay] = useState(false);
   // Heard through the EQ it will be saved with.
-  const player = useEqPlayer(preview, eq);
+  const { sinkId } = useRouting();
+  const player = useEqPlayer(preview, eq, sinkId);
   const duration = player.duration || take.durationMs / 1000;
   const progress = duration > 0 ? player.time / duration : 0;
   useEffect(() => {

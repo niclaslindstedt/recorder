@@ -8,12 +8,14 @@ is in [`../design.md`](../design.md).
 
 ## Ready
 
-The microphone is closed. At the top are the take's four choices, as
+The microphone is closed. At the top are the take's five choices, as
 buttons. Side by side, how it will sound: **Quality** (the preset's name,
 with its bitrate on the caption) opens the Quality sheet, and **EQ** (Flat,
 a preset's name, or Custom) opens the [equalizer](equalizer.md) — the EQ
 new takes start with, which you can **Monitor** on headphones before you
-record (and while Listening or Recording, from the headphones glyph). Under them, the whole width, **Trigger** (Off, or On sound with
+record (and while Listening or Recording, from the headphones glyph). Under them, the whole width, **Microphone** (Automatic, or the
+microphone you chose, with the output on the caption once you have chosen
+one) opens the [Microphone sheet](#microphone-and-output), **Trigger** (Off, or On sound with
 its level and hold on the caption) opens the [sound trigger](#sound-trigger)
 sheet, and **Save to** (the folder a new take is filed in) opens the folder
 picker. Save to starts on the folder the library
@@ -196,6 +198,44 @@ choice is remembered on this device, not per space or folder.
 suppress noise and level the volume, the way a call does. It is off by
 default, because it also changes what was recorded: on records what the
 microphone hears less the room.
+
+## Microphone and output
+
+The **Microphone** button on Ready opens the sheet that says which
+microphone a take records through and where the app's sound comes out —
+the monitor, a take's listen-back and the player. Each list starts on
+**Automatic**, the device's own choice, which is what the app did before
+there was a sheet; nothing about the device's sound is touched until you
+choose something else.
+
+- **Record with** lists the microphones. A browser names them only once the
+  microphone has been allowed, so until you have pressed Listen or Record
+  once, the sheet says so and Automatic is the device's own. Every take,
+  Listening and the monitor use the one you choose; Listening starts over
+  on the new one, so the meter reads the microphone the take will use.
+- **Play through** lists the outputs, where the device can send its sound
+  somewhere chosen: Chrome, Edge and Firefox on a computer, and the phone
+  app. Safari — so every browser on an iPhone or iPad — plays wherever the
+  system sends its sound, and the sheet says to choose that in Control
+  Center instead.
+- In the **phone app**, both lists are the phone's own: the iPhone's
+  microphone, a Bluetooth headset's, a wired or USB one, and on the output
+  side the headphones, the loudspeaker and **More outputs…**, the system's
+  own picker (AirPlay and every Bluetooth device on an iPhone, the output
+  switcher on Android).
+
+**Record on the phone, listen on Bluetooth headphones.** Left to itself, a
+phone that opens its microphone with a Bluetooth headset connected switches
+the headset to its call link: the headset's microphone records, and what
+you hear is narrow and quiet. In the phone app, choose the phone's own
+microphone under **Record with**: the headphones stay on their full-quality
+link for the monitor and the listen-back while the phone records. On
+Android, choosing the headphones under **Play through** holds them there
+while the microphone is open.
+
+A chosen device that is not connected stays chosen — the sheet lists it as
+not connected — and Automatic stands in until it is back. Both choices are
+remembered on this device, like Quality.
 
 ## Sound trigger
 
