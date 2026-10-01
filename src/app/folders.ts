@@ -4,6 +4,7 @@
 // functions from a document to a new one. Ids and the `updatedAt` stamp
 // come in through `ctx`, so nothing here touches chance or the clock.
 
+import { normalizeEq, sameEq, type Eq } from "./eq.ts";
 import {
   liveFolders,
   liveRecordings,
@@ -252,6 +253,24 @@ export function patchRecording(
   if (!r) return data;
   const next: Recording = { ...r, ...patch, updatedAt: ctx.now() };
   if (typeof patch.title === "string") next.title = patch.title.trim();
+  return saveRecording(data, next);
+}
+
+/** Set the EQ a recording is heard and exported through; `null` (or a flat
+ *  one) takes it off. The bytes are not touched. */
+export function setRecordingEq(
+  data: AppData,
+  id: string,
+  eq: Eq | null,
+  ctx: Ctx,
+): AppData {
+  const r = data.recordings[id];
+  if (!r) return data;
+  const kept = normalizeEq(eq);
+  if (sameEq(r.eq ?? null, kept)) return data;
+  const next: Recording = { ...r, updatedAt: ctx.now() };
+  if (kept) next.eq = kept;
+  else delete next.eq;
   return saveRecording(data, next);
 }
 

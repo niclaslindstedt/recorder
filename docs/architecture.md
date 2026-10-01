@@ -18,6 +18,10 @@ src/
     ├── quality.ts           the four ways a take is kept (Memo, Standard, High, Lossless) and a minute's cost
     ├── levels.ts            Listening's readings: the room, the peak, the headroom, a verdict
     ├── pacing.ts            the capture's frames paced to the display, so the meter moves every frame
+    ├── eq.ts                the equalizer: bands, presets, the curve, and the samples through it (exports)
+    ├── eqChain.ts           the same EQ as the browser's filters, for the player and the monitor
+    ├── useEqPlayer.ts       the player and Review's playback, through the EQ once one is wanted
+    ├── useMonitor.ts        the microphone through the EQ into headphones; nothing kept
     ├── playhead.ts          the player's playhead as a smooth clock over the element's coarse time
     ├── export.ts            WAV / FLAC / MP3 out, through the framework's encoders; the size estimate
     ├── format.ts            durations, timers, day headings, container names
@@ -41,6 +45,7 @@ src/
     ├── SearchSheet.tsx      search across the space's titles, notes and folder names
     ├── RecordingRow.tsx     a recording as a row, wherever one is listed
     ├── PlayerModal.tsx      the title, the folder chip, the shape, the transport, the note, the facts
+    ├── EqSheet.tsx          the EQ sheet; EqParts.tsx is its knob and its curve
     ├── ExportModal.tsx      the export sheet, and what the file will be
     ├── SettingsScreen.tsx   settings; SidePanel.tsx is the same on a desk
     ├── LookPicker.tsx       the looks as cards, each drawn in its own colours
@@ -153,6 +158,7 @@ type Recording = {
   notes: string;
   clipCount: number; // how many times the take clipped
   maxPeakDb: number; // the loudest peak, dBFS
+  eq?: { lowCut: boolean; gains: { bass; warmth; mids; presence; air } }; // dB; absent is flat
   deletedAt?: string | null;
 };
 ```

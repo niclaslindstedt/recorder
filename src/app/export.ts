@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The way out: a recording as a file somebody else can open.
 //
-// The take is decoded to samples through the browser, folded and resampled
-// as the form asked, and encoded by the framework — WAV and FLAC in the
+// The take is decoded to samples through the browser, put through its EQ,
+// folded and resampled as the form asked, and encoded by the framework — WAV and FLAC in the
 // bundle, MP3 through an encoder fetched on first use so nobody who never
 // exports one downloads it. The framework's `saveFile` gets it out: a
 // download on the web, the share sheet in the phone app.
@@ -28,6 +28,7 @@ import {
   type SaveFileOutcome,
 } from "@niclaslindstedt/oss-framework/files";
 
+import { applyEq, type Eq } from "./eq.ts";
 import { FLAC_RATIO } from "./quality.ts";
 import type { Bitrate, ExportFormat, ExportRate } from "./useAppSettings.ts";
 import type { Recording } from "./types.ts";
@@ -115,16 +116,20 @@ function nearestMp3Rate(rate: number): number {
   return best;
 }
 
-/** Samples → the file's bytes, per format. */
+/** Samples → the file's bytes, per format. The recording's EQ, if it has
+ *  one, is applied first, at the take's own rate — the curve the player
+ *  plays it through. */
 export async function encodeExport(
   pcm: Pcm,
   options: ExportOptions,
+  eq: Eq | null = null,
 ): Promise<{ bytes: Uint8Array; mimeType: string }> {
   const plan = exportPlan(
     { sampleRate: pcm.sampleRate, channels: pcm.channels.length },
     options,
   );
-  let shaped = plan.channels === 1 ? toMono(pcm) : pcm;
+  const heard = applyEq(pcm, eq);
+  let shaped = plan.channels === 1 ? toMono(heard) : heard;
   shaped = resample(shaped, plan.sampleRate);
   switch (options.format) {
     case "wav":
@@ -154,7 +159,11 @@ export async function exportRecording(
   options: ExportOptions,
 ): Promise<SaveFileOutcome> {
   const pcm = await decodeAudio(blob);
-  const { bytes, mimeType } = await encodeExport(pcm, options);
+  const { bytes, mimeType } = await encodeExport(
+    pcm,
+    options,
+    recording.eq ?? null,
+  );
   return saveFile({
     blob: new Blob([bytes as BlobPart], { type: mimeType }),
     filename: exportFileName(recording, options.format),
@@ -162,7 +171,8 @@ export async function exportRecording(
   });
 }
 
-/** Share the take as it is — no decoding, the container the browser wrote. */
+/** Share the take as it is — no decoding, the container the browser wrote,
+ *  and so without its EQ. */
 export function shareOriginal(
   recording: Recording,
   blob: Blob,

@@ -165,3 +165,16 @@ export function ScanIcon({ className }: IconProps) {
     </Glyph>
   );
 }
+
+/** The equalizer: a curve over three knobs' worth of dots — a boost, a
+ *  dip, a boost — which is what an EQ does to a sound. */
+export function EqIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M2 14c2.5 0 3-6 5.5-6S10 18 13 18s3-9 5.5-9S21 12 22 12" />
+      <circle cx="7.5" cy="8" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="13" cy="18" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="18.5" cy="9" r="1.4" fill="currentColor" stroke="none" />
+    </Glyph>
+  );
+}

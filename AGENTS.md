@@ -241,7 +241,23 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   thumbnail out by time. `src/app/playhead.ts` does the same for the
   player's line: a smooth clock at the playback rate, kept on the audio
   element's coarse `currentTime`.
-- `src/app/useAppSettings.ts` — the per-device settings: the theme and its looks, how a
+- `src/app/eq.ts` — the **equalizer**: a low cut and five bands (Bass,
+  Warmth, Mids, Presence, Air), the presets, `normalizeEq` (flat is
+  `null`), the curve (`responseDb`) and `applyEq`, which runs samples
+  through the same biquads the Web Audio spec gives `BiquadFilterNode` —
+  what an export is encoded from. Pure. An EQ is a fact about a recording
+  (`Recording.eq`), never written into its bytes. `eqChain.ts` is the same
+  EQ as the browser's filters; `useEqPlayer.ts` is the player and Review's
+  playback — the framework's `Player` shape over an element of its own,
+  since the framework's `usePlayer` keeps its element and an element's
+  sound can only be routed by its holder — taken through the chain only
+  once an EQ is wanted, and only on a press; `useMonitor.ts` is the
+  microphone through the EQ into headphones, opened on Monitor and keeping
+  nothing. `EqSheet.tsx` / `EqParts.tsx` are the sheet, its knobs and its
+  curve. Both the player and the monitor are candidates for the
+  framework's `audio` module once it can route an element's or a capture's
+  sound.
+- `src/app/useAppSettings.ts` — the per-device settings: the theme and its looks, the EQ new takes start with (`recordEq`), how a
   take is kept (compact at a bitrate, or lossless) and voice processing —
   both chosen on the Record screen's Quality sheet, not in Settings — the
   visualizer (`wave`, `spectrum` or `spectrogram`), the skip length, the
@@ -467,6 +483,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 | A change to the tree, or an edit to a record   | `src/app/folders.ts` (pure, tested in `tests/folders_test.ts`) + the store method in `useDocStore.ts`                                                                             |
 | A change to what is deleted, or when           | `src/app/types.ts` (`TRASH_DAYS`, `TOMBSTONE_DAYS`, `wantedFiles`, `purgeAfter`) — never a record removed outright, see "A deletion is a tombstone"                               |
 | A new export format or quality                 | `src/app/export.ts` (tested) + `useAppSettings.ts` (the default) + `ExportModal.tsx` + `SettingsScreen.tsx` — the encoder itself is the framework's                               |
+| The EQ: its bands, presets or arithmetic       | `src/app/eq.ts` (pure, tested in `tests/eq_test.ts`; the record side in `tests/eq_record_test.ts`) + `eqChain.ts` for the browser's half — the two must stay the same curve       |
 | A preset for how a take is kept                | `src/app/quality.ts` (pure, tested in `tests/quality_test.ts`) + `QualitySheet.tsx` — the capture reads `recordingKind` / `recordingBitrate`, nothing else                        |
 | What Listening reads, or its verdict           | `src/app/levels.ts` (pure, tested in `tests/levels_test.ts`) — the zones are the framework's `meterTone`, never a second set                                                      |
 | A look, or its name                            | `src/app/look.ts` (the table and the resolution, tested in `tests/look_test.ts`) + its words in `i18n/en.ts` under `look` — the palette itself is the framework's                 |
@@ -491,7 +508,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
 `migrations`, `takes`, `export`, `format`, `levels`, `quality`, `pacing`,
-`playhead`, `look`,
+`playhead`, `look`, `eq`,
 `useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
 `demoData`), which is where the app's
 real logic is. `native_icloud_test.ts` pins the strings the wrapper and the app
@@ -587,7 +604,9 @@ with `doc: <slug>` in the front matter; the collator renders that as a
   take on Stop "to be safe". Listening keeps nothing at all: it is a capture
   that is only ever cancelled, never saved, started over every few minutes
   so it holds no more than that in memory — never add a way to keep what it
-  heard. The microphone opens only on Listen or Record, never at launch.
+  heard. The microphone opens only on Listen, Record or the EQ sheet's
+  Monitor, never at launch; the monitor is microphone → filters →
+  headphones, with no recorder on the path — never add one.
 - **The clip lamp is never the only signal.** The meter's red zone, the
   latched clip lamp (on the Record screen a glyph — a wave with its tops cut
   flat, `ClipIcon` and `.app-meter-big` — rather than a word), the "Too

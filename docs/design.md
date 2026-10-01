@@ -70,7 +70,8 @@ count, a repeated date on every row or an explanatory paragraph under every
 control do not, so they are gone or folded into a heading.
 
 **8. Privacy is a behaviour, not a banner.** The microphone opens only when
-someone presses Listen or Record, and closes when they stop. Nothing listens
+someone presses Listen, Record or the EQ sheet's Monitor, and closes when
+they stop. Nothing listens
 at launch. Nothing is written until Save.
 
 ## The shell
@@ -153,9 +154,12 @@ columns across the whole width, not the reading column:
 ```
 ┌───────────────────────────────────────────┐
 │  ┌─────────────────┐ ┌──────────────────┐ │
-│  │ ◈ QUALITY·128k› │ │ 🗀 SAVE TO     › │ │  the take's two choices
-│  │   Standard      │ │   Ideas          │ │
+│  │ ◈ QUALITY·128k› │ │ ∿ EQ           › │ │  how the take sounds
+│  │   Standard      │ │   Podcast        │ │
 │  └─────────────────┘ └──────────────────┘ │
+│  ┌─────────────────────────────────────┐  │
+│  │ 🗀 SAVE TO  Ideas › Songs         › │  │  where it goes, the whole width
+│  └─────────────────────────────────────┘  │
 │  ┌─────────────────────────────────────┐  │
 │  │ ≈  Check your level     [🎧 Listen] │  │  the invitation to listen
 │  │    Hear the room … Nothing is kept. │  │
@@ -173,8 +177,12 @@ columns across the whole width, not the reading column:
   sheet** (below). It sits at the top because it is decided before a take
   and never during one. The bitrate is on the caption's line so the name is
   never cut short in a half-width button.
-- **Destination** (top right) is the same shape: the folder a new take will
-  be saved to. It opens the folder picker. It starts on the folder the
+- **EQ** (top right) is the same shape: the EQ a new take starts with —
+  Flat, a preset's name or Custom. It sits beside Quality because the two
+  together are how the take will sound. It opens **the EQ sheet** (below).
+- **Destination** (under them, the whole width, because a folder's path is
+  long and a half-width button cut it short) is the same shape: the folder
+  a new take will be saved to. It opens the folder picker. It starts on the folder the
   library is showing, so "I'm in Interviews, I press Record" files the take
   into Interviews without a question. Saying it _before_ the take is what
   lets the Review mode ask nothing it doesn't have to.
@@ -387,6 +395,45 @@ whole screen on two fields and put a big red Discard under a small Save.
   on. It is not a per-space or per-folder setting. A quality is a fact about
   a take, and the take records it (Player → facts).
 
+### The EQ sheet
+
+```
+┌───────────────────────────────────────────┐
+│  Equalizer                            ✕   │
+│  Podcast                      [Compare]   │  preset or Custom · hear it flat
+│  ┌─────────────────────────────────────┐  │
+│  │      ╭─•──•───•──╮•─────            │  │  the curve, bands marked; the
+│  │  ╭──╯              ▒▒▒ live ▒▒▒     │  │  sound after it behind, live
+│  └─────────────────────────────────────┘  │
+│  [Flat] [Podcast] [Warm] [Bright] …       │  starting points
+│   (◜)    (◝)    (│)    (◝)    (◝)         │  a knob per band
+│   Bass  Warmth  Mids  Presence  Air       │
+│  [■ ] Low cut — rumble under 80 Hz        │
+│  🎧 Hear yourself through it  [Monitor]   │  Record screen: the microphone
+│     ── or ──                              │
+│  ▶ Interview: Mira, part 1   0:03 / 0:10  │  player: the transport
+└───────────────────────────────────────────┘
+```
+
+- **One sheet, two owners.** From the Record screen it is the EQ new takes
+  start with (a per-device setting, like Quality); from the player it is
+  that recording's. It is never written into the bytes: it is kept beside
+  the recording, heard in the player and in Review, and baked into an
+  export, and Flat always brings the recording back.
+- **The curve is on top** because it is what an EQ _is_; the knobs under it
+  are how it is turned. While something is heard, the sound after the EQ
+  is drawn behind the curve, so a cut can be seen taking a hum out.
+- **Knobs, not sliders**, because that is what an EQ is to anyone who has
+  used one, and five of them fit a phone's width. They are named for what
+  they do — Bass, Warmth, Mids, Presence, Air — with the frequency under
+  the name for the reader who thinks in hertz.
+- **Compare** is beside the preset's name, so A/B is one press away while
+  judging a change; it changes nothing.
+- **Monitor** (Record screen only) says to put headphones on before it
+  starts, opens the microphone only on the press, keeps nothing, and hands
+  the microphone over from Listening. In the player, the same place holds
+  the transport, so a change is heard without leaving the sheet.
+
 ## Recordings
 
 The library is where the "after" happens: find it, play it, file it, get it
@@ -481,7 +528,7 @@ The player is a recording's page: listen, annotate, file, export.
 │  ▁▂▃▅▃▂▁▂▅▇▅▃▂▁▂▃▂▁▂▃▅▃▂▁▂▅▇▅▃▂▁▂▃▂▁       │  the shape, seekable, with the playhead
 │  0:03                              0:10   │
 │                                           │
-│       (↺15)     ( ▶ )     (15↻)    [1×]   │  transport · speed
+│  [∿]  (↺15)     ( ▶ )     (15↻)    [1×]   │  EQ · transport · speed
 │                                           │
 │  Add a note…                              │  the note
 │                                           │
@@ -497,6 +544,9 @@ The player is a recording's page: listen, annotate, file, export.
 - **The folder** is a chip beside the date, which opens the picker in its
   choosing form. Filing is one tap from the recording, with no need to find
   a Move button.
+- **EQ** is a glyph left of the transport, balancing Speed on the right,
+  and lit when the recording has one. It opens the EQ sheet for this
+  recording, with the transport inside it.
 - **Speed** is a single button that steps through the rates (0.5× … 2×).
   The six-way segmented control took a row for something set occasionally.
   It sits beside the transport because it changes the transport.

@@ -8,6 +8,7 @@ import {
   deleteFolder,
   moveFolder,
   patchRecording,
+  setRecordingEq,
   purgeRecording,
   renameFolder,
   reorderFolders,
@@ -16,6 +17,7 @@ import {
   trashRecording,
   type Ctx,
 } from "./folders.ts";
+import type { Eq } from "./eq.ts";
 import { liveCtx } from "./ids.ts";
 import { parseDoc, serializeDoc } from "./migrations.ts";
 import {
@@ -146,6 +148,8 @@ export type DocStore = {
     id: string,
     patch: Parameters<typeof patchRecording>[2],
   ) => void;
+  /** The EQ a recording is heard and exported through; `null` is flat. */
+  setRecordingEq: (id: string, eq: Eq | null) => void;
   trashRecording: (id: string) => void;
   restoreRecording: (id: string) => void;
   purgeRecording: (id: string) => void;
@@ -238,6 +242,7 @@ export function useDocStore(
       saveRecording: (r) => edit((d) => saveRecording(d, r)),
       patchRecording: (id, patch) =>
         edit((d) => patchRecording(d, id, patch, c())),
+      setRecordingEq: (id, eq) => edit((d) => setRecordingEq(d, id, eq, c())),
       trashRecording: (id) => edit((d) => trashRecording(d, id, c())),
       restoreRecording: (id) => edit((d) => restoreRecording(d, id, c())),
       purgeRecording: (id) => edit((d) => purgeRecording(d, id, c())),

@@ -15,6 +15,7 @@ import {
   type Pcm,
 } from "@niclaslindstedt/oss-framework/audio";
 
+import { EQ_PRESETS, type EqPresetId } from "../eq.ts";
 import {
   emptyDoc,
   type AppData,
@@ -32,6 +33,8 @@ type Seed = {
   favorite?: boolean;
   notes?: string;
   kind?: Recording["kind"];
+  /** The EQ preset it is heard through, so the EQ shows lit somewhere. */
+  eq?: EqPresetId;
   /** The tone's pitch, so each demo file sounds different. */
   hz: number;
 };
@@ -86,6 +89,7 @@ const SEEDS: Seed[] = [
     agoHours: 52,
     seconds: 1843,
     hz: 247,
+    eq: "podcast",
   },
   {
     id: "demorec06",
@@ -217,6 +221,8 @@ export function buildDemoData(now: Date): AppData {
       clipCount: 0,
       maxPeakDb: -6.4,
     };
+    const eq = s.eq && EQ_PRESETS.find((p) => p.id === s.eq)?.eq;
+    if (eq) doc.recordings[s.id]!.eq = eq;
   }
   return doc;
 }

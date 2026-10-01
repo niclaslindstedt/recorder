@@ -88,8 +88,10 @@ export function formatContainer(mimeType: string): string {
 /** A sample rate as "48 kHz". */
 export function formatRate(hz: number): string {
   if (!(hz > 0)) return "—";
-  const khz = hz / 1000;
-  return `${Number.isInteger(khz) ? khz : khz.toFixed(1)} kHz`;
+  // Tenths, cut rather than rounded, so 22.05 reads "22" and 44.1 stays
+  // 44.1 — the names people know these rates by.
+  const tenths = Math.floor(hz / 100);
+  return `${tenths % 10 === 0 ? tenths / 10 : (tenths / 10).toFixed(1)} kHz`;
 }
 
 /** A local calendar day as `YYYY-MM-DD` — what the list groups rows by. */

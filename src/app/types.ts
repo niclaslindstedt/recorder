@@ -11,6 +11,8 @@
 // "Recently deleted" is the tombstones younger than `TRASH_DAYS`; older ones
 // lose their file and, later, the record itself (`purgeAfter`).
 
+import type { Eq } from "./eq.ts";
+
 /** The document's schema version. Bump it and append a step in
  *  `migrations.ts` for a change an old document cannot be read across. */
 export const DOC_VERSION = 1;
@@ -67,6 +69,9 @@ export type Recording = {
    *  facts about the take, shown on its details. */
   clipCount: number;
   maxPeakDb: number;
+  /** The equalizer it is heard and exported through (`eq.ts`). Absent is
+   *  flat. Never written into the bytes: the take stays as it was heard. */
+  eq?: Eq;
   deletedAt?: string | null;
 };
 

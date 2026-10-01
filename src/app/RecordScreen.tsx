@@ -28,7 +28,9 @@ import {
 import { FolderPicker } from "./FolderPicker.tsx";
 import { folderPath } from "./folders.ts";
 import { formatSize, formatSpan, formatTimer } from "./format.ts";
-import { ClipIcon } from "./icons.tsx";
+import { presetOf } from "./eq.ts";
+import { EqSheet, MonitorPanel } from "./EqSheet.tsx";
+import { ClipIcon, EqIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { liveCtx } from "./ids.ts";
 import { paced } from "./pacing.ts";
@@ -48,6 +50,7 @@ import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
 import { useListen } from "./useListen.ts";
+import { useMonitor } from "./useMonitor.ts";
 import { useStand } from "./useShape.ts";
 import { Visualizer } from "./Visualizer.tsx";
 
@@ -122,7 +125,33 @@ export function RecordScreen({
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [clipped, setClipped] = useState(false);
-  const [sheet, setSheet] = useState<"quality" | "destination" | null>(null);
+  const [sheet, setSheet] = useState<"quality" | "eq" | "destination" | null>(
+    null,
+  );
+
+  // The EQ new takes start with, heard through the monitor while the EQ
+  // sheet is open — or flat while Compare is held.
+  const [eqBypassed, setEqBypassed] = useState(false);
+  const monitor = useMonitor(
+    eqBypassed ? null : settings.recordEq,
+    settings.voiceProcessing,
+  );
+  const monitorControls = useMemo(
+    () => ({
+      ...monitor,
+      // One microphone at a time: Listening hands it over.
+      start: () => {
+        if (listen.on) void listen.stop();
+        monitor.start();
+      },
+    }),
+    [monitor, listen],
+  );
+  const closeEq = () => {
+    monitor.stop();
+    setEqBypassed(false);
+    setSheet(null);
+  };
 
   // Where the take goes: the library's folder, until the reader says
   // otherwise. A folder deleted meanwhile is no folder.
@@ -201,6 +230,7 @@ export function RecordScreen({
           folderId: destinationLive,
           ctx: liveCtx(),
           flacLevel: settings.exportFlacLevel,
+          eq: settings.recordEq,
         });
         await onSave(recording, blob);
         onNotice(t("record.saved", { title: recording.title }));
@@ -220,6 +250,7 @@ export function RecordScreen({
       suggested,
       destinationLive,
       settings.exportFlacLevel,
+      settings.recordEq,
       onSave,
       onNotice,
       t,
@@ -270,6 +301,16 @@ export function RecordScreen({
       detail={qualityDetail}
       value={qualityName}
       onClick={() => setSheet("quality")}
+    />
+  );
+  const eqPreset = presetOf(settings.recordEq);
+  const eqButton = (slim = false) => (
+    <ChoiceButton
+      slim={slim}
+      icon={<EqIcon className="h-5 w-5" />}
+      caption={t("eq.caption")}
+      value={eqPreset ? t(`eq.preset.${eqPreset}`) : t("eq.custom")}
+      onClick={() => setSheet("eq")}
     />
   );
   const destinationButton = (slim = false) => (
@@ -334,6 +375,7 @@ export function RecordScreen({
         take={take}
         suggested={suggested}
         saving={saving}
+        eq={settings.recordEq}
         beside={stand}
         destination={destinationButton()}
         onSave={(title) => void save(title)}
@@ -541,17 +583,23 @@ export function RecordScreen({
             left to Ready, so the button stays in reach. */}
         <div className="hidden grid-cols-2 gap-2 tall:grid">
           {qualityButton(true)}
-          {destinationButton(true)}
+          {eqButton(true)}
+          <div className="col-span-2 flex flex-col">
+            {destinationButton(true)}
+          </div>
         </div>
         {recordButton}
       </>
     );
   } else {
-    // The take's two choices, decided before it and never during.
+    // The take's choices, decided before it and never during: how it
+    // sounds side by side — its quality and its EQ — and where it goes
+    // under them, the whole width, since a folder's path is long.
     const choices = (
       <div className="grid grid-cols-2 gap-2">
         {qualityButton()}
-        {destinationButton()}
+        {eqButton()}
+        <div className="col-span-2 flex flex-col">{destinationButton()}</div>
       </div>
     );
     const listenCard = (
@@ -608,6 +656,19 @@ export function RecordScreen({
           locale={locale}
           onClose={() => setSheet(null)}
         />
+      )}
+      {sheet === "eq" && (
+        <EqSheet
+          eq={settings.recordEq}
+          onChange={(next) => update("recordEq", next)}
+          bypassed={eqBypassed}
+          onBypass={setEqBypassed}
+          analyser={monitor.analyser}
+          note={t("eq.forRecord")}
+          onClose={closeEq}
+        >
+          <MonitorPanel monitor={monitorControls} />
+        </EqSheet>
       )}
       {sheet === "destination" && (
         <FolderPicker

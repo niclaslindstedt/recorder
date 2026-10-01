@@ -145,7 +145,7 @@ export function Visualizer({
 
 /** A canvas that fills its box at the device's pixel density, and the
  *  box's size, which the drawing restarts on. */
-function useCanvas() {
+export function useCanvas() {
   const box = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -177,7 +177,7 @@ function useCanvas() {
 }
 
 /** The theme's colours, read off the page so both themes draw right. */
-function palette(el: Element) {
+export function palette(el: Element) {
   const css = getComputedStyle(el);
   const v = (name: string, fallback: string) =>
     css.getPropertyValue(name).trim() || fallback;

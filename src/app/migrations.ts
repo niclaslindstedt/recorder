@@ -15,6 +15,7 @@ import {
   type Versioned,
 } from "@niclaslindstedt/oss-framework/storage";
 
+import { normalizeEq } from "./eq.ts";
 import {
   DOC_VERSION,
   emptyDoc,
@@ -96,6 +97,7 @@ function parseRecording(id: string, value: unknown): Recording | null {
   const fileName = str(value.fileName);
   if (!isFileName(fileName)) return null;
   const deletedAt = tombstone(value.deletedAt);
+  const eq = normalizeEq(value.eq);
   return {
     id,
     title: str(value.title).slice(0, TITLE_MAX),
@@ -114,6 +116,7 @@ function parseRecording(id: string, value: unknown): Recording | null {
     notes: str(value.notes).slice(0, NOTES_MAX),
     clipCount: Math.max(0, Math.round(num(value.clipCount))),
     maxPeakDb: num(value.maxPeakDb, -60),
+    ...(eq ? { eq } : {}),
     ...(deletedAt ? { deletedAt } : {}),
   };
 }

@@ -11,6 +11,7 @@ import {
 } from "@niclaslindstedt/oss-framework/audio";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 
+import { normalizeEq, type Eq } from "./eq.ts";
 import {
   isDarkLook,
   isLightLook,
@@ -69,6 +70,9 @@ export type AppSettings = {
    *  suppression, automatic gain) is asked for. Off records what the
    *  microphone hears. */
   voiceProcessing: boolean;
+  /** The EQ a new take starts with, set (and monitored) from the Record
+   *  screen's EQ sheet; `null` is flat. */
+  recordEq: Eq | null;
   /** What the Record screen draws while listening and recording. */
   visualizer: VisualizerKind;
   /** How many seconds the skip buttons move. */
@@ -95,6 +99,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   recordingKind: "compact",
   recordingBitrate: 128,
   voiceProcessing: false,
+  recordEq: null,
   visualizer: "wave",
   skipSeconds: 15,
   exportFormat: "mp3",
@@ -142,6 +147,7 @@ export function parseSettings(raw: string): AppSettings {
       DEFAULT_SETTINGS.recordingBitrate,
     ),
     voiceProcessing: m.voiceProcessing === true,
+    recordEq: normalizeEq(m.recordEq),
     visualizer: oneOf(VISUALIZERS, m.visualizer, DEFAULT_SETTINGS.visualizer),
     skipSeconds: oneOf(
       SKIP_SECONDS,

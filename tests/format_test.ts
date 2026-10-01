@@ -59,6 +59,9 @@ describe("names", () => {
     expect(formatContainer("")).toBe("—");
     expect(formatRate(48000)).toBe("48 kHz");
     expect(formatRate(44100)).toBe("44.1 kHz");
+    expect(formatRate(22050)).toBe("22 kHz");
+    expect(formatRate(11025)).toBe("11 kHz");
+    expect(formatRate(88200)).toBe("88.2 kHz");
     expect(formatRate(0)).toBe("—");
   });
 });
