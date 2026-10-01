@@ -14,16 +14,17 @@ import {
   type Eq,
 } from "./eq.ts";
 import { EqCurve, Knob, useEqName } from "./EqParts.tsx";
-import { HeadphonesIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { SheetTitle } from "./ModalHeader.tsx";
-import type { Monitor } from "./useMonitor.ts";
 
 // The equalizer sheet (docs/design.md, "The EQ sheet"): one sheet, opened
 // from the Record screen for the EQ new takes start with, and from the
 // player for one recording's. The curve on top, the starting points, a
-// knob per band, the low cut and Compare; under them whatever hears it —
-// the monitor on the Record screen, the transport in the player. A starting
+// knob per band, the low cut and Compare. What hears it: on the Record
+// screen the monitor, as the headphones glyph in the title row — the same
+// glyph, and the same monitor, as Listening's and Recording's, so one
+// switched on there is lit here — and in the player the transport, under
+// the knobs. A starting
 // point sets the five bands and never the low cut, which is its own switch:
 // the two never undo each other.
 //
@@ -40,8 +41,10 @@ type Props = {
   analyser: AnalyserNode | null;
   /** What the EQ here is for, in a sentence. */
   note: string;
-  /** What lets it be heard: the monitor, or the transport. */
-  children: ReactNode;
+  /** A glyph in the title row: the Record screen's monitor. */
+  action?: ReactNode;
+  /** Under the knobs: the player's transport. */
+  children?: ReactNode;
   onClose: () => void;
 };
 
@@ -52,6 +55,7 @@ export function EqSheet({
   onBypass,
   analyser,
   note,
+  action,
   children,
   onClose,
 }: Props) {
@@ -77,8 +81,15 @@ export function EqSheet({
       size="max-w-lg"
       closeLabel={t("common.close")}
     >
-      <SheetTitle titleId="eq-title" title={t("eq.title")} onClose={onClose} />
-      <div className="flex flex-col gap-4 p-3">
+      <SheetTitle
+        titleId="eq-title"
+        title={t("eq.title")}
+        onClose={onClose}
+        actions={action}
+      />
+      {/* The body scrolls under the title row: on a phone the sheet is
+          taller than the card the framework allows it. */}
+      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain p-3">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2">
             <span className="min-w-0 flex-1 truncate text-sm font-semibold text-fg-bright">
@@ -169,70 +180,5 @@ export function EqSheet({
         <p className="text-xs text-muted">{note}</p>
       </div>
     </Modal>
-  );
-}
-
-/** The Record screen's way to hear the EQ: the microphone through it, into
- *  headphones. Says to put them on before it starts, says that nothing is
- *  kept while it runs. */
-export function MonitorPanel({ monitor }: { monitor: Monitor }) {
-  const t = useT();
-  const on = monitor.state === "on" || monitor.state === "starting";
-  const status =
-    monitor.state === "on"
-      ? t("eq.monitor.on")
-      : monitor.state === "starting"
-        ? t("eq.monitor.starting")
-        : monitor.state === "denied"
-          ? t("eq.monitor.denied")
-          : monitor.state === "failed"
-            ? t("eq.monitor.failed")
-            : monitor.state === "feedback"
-              ? t("eq.monitor.feedback")
-              : t("eq.monitor.hint");
-  const trouble =
-    monitor.state === "denied" ||
-    monitor.state === "failed" ||
-    monitor.state === "feedback";
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-lg border p-3 ${
-        on ? "border-accent/60 bg-accent/10" : "border-dashed border-line"
-      }`}
-    >
-      <HeadphonesIcon
-        className={`h-7 w-7 shrink-0 ${on ? "text-accent" : "text-muted"}`}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-fg-bright">
-          {t("eq.monitor.title")}
-        </p>
-        <p
-          role="status"
-          aria-live="polite"
-          className={`text-xs ${trouble ? "text-danger" : "text-muted"}`}
-        >
-          {monitor.state === "on" && (
-            <span
-              aria-hidden
-              className="app-rec-dot mr-1.5 inline-block h-2 w-2 rounded-full bg-accent"
-            />
-          )}
-          {status}
-        </p>
-      </div>
-      <button
-        type="button"
-        aria-pressed={on}
-        onClick={() => (on ? monitor.stop() : monitor.start())}
-        className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition-colors ${
-          on
-            ? "border border-line bg-surface text-fg hover:bg-surface-2"
-            : "bg-accent text-page-bg"
-        }`}
-      >
-        {on ? t("eq.monitor.stop") : t("eq.monitor.start")}
-      </button>
-    </div>
   );
 }
