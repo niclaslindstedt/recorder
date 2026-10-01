@@ -457,7 +457,8 @@ whole screen on two fields and put a big red Discard under a small Save.
 - **Compare** is beside the preset's name, so A/B is one press away while
   judging a change; it changes nothing.
 - **Monitor** (Record screen only) says to put headphones on before it
-  starts, opens the microphone only on the press, keeps nothing, and hands
+  starts, stops itself the moment it hears feedback (and says so, in the
+  place the hint was), opens the microphone only on the press, keeps nothing, and hands
   the microphone over from Listening. In the player, the same place holds
   the transport, so a change is heard without leaving the sheet.
 
