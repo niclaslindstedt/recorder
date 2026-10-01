@@ -9,6 +9,7 @@ import {
 import { formatSize } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { SheetTitle } from "./ModalHeader.tsx";
+import { TargetLevel } from "./TargetLevel.tsx";
 import {
   QUALITY_PRESETS,
   bytesPerMinute,
@@ -26,7 +27,8 @@ import { BITRATES, type AppSettings } from "./useAppSettings.ts";
 // "will an hour fit?" and "will it be good enough?" are the two questions.
 // The bitrate row is for a number the presets do not offer. Voice
 // processing lives here too: it changes what is recorded, and whether you
-// want it depends on the take.
+// want it depends on the take. So does the target level (`TargetLevel.tsx`):
+// where the peaks should land depends on what is in front of the microphone.
 
 type Props = {
   settings: AppSettings;
@@ -143,6 +145,8 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
           checked={settings.voiceProcessing}
           onChange={(next) => update("voiceProcessing", next)}
         />
+
+        <TargetLevel settings={settings} update={update} />
       </div>
     </Modal>
   );

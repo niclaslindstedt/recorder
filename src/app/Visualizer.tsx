@@ -4,16 +4,21 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   SpectrumBars,
   meterFill,
-  meterTone,
   readFrame,
+  toDb,
   type CaptureFrame,
-  type MeterTone,
 } from "@niclaslindstedt/oss-framework/audio";
 import { WaveformIcon } from "@niclaslindstedt/oss-framework/components";
 
 import { SpectrogramIcon, SpectrumIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { bucketShare } from "./pacing.ts";
+import {
+  formatTargetDb,
+  targetTone,
+  type TargetRange,
+  type TargetTone,
+} from "./target.ts";
 import type { VisualizerKind } from "./useAppSettings.ts";
 
 // The Record screen's big picture (docs/design.md, "Record"): the card that
@@ -21,14 +26,17 @@ import type { VisualizerKind } from "./useAppSettings.ts";
 // recording, drawing one of three views of the same frames —
 //
 // - wave: the sound's shape scrolling by, the newest at the right edge, on
-//   the meter's own decibel scale and in its zone colours, with the −18 and
-//   −6 lines drawn across, so speech, silence and a clip read at a glance;
+//   the meter's own decibel scale, with the target range (`target.ts`)
+//   shaded across it and every bar coloured by where its peak landed —
+//   grey under the range, the accent in it, amber over it, red when hot or
+//   clipped — so "is this a good level?" is read off the picture;
 // - spectrum: the framework's bars, how loud each frequency is now;
 // - spectrogram: frequency over time, brighter where louder, so a hum, a
 //   hiss or a voice's harmonics show as lines.
 //
 // It draws from what the capture hands every subscriber; what a level or a
-// clip *is* stays the framework's (`readFrame`, `meterFill`, `meterTone`).
+// clip *is* stays the framework's (`readFrame`, `meterFill`, `meterTone`),
+// and where one should be for this source is the target's.
 // The switcher is in the card's corner, because trying the three against a
 // room is the point of having three.
 
@@ -43,6 +51,8 @@ type Props = {
   /** The frequency printed beside a band. */
   ticks: Array<{ band: number; label: string }>;
   bands: number;
+  /** Where the peaks should land: the waveform's band and its colours. */
+  target: TargetRange;
   /** Draw the whole take so far as a strip along the card's foot, from the
    *  frames' own thumbnail. */
   overview?: boolean;
@@ -66,6 +76,7 @@ export function Visualizer({
   running,
   ticks,
   bands,
+  target,
   overview,
   className = "",
 }: Props) {
@@ -81,7 +92,12 @@ export function Visualizer({
     >
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate text-xs text-muted">
-          {t(`visualizer.caption.${kind}`)}
+          {kind === "wave"
+            ? t("visualizer.caption.wave", {
+                low: formatTargetDb(target.lowDb),
+                high: formatTargetDb(target.highDb),
+              })
+            : t(`visualizer.caption.${kind}`)}
         </span>
         <div
           role="radiogroup"
@@ -111,7 +127,11 @@ export function Visualizer({
       <div className="relative min-h-16 flex-1">
         <div className="absolute inset-0">
           {kind === "wave" && (
-            <ScrollingWave subscribe={subscribe} running={running} />
+            <ScrollingWave
+              subscribe={subscribe}
+              running={running}
+              target={target}
+            />
           )}
           {kind === "spectrum" && (
             <SpectrumBars
@@ -136,7 +156,7 @@ export function Visualizer({
           className="h-8 shrink-0 rounded-sm bg-surface-2 px-1"
           title={t("visualizer.overview")}
         >
-          <TakeOverview subscribe={subscribe} />
+          <TakeOverview subscribe={subscribe} target={target} />
         </div>
       )}
     </div>
@@ -191,21 +211,32 @@ export function palette(el: Element) {
   };
 }
 
-function toneColor(tone: MeterTone, p: ReturnType<typeof palette>): string {
-  return tone === "hot" ? p.danger : tone === "loud" ? p.flag : p.accent;
+/** A bar's colour by where its peak landed against the target: no colour
+ *  under it, the accent in it, amber over it, red when hot. */
+function targetColor(tone: TargetTone, p: ReturnType<typeof palette>): string {
+  return tone === "hot"
+    ? p.danger
+    : tone === "over"
+      ? p.flag
+      : tone === "in"
+        ? p.accent
+        : p.muted;
 }
 
 function ScrollingWave({
   subscribe,
   running,
+  target,
 }: {
   subscribe: Subscribe;
   running: boolean;
+  target: TargetRange;
 }) {
   const t = useT();
   const { box, canvas, size } = useCanvas();
   const runningRef = useRef(running);
   runningRef.current = running;
+  const { lowDb, highDb } = target;
 
   useEffect(() => {
     const el = canvas.current;
@@ -225,13 +256,12 @@ function ScrollingWave({
     let phase = 0;
     let last = performance.now();
     const colours = palette(el);
+    const range = { lowDb, highDb };
 
     const bar = (x: number, c: { db: number; clipped: boolean }) => {
       const mid = el.height / 2;
       const half = Math.max(dpr, meterFill(c.db) * mid);
-      ctx.fillStyle = c.clipped
-        ? colours.danger
-        : toneColor(meterTone(c.db), colours);
+      ctx.fillStyle = targetColor(targetTone(c.db, c.clipped, range), colours);
       ctx.fillRect(x, mid - half, colW, half * 2);
     };
 
@@ -240,11 +270,20 @@ function ScrollingWave({
       const h = el.height;
       const mid = h / 2;
       ctx.clearRect(0, 0, w, h);
-      // The meter's zone floors, mirrored: −18 (a healthy voice) and −6.
+      // The target, mirrored: a band in a wash of the accent, so the bars
+      // that reach into it are the ones in the right place.
+      const lowY = meterFill(lowDb) * mid;
+      const highY = meterFill(highDb) * mid;
+      ctx.fillStyle = colours.accent;
+      ctx.globalAlpha = 0.1;
+      ctx.fillRect(0, mid - highY, w, highY - lowY);
+      ctx.fillRect(0, mid + lowY, w, highY - lowY);
+      ctx.globalAlpha = 1;
+      // Its edges, dashed across.
       ctx.strokeStyle = colours.line;
       ctx.lineWidth = dpr;
       ctx.setLineDash([4 * dpr, 4 * dpr]);
-      for (const db of [-18, -6]) {
+      for (const db of [lowDb, highDb]) {
         const y = meterFill(db) * mid;
         for (const yy of [mid - y, mid + y]) {
           ctx.beginPath();
@@ -289,30 +328,29 @@ function ScrollingWave({
       if (cols.length > count) cols.splice(0, cols.length - count);
       draw();
     });
-  }, [subscribe, size, canvas]);
+  }, [subscribe, size, canvas, lowDb, highDb]);
 
   return (
     <div ref={box} className="relative h-full w-full">
       <canvas
         ref={canvas}
         role="img"
-        aria-label={t("visualizer.wave")}
+        aria-label={t("visualizer.waveLabel", {
+          low: formatTargetDb(lowDb),
+          high: formatTargetDb(highDb),
+        })}
         className="absolute inset-0 h-full w-full"
       />
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-0 font-figures text-[9px] leading-none text-muted"
-        style={{ top: `calc(50% - ${meterFill(-6) * 50}% - 0.7em)` }}
-      >
-        −6
-      </span>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-0 font-figures text-[9px] leading-none text-muted"
-        style={{ top: `calc(50% - ${meterFill(-18) * 50}% - 0.7em)` }}
-      >
-        −18
-      </span>
+      {[highDb, lowDb].map((db) => (
+        <span
+          key={db}
+          aria-hidden
+          className="pointer-events-none absolute left-0 font-figures text-[9px] leading-none text-muted"
+          style={{ top: `calc(50% - ${meterFill(db) * 50}% - 0.7em)` }}
+        >
+          {formatTargetDb(db)}
+        </span>
+      ))}
     </div>
   );
 }
@@ -431,10 +469,19 @@ function Spectrogram({
 
 /** The whole take so far, redrawn on every frame: the thumbnail's buckets
  *  laid out by the time each holds (`bucketShare`), so the picture narrows
- *  smoothly as the take grows rather than re-flowing four times a second. */
-function TakeOverview({ subscribe }: { subscribe: Subscribe }) {
+ *  smoothly as the take grows rather than re-flowing four times a second.
+ *  Each bucket wears the target's colour, a little quieter than the
+ *  waveform's, so how much of the take landed in range is seen at once. */
+function TakeOverview({
+  subscribe,
+  target,
+}: {
+  subscribe: Subscribe;
+  target: TargetRange;
+}) {
   const t = useT();
   const { box, canvas, size } = useCanvas();
+  const { lowDb, highDb } = target;
 
   useEffect(() => {
     const el = canvas.current;
@@ -442,6 +489,7 @@ function TakeOverview({ subscribe }: { subscribe: Subscribe }) {
     if (!el || !ctx || size.width === 0) return;
     const dpr = window.devicePixelRatio || 1;
     const colours = palette(el);
+    const range = { lowDb, highDb };
     let drawnCount = -1;
     let drawnElapsed = -1;
 
@@ -462,15 +510,21 @@ function TakeOverview({ subscribe }: { subscribe: Subscribe }) {
       // the take is long enough that there is not.
       const bar = pitch >= 3 * dpr ? pitch * 0.7 : pitch;
       const inset = (pitch - bar) / 2;
-      ctx.fillStyle = colours.muted;
+      ctx.globalAlpha = 0.85;
       for (let i = 0; i < n; i++) {
         const x = i * pitch + inset;
         if (x >= w) break;
-        const half = Math.max(dpr / 2, Math.min(1, peaks[i]!) * mid);
+        const peak = Math.min(1, peaks[i]!);
+        const half = Math.max(dpr / 2, peak * mid);
+        ctx.fillStyle = targetColor(
+          targetTone(toDb(peak), false, range),
+          colours,
+        );
         ctx.fillRect(x, mid - half, Math.min(bar, w - x), half * 2);
       }
+      ctx.globalAlpha = 1;
     });
-  }, [subscribe, size, canvas]);
+  }, [subscribe, size, canvas, lowDb, highDb]);
 
   return (
     <div ref={box} className="relative h-full w-full">

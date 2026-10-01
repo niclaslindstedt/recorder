@@ -62,11 +62,55 @@
 /* ── The big meter ───────────────────────────────────────────────────────────
    The framework's level meter, drawn at the Record screen's size while
    listening and recording: a bar you can read from arm's length, its
-   reading and its CLIP lamp grown to match. Only the size changes — the
-   zones, the held peak, the take's max mark, the latched lamp and the status
-   region are all still the framework's, so the four clip signals stay four. */
+   reading and its CLIP lamp grown to match, and the target level on it
+   (`BigMeter.tsx`). The ballistics, the held peak, the take's max mark, the
+   latched lamp and the status region are all still the framework's, so the
+   four clip signals stay four. */
 .app-meter-big [role="meter"] {
   height: 1.5rem;
+}
+
+/* The target on the track: a wash of the accent under the bar, where the
+   empty track shows it, and its two edges over the bar, so the range reads
+   at any level. `--target-from` / `--target-to` are set by BigMeter. */
+.app-meter-big [role="meter"]::before,
+.app-meter-big [role="meter"]::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  left: var(--target-from, 0%);
+  right: calc(100% - var(--target-to, 0%));
+  pointer-events: none;
+}
+
+.app-meter-big [role="meter"]::before {
+  background-color: color-mix(in oklab, var(--accent) 22%, transparent);
+}
+
+.app-meter-big [role="meter"]::after {
+  border-inline: 2px solid
+    color-mix(in oklab, var(--fg-bright) 55%, transparent);
+}
+
+/* The bar's colour by where the held peak sits against the target, over the
+   framework's own zone colour. The bar is the track's one `origin-left`
+   child — if the framework's markup moves, the bar keeps the framework's
+   colours rather than breaking, and the band above still shows. Red is
+   `hot`, which is the framework's hot zone or the lamp, never the range's. */
+.app-meter-big[data-target="under"] [role="meter"] > .origin-left {
+  background-color: color-mix(in oklab, var(--muted) 75%, transparent);
+}
+
+.app-meter-big[data-target="in"] [role="meter"] > .origin-left {
+  background-color: var(--accent);
+}
+
+.app-meter-big[data-target="over"] [role="meter"] > .origin-left {
+  background-color: var(--flag);
+}
+
+.app-meter-big[data-target="hot"] [role="meter"] > .origin-left {
+  background-color: var(--danger);
 }
 
 .app-meter-big [role="meter"] + span {
@@ -99,8 +143,14 @@
     center / contain no-repeat;
 }
 
+/* The scale under the bar. The framework lays it across the whole row, but
+   the track stops short of the reading and the lamp, so its marks would sit
+   to the right of the levels they name — and the target's band would read
+   wrong against them. It ends where the track ends: the reading's width,
+   the lamp's, and the row's two gaps. */
 .app-meter-big .oss-level-meter > div:last-child {
   height: 0.875rem;
+  margin-right: calc(3.75rem + 2.25rem + 2 * 0.5rem);
   font-size: 0.625rem;
 }
 

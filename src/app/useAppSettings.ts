@@ -18,9 +18,11 @@ import {
   type DarkLook,
   type LightLook,
 } from "./look.ts";
+import { TARGET_IDS, clampTarget, type TargetId } from "./target.ts";
 import type { RecordingKind } from "./types.ts";
 
-// The app's own (non-document) settings: the theme and its looks, how a take is kept, what
+// The app's own (non-document) settings: the theme and its looks, how a take is kept, the
+// level a take aims for, what
 // an export defaults to, and the developer knobs. Per device on purpose —
 // which format your laptop exports in is not a fact about a recording — and
 // persisted to localStorage so a reload keeps your choices. Everything else
@@ -75,6 +77,13 @@ export type AppSettings = {
   recordEq: Eq | null;
   /** What the Record screen draws while listening and recording. */
   visualizer: VisualizerKind;
+  /** Where the peaks should land, by what is being recorded
+   *  (`target.ts`) — the waveform's band. */
+  levelTarget: TargetId;
+  /** The custom range, dBFS — kept while a preset is chosen, so going
+   *  back to Custom finds it as it was. */
+  targetLowDb: number;
+  targetHighDb: number;
   /** How many seconds the skip buttons move. */
   skipSeconds: SkipSeconds;
   /** What the export form starts on. */
@@ -101,6 +110,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   voiceProcessing: false,
   recordEq: null,
   visualizer: "wave",
+  levelTarget: "voice",
+  targetLowDb: -18,
+  targetHighDb: -6,
   skipSeconds: 15,
   exportFormat: "mp3",
   exportWavDepth: DEFAULT_WAV_DEPTH,
@@ -134,6 +146,8 @@ export function parseSettings(raw: string): AppSettings {
     keyof AppSettings,
     unknown
   >;
+  const db = (v: unknown) => (typeof v === "number" ? v : NaN);
+  const target = clampTarget(db(m.targetLowDb), db(m.targetHighDb));
   return {
     theme: m.theme === "light" || m.theme === "dark" ? m.theme : "system",
     lookLight: isLightLook(m.lookLight)
@@ -149,6 +163,9 @@ export function parseSettings(raw: string): AppSettings {
     voiceProcessing: m.voiceProcessing === true,
     recordEq: normalizeEq(m.recordEq),
     visualizer: oneOf(VISUALIZERS, m.visualizer, DEFAULT_SETTINGS.visualizer),
+    levelTarget: oneOf(TARGET_IDS, m.levelTarget, DEFAULT_SETTINGS.levelTarget),
+    targetLowDb: target.lowDb,
+    targetHighDb: target.highDb,
     skipSeconds: oneOf(
       SKIP_SECONDS,
       m.skipSeconds,

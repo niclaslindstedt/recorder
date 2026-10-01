@@ -100,6 +100,16 @@ export function SpectrumIcon({ className }: IconProps) {
   );
 }
 
+/** A bar across: lower a number by one. The framework's set has the plus
+ *  but not its partner. */
+export function MinusIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M5 12h14" />
+    </Glyph>
+  );
+}
+
 /** A grid lit in bands: the spectrogram — frequency over time. */
 export function SpectrogramIcon({ className }: IconProps) {
   return (

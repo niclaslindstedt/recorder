@@ -105,9 +105,9 @@ export const en = {
     headroom: "Headroom",
     verdict: {
       silent: "Nothing heard yet — is the right microphone on?",
-      quiet: "Too quiet — move closer, or raise the input",
+      quiet: "Under the target — move closer, or raise the input",
       good: "Good level",
-      loud: "Loud — little room left for a louder moment",
+      loud: "Over the target — move back a little",
       hot: "Almost too loud — back off a little",
       clipping: "Too loud — move away from the sound source",
     },
@@ -126,15 +126,17 @@ export const en = {
     label: "Visualizer",
     overview: "The whole take so far",
     wave: "Waveform",
+    waveLabel:
+      "Waveform of the last few seconds, with the target level, {low} to {high} dB, shaded across it",
     spectrum: "Spectrum",
     spectrogram: "Spectrogram",
     caption: {
-      wave: "Waveform · the last few seconds",
+      wave: "Waveform · aim for {low} to {high} dB",
       spectrum: "Spectrum · low to high",
       spectrogram: "Spectrogram · frequency over time",
     },
     hint: {
-      wave: "The sound's shape scrolling by, on the meter's decibel scale — speech, silence and clipping at a glance.",
+      wave: "The sound's shape scrolling by, on the meter's decibel scale, with the target level shaded across it: grey is under it, the accent is in it, amber is over it and red is too hot. The target is chosen on the Record screen's Quality sheet.",
       spectrum:
         "How loud each frequency is right now, from bass on the left to treble on the right.",
       spectrogram:
@@ -279,6 +281,36 @@ export const en = {
       high: "Music and rehearsals, near CD",
       lossless: "Every sample, as FLAC — for mixing and mastering",
     },
+  },
+
+  // The target level, on the Quality sheet: where a take's peaks should
+  // land for what is being recorded (`target.ts`).
+  target: {
+    title: "Target level",
+    hint: "Where the peaks should land, shaded on the waveform. Over −3 dB is always too hot.",
+    range: "{low} to {high} dB",
+    value: "{db} dB",
+    preset: {
+      voice: "Voice",
+      music: "Music",
+      live: "Loud",
+      ambience: "Ambience",
+      custom: "Custom",
+    },
+    presetHint: {
+      voice:
+        "Speech, interviews and memos — the meter's own good zone, with room for a laugh.",
+      music:
+        "Instruments and singing — a little hotter and steadier, the usual advice for tracking.",
+      live: "Drums, a band, anything that jumps — more headroom for the hit you didn't see coming.",
+      ambience:
+        "A room, birdsong, a field recording — quiet by nature; turning it up only adds hiss.",
+      custom: "Your own range.",
+    },
+    low: "Lowest peak",
+    high: "Highest peak",
+    lower: "Lower {edge}",
+    raise: "Raise {edge}",
   },
 
   // The Recordings screen: the list, the search, the trash.
