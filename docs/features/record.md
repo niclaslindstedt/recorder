@@ -110,7 +110,9 @@ take afterwards, not where the take should sit, so it is not offered here.
 The target is read in three places, so they never disagree: the waveform's
 band and colours, the meter (a band on its track, and the bar grey, green,
 amber or red by where the held peak sits against it), and the Listening
-verdict. What is too hot — over −3 dB — and what has clipped stay the
+verdict. While listening and recording it is also **said in words over the
+meter** — "Target · Voice · −18 to −6 dB", beside a swatch of the band — so
+"under the target" in the verdict has a number to go with it. What is too hot — over −3 dB — and what has clipped stay the
 same whatever the target says, and the clip lamp and the warning under the
 meter are untouched by it. Like the quality, the target is remembered on
 this device.

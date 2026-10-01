@@ -95,51 +95,46 @@ export function sameEq(a: Eq | null, b: Eq | null): boolean {
   );
 }
 
-/** Starting points, named for what they are for. */
+/** Starting points, named for what they are for: a setting of the five
+ *  bands. The low cut is not part of one — it is its own switch, and
+ *  picking a starting point leaves it as it was, so the two never undo
+ *  each other. */
 export const EQ_PRESETS = [
-  { id: "flat", eq: FLAT_EQ },
+  { id: "flat", gains: FLAT_EQ.gains },
   {
     id: "podcast",
-    eq: {
-      lowCut: true,
-      gains: { bass: -1, warmth: -2, mids: 0, presence: 3, air: 2 },
-    },
+    gains: { bass: -1, warmth: -2, mids: 0, presence: 3, air: 2 },
   },
   {
     id: "warm",
-    eq: {
-      lowCut: false,
-      gains: { bass: 3, warmth: 2, mids: 0, presence: -1, air: -2 },
-    },
+    gains: { bass: 3, warmth: 2, mids: 0, presence: -1, air: -2 },
   },
   {
     id: "bright",
-    eq: {
-      lowCut: false,
-      gains: { bass: 0, warmth: -1, mids: 0, presence: 3, air: 4 },
-    },
-  },
-  {
-    id: "rumble",
-    eq: {
-      lowCut: true,
-      gains: { bass: -3, warmth: 0, mids: 0, presence: 0, air: 0 },
-    },
+    gains: { bass: 0, warmth: -1, mids: 0, presence: 3, air: 4 },
   },
   {
     id: "lofi",
-    eq: {
-      lowCut: true,
-      gains: { bass: -6, warmth: 2, mids: 4, presence: 0, air: -9 },
-    },
+    gains: { bass: -6, warmth: 2, mids: 4, presence: 0, air: -9 },
   },
-] as const satisfies ReadonlyArray<{ id: string; eq: Eq }>;
+] as const satisfies ReadonlyArray<{ id: string; gains: Eq["gains"] }>;
 
 export type EqPresetId = (typeof EQ_PRESETS)[number]["id"];
 
-/** Which preset an EQ is, or `null` for one turned by hand. */
+/** A starting point picked: its bands, the low cut as it was. */
+export function withPreset(eq: Eq | null, id: EqPresetId): Eq {
+  const preset = EQ_PRESETS.find((p) => p.id === id) ?? EQ_PRESETS[0];
+  return { lowCut: eq?.lowCut ?? false, gains: { ...preset.gains } };
+}
+
+/** Which starting point an EQ's bands are, or `null` for bands turned by
+ *  hand. The low cut does not count: it is said beside the name. */
 export function presetOf(eq: Eq | null): EqPresetId | null {
-  return EQ_PRESETS.find((p) => sameEq(p.eq, eq))?.id ?? null;
+  const gains = (eq ?? FLAT_EQ).gains;
+  return (
+    EQ_PRESETS.find((p) => EQ_BANDS.every((b) => p.gains[b.id] === gains[b.id]))
+      ?.id ?? null
+  );
 }
 
 // ── The filters ───────────────────────────────────────────────────────────
