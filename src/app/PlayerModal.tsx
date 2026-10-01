@@ -38,9 +38,9 @@ import { Chip, FolderChip, ToolGlyph } from "./Glyphs.tsx";
 import { ClipIcon, EqIcon, ShareIcon, StarFilledIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import type { BlobStore } from "./blobStore.ts";
-import { stepPlayhead, type Playhead } from "./playhead.ts";
 import { useRouting } from "./useAudioRouting.ts";
 import { useEqPlayer } from "./useEqPlayer.ts";
+import { usePlayhead } from "./usePlayhead.ts";
 import type { Recording } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 
@@ -463,8 +463,8 @@ export function PlayerModal({
 
 /** The recording's shape with the playhead over it, and the time under it.
  *  Its own component, on its own animation frame, so the line moves on
- *  every frame at the playback rate (`playhead.ts`) and only this redraws
- *  for it. */
+ *  every frame at the playback rate (`usePlayhead.ts`) and only this
+ *  redraws for it. */
 function PlayerWave({
   player,
   peaks,
@@ -478,34 +478,7 @@ function PlayerWave({
   canSeek: boolean;
   label: string;
 }) {
-  const latest = useRef(player);
-  latest.current = player;
-  const head = useRef<Playhead | null>(null);
-  const [time, setTime] = useState(player.time);
-  const { playing, rate } = player;
-
-  // Paused, the line stands where the element says — a seek lands at once.
-  useEffect(() => {
-    if (playing) return;
-    head.current = null;
-    setTime(player.time);
-  }, [playing, player.time]);
-
-  useEffect(() => {
-    if (!playing) return;
-    let frame = 0;
-    const tick = (now: number) => {
-      head.current = stepPlayhead(head.current, latest.current.time, now, {
-        playing: true,
-        rate,
-        duration,
-      });
-      setTime(head.current.time);
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [playing, rate, duration]);
+  const time = usePlayhead(player, duration);
 
   return (
     <div>
