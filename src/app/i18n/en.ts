@@ -259,6 +259,12 @@ export const en = {
       on: "Monitoring. Nothing is kept.",
       denied: "The microphone is blocked for this site.",
       failed: "The microphone could not be opened here.",
+      // The headphones glyph while Listening and Recording.
+      toggle: "Monitor on headphones",
+      toggleOff: "Stop monitoring",
+      confirmTitle: "Headphones on?",
+      confirmHint:
+        "You will hear the microphone through the EQ. On speakers it will howl — and while recording, the howl goes into the take.",
     },
   },
 

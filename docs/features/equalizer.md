@@ -35,15 +35,31 @@ In it, top to bottom:
 
 ## Monitoring
 
-On the Record screen the sheet can **Monitor**: the microphone, through the
-EQ, into your headphones, so you can set it by ear before pressing Record.
-Put headphones on first — on speakers it will feed back. It opens the
-microphone only when you press Monitor and closes it when you press Stop or
-close the sheet; it keeps nothing (there is no recorder on that path). It
-asks for the same voice processing the Quality sheet says a take will have,
-so it sounds like the take. If Listening was on, it hands the microphone
-over. How quickly you hear yourself depends on the device; a wireless
-headset adds its own delay.
+**Monitor** is the microphone, through the EQ new takes start with, into
+your headphones. Put headphones on first — on speakers it will feed back,
+and while recording the howl would be in the take. It keeps nothing: there
+is no recorder on that path, only the microphone, the filters and the
+output. It asks for the same voice processing the Quality sheet says a take
+will have, so it sounds like the take. How quickly you hear yourself
+depends on the device; a wireless headset adds its own delay.
+
+It can be switched on in three places, and it is one monitor whichever
+switched it on:
+
+- **The EQ sheet on the Record screen** — set the EQ by ear before pressing
+  Record. Closing the sheet closes the monitor, unless you are Listening.
+- **Listening** — the headphones glyph beside Stop, to hear the room and
+  your level as well as see them.
+- **Recording** — the headphones glyph by the timer, to hear the take as it
+  goes down.
+
+The first time the glyph starts it, it asks whether your headphones are
+on; starting it in the EQ sheet, which says so beside its button, counts
+as the answer. Started while Listening, it carries on into the take when
+you press record. Stopping Listening, stopping or discarding the take, and
+leaving the Record screen all close it. It runs beside the capture, never in
+it, so a take is the same with it on or off — the EQ is still kept beside
+the recording, not written into it.
 
 ## What is kept, and where
 

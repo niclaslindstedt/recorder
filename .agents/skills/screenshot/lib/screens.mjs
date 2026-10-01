@@ -64,6 +64,16 @@ async function recording(page, h) {
   await h.settle(1500);
 }
 
+// The headphones glyph, through its check, until it is lit.
+async function monitorOn(page) {
+  await page.getByRole("button", { name: "Monitor on headphones" }).click();
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Monitor", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Stop monitoring" }).waitFor();
+}
+
 export const SCREENS = {
   record: {
     label: "Record",
@@ -116,9 +126,36 @@ export const SCREENS = {
       await h.settle();
     },
   },
+  "headphones-check": {
+    label: "Headphones check",
+    async stage(page, h) {
+      await page.getByRole("button", { name: "Listen", exact: true }).click();
+      await page.getByText("Listening", { exact: true }).waitFor();
+      await page.getByRole("button", { name: "Monitor on headphones" }).click();
+      await page.getByRole("alertdialog").getByText("Headphones on?").waitFor();
+      await h.settle();
+    },
+  },
+  "listening-monitor": {
+    label: "Listening, monitoring",
+    async stage(page, h) {
+      await page.getByRole("button", { name: "Listen", exact: true }).click();
+      await page.getByText("Listening", { exact: true }).waitFor();
+      await monitorOn(page);
+      await h.settle(1500);
+    },
+  },
   recording: {
     label: "Recording",
     stage: recording,
+  },
+  "recording-monitor": {
+    label: "Recording, monitoring",
+    async stage(page, h) {
+      await recording(page, h);
+      await monitorOn(page);
+      await h.settle();
+    },
   },
   review: {
     label: "Take review",
