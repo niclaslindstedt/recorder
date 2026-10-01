@@ -44,6 +44,7 @@ import {
   useFreeBytes,
 } from "./RecordParts.tsx";
 import { defaultTitle, finishTake } from "./takes.ts";
+import { targetRange } from "./target.ts";
 import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
 import type { DocStore } from "./useDocStore.ts";
@@ -157,6 +158,10 @@ export function RecordScreen({
   );
 
   const ticks = useMemo(() => bandTicks(layoutBands(BANDS, 2048, 48000)), []);
+  const target = targetRange(settings.levelTarget, {
+    lowDb: settings.targetLowDb,
+    highDb: settings.targetHighDb,
+  });
 
   const state = recorder.state;
   const live = state === "recording" || state === "paused";
@@ -387,6 +392,7 @@ export function RecordScreen({
         running={state === "recording"}
         ticks={ticks}
         bands={BANDS}
+        target={target}
         overview
         className={visualizerSize}
       />
@@ -516,6 +522,7 @@ export function RecordScreen({
         running
         ticks={ticks}
         bands={BANDS}
+        target={target}
         className={visualizerSize}
       />
     );

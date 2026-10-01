@@ -71,12 +71,41 @@ One card, three views of the same sound, switched in the card's corner (and
 under **Settings → Record screen → Visualizer**):
 
 - **Waveform** (the default) — the sound's shape scrolling by, about six
-  seconds across a phone, on the meter's decibel scale and in its colours,
-  with the −18 and −6 dB lines across it. A clipped moment is a full-height
-  red bar.
+  seconds across a phone, on the meter's decibel scale, with the **target
+  level** shaded across it and its two edges dashed and labelled. Each
+  moment is coloured by where its peak landed: grey under the target, the
+  accent inside it, amber over it, and red once it is past −3 dB or has
+  clipped. The caption says the range ("aim for −18 to −6 dB"), and the
+  whole-take strip along the foot wears the same colours, so how much of a
+  take sat in range is seen at once.
 - **Spectrum** — how loud each frequency is now, bass on the left.
 - **Spectrogram** — frequency over time, brighter where louder, so a hum, a
   hiss or a voice's harmonics show as lines.
+
+## The target level
+
+There is no one right level for every recording. What is universal is the
+ceiling — a clip cannot be undone, so nothing over −3 dB is ever a target —
+but how far under it a take should sit depends on what is in front of the
+microphone. So the target is chosen with the quality, on the **Quality
+sheet**, as a range for the peaks:
+
+| Target       | Peaks         | For                                                                                          |
+| ------------ | ------------- | -------------------------------------------------------------------------------------------- |
+| **Voice**    | −18 to −6 dB  | Speech, interviews, memos. The meter's own good zone; −18 dBFS is the studio alignment level |
+| **Music**    | −12 to −6 dB  | Instruments and singing — a little hotter and steadier, the usual advice for tracking        |
+| **Loud**     | −20 to −10 dB | Drums, a band, anything that jumps — more headroom for the hit nobody saw coming             |
+| **Ambience** | −36 to −18 dB | A room, birdsong, a field recording — quiet by nature; turning it up only adds hiss          |
+| **Custom**   | your own      | Two steppers, a decibel at a time, between −48 and −3 dB, at least 3 dB apart                |
+
+A loudness target for a finished file (−16 LUFS for a podcast, −14 for a
+streaming service) is a different number: it is what mastering does to a
+take afterwards, not where the take should sit, so it is not offered here.
+
+The target changes the waveform only. The meter, the Listening verdict and
+the clip warnings stay on the meter's own zones, so "too loud" and
+"clipping" mean the same thing whatever the target says. Like the quality,
+the target is remembered on this device.
 
 ## The meter
 

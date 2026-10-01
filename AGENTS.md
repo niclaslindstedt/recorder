@@ -288,7 +288,15 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   kbit/s, Lossless) over `recordingKind` / `recordingBitrate`, and what a
   minute of each costs; pure, so the Record screen's button and
   `QualitySheet.tsx`'s ticked row never disagree. The sheet also carries the
-  bitrate fine-tune and voice processing.
+  bitrate fine-tune, voice processing and the target level.
+- `src/app/target.ts` — the target level: where a take's peaks should land,
+  as a range in dBFS, by what is being recorded (Voice, Music, Loud,
+  Ambience, or a clamped Custom range), and `targetTone`, where a peak lands
+  against it (under / in / over / hot — hot is the framework's `meterTone`,
+  never the range's). The waveform's band and its bar colours, and the
+  Quality sheet's `TargetLevel.tsx`, draw from here. Only the waveform
+  follows it; the meter and the Listening verdict stay on the framework's
+  zones.
 - `src/app/FolderPicker.tsx` — the one folder picker, in two modes.
   _Browse_ is the library's scope: All, Favorites, the tree with counts and
   each folder's ⋯ menu (rename, new folder inside, move, move up / down,
@@ -468,6 +476,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 | A change to what is deleted, or when           | `src/app/types.ts` (`TRASH_DAYS`, `TOMBSTONE_DAYS`, `wantedFiles`, `purgeAfter`) — never a record removed outright, see "A deletion is a tombstone"                               |
 | A new export format or quality                 | `src/app/export.ts` (tested) + `useAppSettings.ts` (the default) + `ExportModal.tsx` + `SettingsScreen.tsx` — the encoder itself is the framework's                               |
 | A preset for how a take is kept                | `src/app/quality.ts` (pure, tested in `tests/quality_test.ts`) + `QualitySheet.tsx` — the capture reads `recordingKind` / `recordingBitrate`, nothing else                        |
+| Where a take's peaks should land               | `src/app/target.ts` (pure, tested in `tests/target_test.ts`) + `TargetLevel.tsx` — the ceiling stays under the framework's hot zone                                               |
 | What Listening reads, or its verdict           | `src/app/levels.ts` (pure, tested in `tests/levels_test.ts`) — the zones are the framework's `meterTone`, never a second set                                                      |
 | A look, or its name                            | `src/app/look.ts` (the table and the resolution, tested in `tests/look_test.ts`) + its words in `i18n/en.ts` under `look` — the palette itself is the framework's                 |
 | How a meter or a playhead keeps time on screen | `src/app/pacing.ts` / `src/app/playhead.ts` (pure, tested) — the ballistics stay the framework's `stepMeter`                                                                      |
@@ -490,7 +499,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
-`migrations`, `takes`, `export`, `format`, `levels`, `quality`, `pacing`,
+`migrations`, `takes`, `export`, `format`, `levels`, `quality`, `target`, `pacing`,
 `playhead`, `look`,
 `useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
 `demoData`), which is where the app's

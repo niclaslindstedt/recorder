@@ -301,12 +301,16 @@ Visualizer).
 
 - **Waveform** (the default): the loudest moment of each 45 ms slice,
   scrolling left with the newest at the right edge, about six seconds across a
-  phone. It is drawn on the **meter's decibel scale** and in the meter's zone
-  colours, not in raw amplitude, so a quiet voice still has a shape and a
-  hot one turns amber then red. The −18 and −6 lines are dashed across it,
-  so "am I in the good zone?" is read off the picture. A clipped slice is a
-  full-height red bar. This is the view most people know from a voice memo
-  app.
+  phone. It is drawn on the **meter's decibel scale**, not in raw
+  amplitude, so a quiet voice still has a shape. The **target level** (the
+  Quality sheet's) is a band shaded across it, its edges dashed and
+  labelled, and every slice wears where its peak landed: **grey** under the
+  target, the **accent** in it, **amber** over it, **red** past −3 or when it
+  clipped. Colour arrives only in the right range, so "am I at a good
+  level?" is read off the picture without reading a number, and the caption
+  names the range for the person who wants the number. The take's strip
+  along the foot wears the same colours. This is the view most people know
+  from a voice memo app.
 - **Spectrum**: the framework's bars, how loud each frequency is now, bass
   on the left. For a musician tuning a mic position, or seeing a hum.
 - **Spectrogram**: frequency over time, low at the foot, brighter where
@@ -315,7 +319,10 @@ Visualizer).
   lines, which neither of the other two can show.
 
 What a level or a clip _is_ stays the framework's: the views read frames
-through `readFrame`, `meterFill` and `meterTone`. A scrolling waveform and a
+through `readFrame`, `meterFill` and `meterTone`, and red is the framework's
+hot zone whatever the target says. Only the waveform follows the target; the
+meter and the Listening verdict stay on the meter's zones, which the Voice
+target matches exactly. A scrolling waveform and a
 spectrogram are candidates to move into the framework's `audio` module next
 to `SpectrumBars` once a sibling app wants them.
 
@@ -368,6 +375,12 @@ whole screen on two fields and put a big red Discard under a small Save.
 │  Bitrate, kbit/s  64  96 [128] 192 256 320│  fine-tune (compact only)
 │  ☐ Voice processing                       │  echo / noise / auto-gain
 │    Cancel echo, suppress noise, level …   │
+│  Target level                             │  where the peaks should land
+│  [Voice] Music  Loud  Ambience  Custom    │
+│  ░░░░░░░░░░░░░░░░██████████▒▒▒▓           │  the range on the meter's scale
+│  −18 to −6 dB · Speech, interviews …      │
+│  Lowest peak     ( − )  −30 dB  ( + )     │  Custom only, a dB at a time
+│  Highest peak    ( − )  −12 dB  ( + )     │
 └───────────────────────────────────────────┘
 ```
 
@@ -383,6 +396,12 @@ whole screen on two fields and put a big red Discard under a small Save.
 - **Voice processing** lives here, not in Settings, because it changes what
   is recorded, and whether you want it depends on the take (on for a call
   in a noisy room, off for an instrument).
+- **The target level** is here for the same reason: where a take's peaks
+  should sit depends on what is being recorded — a voice, a drum kit, a
+  room — not on the device. Four presets name the source, not a number;
+  Custom is two steppers, held between −48 and −3 dB and at least 3 dB
+  apart. The strip under them draws the range on the meter's own scale, so
+  it is the waveform's band turned on its side.
 - The choice is remembered on this device and is what the next take starts
   on. It is not a per-space or per-folder setting. A quality is a fact about
   a take, and the take records it (Player → facts).

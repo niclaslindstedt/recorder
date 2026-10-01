@@ -17,6 +17,7 @@ src/
     ├── takes.ts             a take finished: what the microphone handed back → a record + bytes
     ├── quality.ts           the four ways a take is kept (Memo, Standard, High, Lossless) and a minute's cost
     ├── levels.ts            Listening's readings: the room, the peak, the headroom, a verdict
+    ├── target.ts            the target level: where a take's peaks should land, by source, and a peak's tone against it
     ├── pacing.ts            the capture's frames paced to the display, so the meter moves every frame
     ├── playhead.ts          the player's playhead as a smooth clock over the element's coarse time
     ├── export.ts            WAV / FLAC / MP3 out, through the framework's encoders; the size estimate
