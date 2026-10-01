@@ -29,7 +29,7 @@ import { FolderPicker } from "./FolderPicker.tsx";
 import { folderPath } from "./folders.ts";
 import { formatSize, formatSpan, formatTimer } from "./format.ts";
 import { presetOf } from "./eq.ts";
-import { EqSheet, MonitorPanel } from "./EqSheet.tsx";
+import { EqSheet } from "./EqSheet.tsx";
 import { EqLine } from "./EqParts.tsx";
 import { ClipIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
@@ -143,8 +143,9 @@ export function RecordScreen({
   );
 
   // The monitor: the microphone through the EQ new takes start with, into
-  // headphones — from the EQ sheet's Monitor, or the headphones glyph while
-  // Listening and Recording. One monitor, whichever switched it on; flat
+  // headphones — from the headphones glyph, while Listening and Recording
+  // and in the EQ sheet's title row. One monitor, whichever switched it on,
+  // so it is lit wherever the glyph is drawn; flat
   // while the sheet's Compare is held. It runs beside the capture, never
   // in it: nothing it plays is kept.
   const [eqBypassed, setEqBypassed] = useState(false);
@@ -153,20 +154,9 @@ export function RecordScreen({
     settings.voiceProcessing,
   );
   // On speakers it howls, and a howl while recording is in the take: the
-  // glyph asks once whether headphones are on. The sheet's panel says so
-  // before its button, so starting it there is the same answer.
+  // glyph asks once whether headphones are on.
   const headphonesOn = useRef(false);
   const [askHeadphones, setAskHeadphones] = useState(false);
-  const monitorControls = useMemo(
-    () => ({
-      ...monitor,
-      start: () => {
-        headphonesOn.current = true;
-        monitor.start();
-      },
-    }),
-    [monitor],
-  );
   const toggleMonitor = () => {
     if (monitor.state === "on" || monitor.state === "starting") monitor.stop();
     else if (headphonesOn.current) monitor.start();
@@ -249,16 +239,16 @@ export function RecordScreen({
   }, [monitorWanted, monitorState, stopMonitor]);
 
   // A monitor that could not open, or stopped itself on hearing feedback,
-  // says so; the sheet says it in its panel.
+  // says so, wherever its glyph was pressed.
   const lastMonitorState = useRef(monitorState);
   useEffect(() => {
     const was = lastMonitorState.current;
     lastMonitorState.current = monitorState;
-    if (was === monitorState || sheet === "eq") return;
+    if (was === monitorState) return;
     if (monitorState === "denied") onNotice(t("eq.monitor.denied"));
     if (monitorState === "failed") onNotice(t("eq.monitor.failed"));
     if (monitorState === "feedback") onNotice(t("eq.monitor.feedback"));
-  }, [monitorState, sheet, onNotice, t]);
+  }, [monitorState, onNotice, t]);
   const monitorGlyph = (
     <MonitorGlyph state={monitorState} onToggle={toggleMonitor} />
   );
@@ -745,10 +735,9 @@ export function RecordScreen({
           onBypass={setEqBypassed}
           analyser={monitor.analyser}
           note={t("eq.forRecord")}
+          action={monitorGlyph}
           onClose={closeEq}
-        >
-          <MonitorPanel monitor={monitorControls} />
-        </EqSheet>
+        />
       )}
       {sheet === "destination" && (
         <FolderPicker

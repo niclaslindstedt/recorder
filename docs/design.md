@@ -458,7 +458,8 @@ whole screen on two fields and put a big red Discard under a small Save.
 
 ```
 ┌───────────────────────────────────────────┐
-│  Equalizer                            ✕   │
+│  Equalizer                       (🎧)  ✕  │  Record screen: the monitor
+├───────────────────────────────────────────┤  (the body scrolls under the title)
 │  Podcast · Low cut            [Compare]   │  preset or Custom · hear it flat
 │  ┌─────────────────────────────────────┐  │
 │  │      ╭─•──•───•──╮•─────            │  │  the curve, bands marked; the
@@ -468,8 +469,6 @@ whole screen on two fields and put a big red Discard under a small Save.
 │   (◜)    (◝)    (│)    (◝)    (◝)         │  a knob per band
 │   Bass  Warmth  Mids  Presence  Air       │
 │  [■ ] Low cut — rumble under 80 Hz        │
-│  🎧 Hear yourself through it  [Monitor]   │  Record screen: the microphone
-│     ── or ──                              │
 │  ▶ Interview: Mira, part 1   0:03 / 0:10  │  player: the transport
 └───────────────────────────────────────────┘
 ```
@@ -497,14 +496,21 @@ whole screen on two fields and put a big red Discard under a small Save.
   dark as the switch was flipped — so there is no such preset.
 - **Compare** is beside the preset's name, so A/B is one press away while
   judging a change; it changes nothing.
-- **Monitor** (Record screen only) says to put headphones on before it
-  starts, stops itself the moment it hears feedback (and says so, in the
-  place the hint was), opens the microphone only on the press, and keeps
-  nothing. It is the same monitor as the headphones glyph while Listening
-  and Recording: it runs beside Listening rather than taking the microphone
-  from it, and closing the sheet closes it only when nothing else has the
-  microphone open. In the player, the same place holds
-  the transport, so a change is heard without leaving the sheet.
+- **The monitor** (Record screen only) is the headphones glyph in the title
+  row, beside the close — the same glyph, in the same corner of the
+  attention, as Listening's and Recording's, and the same monitor: one
+  switched on while Listening is lit when the sheet opens. A row at the foot
+  of the sheet said the same thing in a sentence and a button, and pushed
+  the body past the card on a phone. It asks whether headphones are on
+  before it first starts, stops itself the moment it hears feedback (and
+  says so in a notice), opens the microphone only on the press, and keeps
+  nothing. It runs beside Listening rather than taking the microphone from
+  it, and closing the sheet closes it only when nothing else has the
+  microphone open. In the player the transport sits under the low cut
+  instead, so a change is heard without leaving the sheet.
+- **The body scrolls; the title row stays.** The sheet is taller than the
+  card a phone allows it, so everything under the title scrolls, and the
+  close and the monitor stay in reach.
 
 ## Recordings
 

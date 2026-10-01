@@ -252,17 +252,12 @@ export const en = {
     player: "Equalizer: {name}",
     exportLine: "Through its EQ: {name}",
     monitor: {
-      title: "Hear yourself through it",
-      hint: "Put headphones on first. If it hears itself through a speaker, it stops.",
       start: "Monitor",
-      stop: "Stop",
-      starting: "Opening the microphone…",
-      on: "Monitoring. Nothing is kept.",
       denied: "The microphone is blocked for this site.",
       failed: "The microphone could not be opened here.",
       feedback:
         "Stopped: it was hearing itself through the speaker. Put headphones on and start it again.",
-      // The headphones glyph while Listening and Recording.
+      // The headphones glyph: Listening, Recording and the EQ sheet.
       toggle: "Monitor on headphones",
       toggleOff: "Stop monitoring",
       confirmTitle: "Headphones on?",

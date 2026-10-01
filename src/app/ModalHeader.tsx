@@ -114,6 +114,7 @@ export function SheetTitle({
   title,
   onClose,
   children,
+  actions,
 }: {
   titleId: string;
   title: string;
@@ -121,6 +122,9 @@ export function SheetTitle({
   /** Anything that belongs in the row between the title and the close —
    *  the search sheet's field takes the title's place. */
   children?: ReactNode;
+  /** A glyph beside the close, for a switch the whole sheet is about — the
+   *  EQ sheet's monitor, where the Record screen keeps it too. */
+  actions?: ReactNode;
 }) {
   const t = useT();
   return (
@@ -133,6 +137,7 @@ export function SheetTitle({
           {title}
         </h2>
       )}
+      {actions}
       <IconButton label={t("common.close")} onClick={onClose}>
         <CloseIcon className="h-5 w-5" />
       </IconButton>

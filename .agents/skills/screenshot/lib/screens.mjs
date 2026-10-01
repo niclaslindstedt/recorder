@@ -120,9 +120,35 @@ export const SCREENS = {
       await page.getByRole("button", { name: /^EQ: / }).click();
       const sheet = page.getByRole("dialog").last();
       await sheet.getByRole("radio", { name: "Podcast" }).click();
-      await sheet.getByRole("button", { name: "Monitor" }).click();
-      await sheet.getByText("Monitoring. Nothing is kept.").waitFor();
+      await monitorOn(page);
       await page.waitForTimeout(600);
+      await h.settle();
+    },
+  },
+  "eq-from-listening": {
+    label: "EQ sheet, opened while monitoring",
+    async stage(page, h) {
+      await page.getByRole("button", { name: "Listen", exact: true }).click();
+      await page.getByText("Listening", { exact: true }).waitFor();
+      await monitorOn(page);
+      await page.getByRole("button", { name: /^EQ: / }).click();
+      await page
+        .getByRole("dialog")
+        .last()
+        .getByRole("button", { name: "Stop monitoring" })
+        .waitFor();
+      await page.waitForTimeout(600);
+      await h.settle();
+    },
+  },
+  "eq-scrolled": {
+    label: "EQ sheet, scrolled to its foot",
+    async stage(page, h) {
+      await page.getByRole("button", { name: /^EQ: / }).click();
+      const sheet = page.getByRole("dialog").last();
+      await sheet
+        .getByText(/New takes start with this EQ/)
+        .scrollIntoViewIfNeeded();
       await h.settle();
     },
   },

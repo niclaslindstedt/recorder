@@ -69,19 +69,20 @@ steady whistle right at the microphone can look like feedback too; then it
 stops just the same, and can be started again. While recording, the guard
 stops the monitor, not the take: what the take already heard stays in it.
 
-It can be switched on in three places, and it is one monitor whichever
-switched it on:
+It is the same headphones glyph in three places, and one monitor whichever
+switched it on — so turned on while Listening, it is already lit when you
+open the EQ sheet:
 
-- **The EQ sheet on the Record screen** — set the EQ by ear before pressing
-  Record. Closing the sheet closes the monitor, unless you are Listening.
+- **The EQ sheet on the Record screen**, beside its close button — set the
+  EQ by ear before pressing Record. Closing the sheet closes the monitor,
+  unless you are Listening.
 - **Listening** — the headphones glyph beside Stop, to hear the room and
   your level as well as see them.
 - **Recording** — the headphones glyph by the timer, to hear the take as it
   goes down.
 
 The first time the glyph starts it, it asks whether your headphones are
-on; starting it in the EQ sheet, which says so beside its button, counts
-as the answer. Started while Listening, it carries on into the take when
+on, wherever it was pressed. Started while Listening, it carries on into the take when
 you press record. Stopping Listening, stopping or discarding the take, and
 leaving the Record screen all close it; if the guard stops it outside the
 sheet, a notice says why. It runs beside the capture, never in it, so a
