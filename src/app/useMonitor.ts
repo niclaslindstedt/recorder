@@ -85,7 +85,7 @@ export function useMonitor(eq: Eq | null, processing: boolean): Monitor {
         ctx.createMediaStreamSource(stream).connect(chain.input);
         chain.output.connect(ctx.destination);
         open.current = { ctx, stream, chain };
-        setAnalyser(chain.output);
+        setAnalyser(chain.analyser);
         setState("on");
       })
       .catch((err: unknown) => {

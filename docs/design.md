@@ -448,8 +448,11 @@ whole screen on two fields and put a big red Discard under a small Save.
   the recording, heard in the player and in Review, and baked into an
   export, and Flat always brings the recording back.
 - **The curve is on top** because it is what an EQ _is_; the knobs under it
-  are how it is turned. While something is heard, the sound after the EQ
-  is drawn behind the curve, so a cut can be seen taking a hum out.
+  are how it is turned. While something is heard, the sound is drawn
+  behind the curve as bars, moved by the EQ as it turns — what it adds in
+  the accent, what it takes away hollow — so a cut can be seen taking a
+  hum out. The curve's floor sits past −24 dB, so a band turned off runs
+  out of the bottom rather than stopping at a number.
 - **Knobs, not sliders**, because that is what an EQ is to anyone who has
   used one, and five of them fit a phone's width. They are named for what
   they do — Bass, Warmth, Mids, Presence, Air — with the frequency under
