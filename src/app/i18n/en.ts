@@ -105,9 +105,9 @@ export const en = {
     headroom: "Headroom",
     verdict: {
       silent: "Nothing heard yet — is the right microphone on?",
-      quiet: "Too quiet — move closer, or raise the input",
+      quiet: "Under the target — move closer, or raise the input",
       good: "Good level",
-      loud: "Loud — little room left for a louder moment",
+      loud: "Over the target — move back a little",
       hot: "Almost too loud — back off a little",
       clipping: "Too loud — move away from the sound source",
     },

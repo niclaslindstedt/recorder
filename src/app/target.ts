@@ -45,6 +45,10 @@ export const TARGET_PRESETS: ReadonlyArray<{ id: TargetPreset } & TargetRange> =
     { id: "ambience", lowDb: -36, highDb: -18 },
   ];
 
+/** The range nothing has been chosen for: Voice's, which is the meter's own
+ *  good zone. */
+export const DEFAULT_TARGET: TargetRange = { lowDb: -18, highDb: -6 };
+
 export const TARGET_IDS: readonly TargetId[] = [
   ...TARGET_PRESETS.map((p) => p.id),
   "custom",

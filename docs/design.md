@@ -223,19 +223,26 @@ level, placing a microphone, checking a room, or just watching sound.
   with its tops cut flat against a ceiling, which is what clipping does to
   the sound. The same glyph marks the "Too loud — move away from the sound
   source" warning, so the lamp and the words are visibly the same thing.
-  Only the size and the lamp's face are the app's (`.app-meter-big`). The zones, the
-  held peak, the take's max mark, the latched lamp and the status region
-  are the framework's, so the four clip signals stay four.
+  The **target level** is on it too: a band across the track with its two
+  edges drawn over the bar, and the bar coloured by where the held peak
+  sits against it — grey under, the accent in it, amber over, red when hot
+  or clipping — the same colours the waveform wears. The scale under the
+  bar ends where the track ends, so its marks name the levels above them
+  and the band reads true. The size, the lamp's face, the band and the
+  colour are the app's (`.app-meter-big`, `BigMeter.tsx`); the ballistics,
+  the held peak, the take's max mark, the latched lamp and the status
+  region are the framework's, so the four clip signals stay four.
 - **Room** is the noise floor: the quiet end of the last four seconds' level.
   It tells a journalist whether the café is too loud and a musician whether
   the fridge is in the take. **Peak** is the loudest moment of the last four
   seconds. **Headroom** is how far that peak is from clipping. All three are
   in dB because that is the unit the meter is drawn in.
-- **The verdict** turns those numbers into a sentence, on the meter's own
-  zones (the framework's `meterTone`): nothing heard, too quiet (peaks under
-  −18), good (−18 to −6), loud (−6 to −3), very hot (over −3), or
-  clipping. It is coloured, but it is also words, because the clip warning is
-  never colour alone.
+- **The verdict** turns those numbers into a sentence, against the target
+  level: nothing heard, under the target, good, over the target, almost too
+  loud (over −3, the framework's hot zone, whatever the target), or
+  clipping. With the default Voice target that is peaks under −18, −18 to
+  −6, −6 to −3 and over −3 — the meter's own zones. It is coloured, but it
+  is also words, because the clip warning is never colour alone.
 - **The choices** shrink to one line, and only on a tall window. They are
   still changeable, but they are no longer what the screen is about, and on
   a small phone the button's reach matters more.
@@ -320,9 +327,10 @@ Visualizer).
 
 What a level or a clip _is_ stays the framework's: the views read frames
 through `readFrame`, `meterFill` and `meterTone`, and red is the framework's
-hot zone whatever the target says. Only the waveform follows the target; the
-meter and the Listening verdict stay on the meter's zones, which the Voice
-target matches exactly. A scrolling waveform and a
+hot zone whatever the target says. The waveform, the meter and the
+Listening verdict read the one target, so the picture, the bar and the
+words never disagree; the Voice target is exactly the meter's own zones. A
+scrolling waveform and a
 spectrogram are candidates to move into the framework's `audio` module next
 to `SpectrumBars` once a sibling app wants them.
 

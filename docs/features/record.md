@@ -31,9 +31,11 @@ seconds:
 - **Peak** — the loudest moment.
 - **Headroom** — how far that peak is from clipping.
 
-Under them a **verdict** says it in words, on the meter's own zones:
-nothing heard, too quiet (peaks under −18 dB), a good level (−18 to −6),
-loud (−6 to −3), very hot (over −3), or clipping.
+Under them a **verdict** says it in words, against the **target level**
+(below): nothing heard, under the target, a good level, over the target,
+almost too loud (over −3 dB, whatever the target), or clipping. With the
+default Voice target that is peaks under −18 dB, −18 to −6, −6 to −3 and
+over −3.
 
 Listening runs on the same capture path as a take, voice processing
 included, so what the meter says is what a take will get. It is a take that
@@ -102,10 +104,13 @@ A loudness target for a finished file (−16 LUFS for a podcast, −14 for a
 streaming service) is a different number: it is what mastering does to a
 take afterwards, not where the take should sit, so it is not offered here.
 
-The target changes the waveform only. The meter, the Listening verdict and
-the clip warnings stay on the meter's own zones, so "too loud" and
-"clipping" mean the same thing whatever the target says. Like the quality,
-the target is remembered on this device.
+The target is read in three places, so they never disagree: the waveform's
+band and colours, the meter (a band on its track, and the bar grey, green,
+amber or red by where the held peak sits against it), and the Listening
+verdict. What is too hot — over −3 dB — and what has clipped stay the
+same whatever the target says, and the clip lamp and the warning under the
+meter are untouched by it. Like the quality, the target is remembered on
+this device.
 
 ## The meter
 

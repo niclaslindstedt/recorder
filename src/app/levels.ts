@@ -3,14 +3,14 @@
 // read as three numbers and a verdict. Pure and clock-free — a reading
 // carries its own time, so a test can play a room back at any speed.
 //
-// The zones are the framework's (`meterTone`): the same −18 and −6 the
-// meter paints in, so the verdict in words and the bar's colour never
-// disagree.
+// The verdict is read against the target level (`target.ts`) — the same
+// range the waveform shades and the meter's bar is coloured by — so the
+// words, the bar and the picture never disagree. What is hot or clipping is
+// the framework's (`meterTone`, the clip lamp), whatever the target says.
 
-import {
-  METER_FLOOR_DB,
-  meterTone,
-} from "@niclaslindstedt/oss-framework/audio";
+import { METER_FLOOR_DB } from "@niclaslindstedt/oss-framework/audio";
+
+import { DEFAULT_TARGET, targetTone, type TargetRange } from "./target.ts";
 
 export type Reading = {
   /** When, ms, on any monotonic clock. */
@@ -61,8 +61,11 @@ export function pushReading(
  *  does not. */
 const ROOM_PERCENTILE = 0.1;
 
-/** The window, read. `null` before the first reading. */
-export function readAmbient(window: readonly Reading[]): Ambient | null {
+/** The window, read against the target. `null` before the first reading. */
+export function readAmbient(
+  window: readonly Reading[],
+  target: TargetRange = DEFAULT_TARGET,
+): Ambient | null {
   if (window.length === 0) return null;
   const levels = window.map((r) => r.levelDb).sort((a, b) => a - b);
   const roomDb =
@@ -79,12 +82,25 @@ export function readAmbient(window: readonly Reading[]): Ambient | null {
     roomDb,
     peakDb,
     headroomDb: Math.max(0, -peakDb),
-    verdict: verdictFor(peakDb, clipping),
+    verdict: verdictFor(peakDb, clipping, target),
   };
 }
 
-export function verdictFor(peakDb: number, clipping: boolean): Verdict {
+/** A peak in words: nothing heard, under the target, in it, over it, in
+ *  the framework's hot zone, or clipping. */
+export function verdictFor(
+  peakDb: number,
+  clipping: boolean,
+  target: TargetRange = DEFAULT_TARGET,
+): Verdict {
   if (clipping) return "clipping";
   if (peakDb <= SILENT_DB) return "silent";
-  return meterTone(peakDb);
+  const tone = targetTone(peakDb, false, target);
+  return tone === "under"
+    ? "quiet"
+    : tone === "in"
+      ? "good"
+      : tone === "over"
+        ? "loud"
+        : "hot";
 }
