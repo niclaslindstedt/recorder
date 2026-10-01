@@ -15,7 +15,7 @@ import {
   type Pcm,
 } from "@niclaslindstedt/oss-framework/audio";
 
-import { EQ_PRESETS, type EqPresetId } from "../eq.ts";
+import { withPreset, type EqPresetId } from "../eq.ts";
 import {
   emptyDoc,
   type AppData,
@@ -221,8 +221,9 @@ export function buildDemoData(now: Date): AppData {
       clipCount: 0,
       maxPeakDb: -6.4,
     };
-    const eq = s.eq && EQ_PRESETS.find((p) => p.id === s.eq)?.eq;
-    if (eq) doc.recordings[s.id]!.eq = eq;
+    // With the low cut on, as an interview would be.
+    if (s.eq)
+      doc.recordings[s.id]!.eq = { ...withPreset(null, s.eq), lowCut: true };
   }
   return doc;
 }

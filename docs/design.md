@@ -154,8 +154,8 @@ columns across the whole width, not the reading column:
 ```
 ┌───────────────────────────────────────────┐
 │  ┌─────────────────┐ ┌──────────────────┐ │
-│  │ ◈ QUALITY·128k› │ │ ∿ EQ           › │ │  how the take sounds
-│  │   Standard      │ │   Podcast        │ │
+│  │ ◈ QUALITY·128k› │ │ ╭╮ EQ·Low cut  › │ │  how the take sounds
+│  │   Standard      │ │ ╯  Podcast       │ │
 │  └─────────────────┘ └──────────────────┘ │
 │  ┌─────────────────────────────────────┐  │
 │  │ 🗀 SAVE TO  Ideas › Songs         › │  │  where it goes, the whole width
@@ -178,8 +178,12 @@ columns across the whole width, not the reading column:
   and never during one. The bitrate is on the caption's line so the name is
   never cut short in a half-width button.
 - **EQ** (top right) is the same shape: the EQ a new take starts with —
-  Flat, a preset's name or Custom. It sits beside Quality because the two
-  together are how the take will sound. It opens **the EQ sheet** (below).
+  Flat, a preset's name or Custom, with "Low cut" on the caption's line
+  when that switch is on. Where the other buttons have a glyph it has **the
+  EQ's own curve**, drawn small, so the button shows what a take will sound
+  like and not only what the EQ is called. It sits beside Quality because
+  the two together are how the take will sound. It opens **the EQ sheet**
+  (below).
 - **Destination** (under them, the whole width, because a folder's path is
   long and a half-width button cut it short) is the same shape: the folder
   a new take will be saved to. It opens the folder picker. It starts on the folder the
@@ -231,6 +235,10 @@ level, placing a microphone, checking a room, or just watching sound.
   with its tops cut flat against a ceiling, which is what clipping does to
   the sound. The same glyph marks the "Too loud — move away from the sound
   source" warning, so the lamp and the words are visibly the same thing.
+  Over it, the **target in words** — a swatch drawn like the band,
+  "TARGET", and the target's name and range ("Voice · −18 to −6 dB") — so
+  "under the target" in the verdict points at something on screen, in
+  every visualizer and not only the waveform's caption.
   The **target level** is on it too: a band across the track with its two
   edges drawn over the bar, and the bar coloured by where the held peak
   sits against it — grey under, the accent in it, amber over, red when hot
@@ -384,10 +392,10 @@ whole screen on two fields and put a big red Discard under a small Save.
 ```
 ┌───────────────────────────────────────────┐
 │  Quality                              ✕   │
-│  ◉ Memo      Speech, smallest    64 kbit/s  ≈480 kB/min
-│  ○ Standard  Voices, interviews  128 kbit/s ≈960 kB/min
-│  ○ High      Music, near CD      256 kbit/s ≈1.9 MB/min
-│  ○ Lossless  Every sample, FLAC  FLAC       ≈3.5 MB/min
+│  ◉ Memo      Speech, smallest    64 kbit/s  ≈480 kB/min  room for 34 h
+│  ○ Standard  Voices, interviews  128 kbit/s ≈960 kB/min  room for 17 h
+│  ○ High      Music, near CD      256 kbit/s ≈1.9 MB/min  room for 9 h
+│  ○ Lossless  Every sample, FLAC  FLAC       ≈3.5 MB/min  room for 5 h
 │  Bitrate, kbit/s  64  96 [128] 192 256 320│  fine-tune (compact only)
 │  ☐ Voice processing                       │  echo / noise / auto-gain
 │    Cancel echo, suppress noise, level …   │
@@ -405,7 +413,11 @@ whole screen on two fields and put a big red Discard under a small Save.
   be good enough?" is the musician's. Each row says who it is for in a few
   words. Memo, Standard and High are the device's own encoder at 64, 128 and
   256 kbit/s; Lossless is the samples as 16-bit FLAC (its size is an
-  estimate: 48 kHz mono at about 60 % of the raw samples).
+  estimate: 48 kHz mono at about 60 % of the raw samples). Under the size,
+  **room for** how long this device could record at that quality — the
+  browser's own estimate of its free space (`navigator.storage.estimate`,
+  read on the device, sent nowhere), in whole hours once there is an hour;
+  the line is left out where the browser does not say.
 - **The bitrate row** is for the person who wants a number the presets
   don't offer. Choosing one that matches a preset selects the preset; the
   button on Ready then says "Custom".
@@ -418,6 +430,9 @@ whole screen on two fields and put a big red Discard under a small Save.
   Custom is two steppers, held between −48 and −3 dB and at least 3 dB
   apart. The strip under them draws the range on the meter's own scale, so
   it is the waveform's band turned on its side.
+- **Both segmented rows stay inside their bar.** On a narrow phone the
+  buttons shrink to their text, and past that the row wraps onto a second
+  line within the bar (`SEGMENTS_FIT`) — a choice never sits outside it.
 - The choice is remembered on this device and is what the next take starts
   on. It is not a per-space or per-folder setting. A quality is a fact about
   a take, and the take records it (Player → facts).
@@ -427,7 +442,7 @@ whole screen on two fields and put a big red Discard under a small Save.
 ```
 ┌───────────────────────────────────────────┐
 │  Equalizer                            ✕   │
-│  Podcast                      [Compare]   │  preset or Custom · hear it flat
+│  Podcast · Low cut            [Compare]   │  preset or Custom · hear it flat
 │  ┌─────────────────────────────────────┐  │
 │  │      ╭─•──•───•──╮•─────            │  │  the curve, bands marked; the
 │  │  ╭──╯              ▒▒▒ live ▒▒▒     │  │  sound after it behind, live
@@ -457,6 +472,12 @@ whole screen on two fields and put a big red Discard under a small Save.
   used one, and five of them fit a phone's width. They are named for what
   they do — Bass, Warmth, Mids, Presence, Air — with the frequency under
   the name for the reader who thinks in hertz.
+- **The low cut is its own switch**, not part of a starting point. A
+  starting point sets the five knobs and leaves the switch as it was;
+  turning the switch leaves the starting point named as it was ("Podcast ·
+  Low cut"). When a preset carried the low cut, the two undid each other —
+  a "No rumble" preset that was the switch plus a little bass lit and went
+  dark as the switch was flipped — so there is no such preset.
 - **Compare** is beside the preset's name, so A/B is one press away while
   judging a change; it changes nothing.
 - **Monitor** (Record screen only) says to put headphones on before it
@@ -559,7 +580,7 @@ The player is a recording's page: listen, annotate, file, export.
 │  ▁▂▃▅▃▂▁▂▅▇▅▃▂▁▂▃▂▁▂▃▅▃▂▁▂▅▇▅▃▂▁▂▃▂▁       │  the shape, seekable, with the playhead
 │  0:03                              0:10   │
 │                                           │
-│  [∿]  (↺15)     ( ▶ )     (15↻)    [1×]   │  EQ · transport · speed
+│  [╭╮]  (↺15)    ( ▶ )     (15↻)    [1×]   │  EQ · transport · speed
 │                                           │
 │  Add a note…                              │  the note
 │                                           │

@@ -16,6 +16,7 @@ import {
   presetOf,
   responseDb,
   withGain,
+  withPreset,
   type Eq,
 } from "../src/app/eq.ts";
 
@@ -139,7 +140,7 @@ describe("the equalizer", () => {
   });
 
   it("draws the curve the samples get", () => {
-    const eq = EQ_PRESETS.find((p) => p.id === "podcast")!.eq;
+    const eq = { ...withPreset(null, "podcast"), lowCut: true };
     for (const hz of [60, 200, 700, 2500, 6000]) {
       expect(measured(eq, hz)).toBeCloseTo(responseDb(eq, hz), 0);
     }
@@ -196,14 +197,29 @@ describe("an EQ as stored", () => {
   it("names every preset once, and knows an EQ turned by hand", () => {
     const ids = EQ_PRESETS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const p of EQ_PRESETS) expect(presetOf(p.eq)).toBe(p.id);
+    for (const p of EQ_PRESETS)
+      expect(presetOf(withPreset(null, p.id))).toBe(p.id);
     expect(presetOf(null)).toBe("flat");
     expect(presetOf(withGain(FLAT_EQ, "mids", 0.5))).toBeNull();
-    expect(isFlat(EQ_PRESETS[0].eq)).toBe(true);
-    for (const p of EQ_PRESETS.slice(1)) expect(isFlat(p.eq)).toBe(false);
+    expect(isFlat(withPreset(null, "flat"))).toBe(true);
+    for (const p of EQ_PRESETS.slice(1))
+      expect(isFlat(withPreset(null, p.id))).toBe(false);
     for (const p of EQ_PRESETS)
       for (const b of EQ_BANDS)
-        expect(Math.abs(p.eq.gains[b.id])).toBeLessThanOrEqual(EQ_MAX_DB);
+        expect(Math.abs(p.gains[b.id])).toBeLessThanOrEqual(EQ_MAX_DB);
+  });
+
+  it("keeps the low cut apart from the starting points", () => {
+    // Picking one leaves the switch as it was, either way.
+    const cut = { ...FLAT_EQ, lowCut: true };
+    expect(withPreset(cut, "podcast").lowCut).toBe(true);
+    expect(withPreset(FLAT_EQ, "podcast").lowCut).toBe(false);
+    expect(withPreset(cut, "flat")).toEqual(cut);
+    // And flipping the switch leaves the starting point named as it was.
+    const podcast = withPreset(null, "podcast");
+    expect(presetOf({ ...podcast, lowCut: true })).toBe("podcast");
+    expect(presetOf({ ...podcast, lowCut: false })).toBe("podcast");
+    expect(presetOf(cut)).toBe("flat");
   });
 
   it("reads an EQ kept before a band could be turned off as it was", () => {

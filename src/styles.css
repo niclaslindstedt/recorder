@@ -92,6 +92,14 @@
     color-mix(in oklab, var(--fg-bright) 55%, transparent);
 }
 
+/* The target's swatch in the words over the meter: the band in small, the
+   same wash and the same two edges. */
+.app-target-swatch {
+  background-color: color-mix(in oklab, var(--accent) 22%, transparent);
+  border-inline: 2px solid
+    color-mix(in oklab, var(--fg-bright) 55%, transparent);
+}
+
 /* The bar's colour by where the held peak sits against the target, over the
    framework's own zone colour. The bar is the track's one `origin-left`
    child — if the framework's markup moves, the bar keeps the framework's

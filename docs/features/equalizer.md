@@ -11,9 +11,11 @@ it was.
 One sheet, opened in two places:
 
 - **Record screen → EQ** sets the EQ new takes start with. A take is saved
-  with it, and Review plays the take through it.
-- **Player → the EQ glyph** (left of the transport, lit when the recording
-  has an EQ) sets one recording's. The change is kept when the sheet closes.
+  with it, and Review plays the take through it. The button shows the EQ's
+  curve, small, beside its name — and "Low cut" when that is on.
+- **Player → the EQ button** (left of the transport, lit and showing the
+  curve when the recording has an EQ) sets one recording's. The change is
+  kept when the sheet closes.
 
 In it, top to bottom:
 
@@ -21,9 +23,9 @@ In it, top to bottom:
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **The curve**       | What the EQ does from 20 Hz to 20 kHz, each band marked on it. While something plays — or the microphone is monitored — the sound itself is drawn behind it as bars, moved by the EQ as you turn it: what it adds in the accent colour, what it takes away as the hollow outline of the bar that was, so a cut can be seen taking a hum out. |
 | **Compare**         | Hear it without the EQ while it is on, to judge the difference. Nothing is changed.                                                                                                                                                                                                                                                          |
-| **Starting points** | Flat, Podcast, Warm, Bright, No rumble, Lo-fi. Turning a knob afterwards makes it Custom.                                                                                                                                                                                                                                                    |
+| **Starting points** | Flat, Podcast, Warm, Bright, Lo-fi: a setting of the five knobs. Turning a knob afterwards makes it Custom. Picking one leaves the low cut as it was.                                                                                                                                                                                        |
 | **Five knobs**      | Drag up to boost and down to cut: up to +12 dB, down to −24 dB in half-dB steps, and all the way down is **off** — that band is not heard at all. Double-tap for 0. Arrow keys work, Page Up / Down move three, Home turns a band off.                                                                                                       |
-| **Low cut**         | Takes out what is under 80 Hz — traffic, handling noise, the air conditioning.                                                                                                                                                                                                                                                               |
+| **Low cut**         | Takes out what is under 80 Hz — traffic, handling noise, the air conditioning. A switch of its own: no starting point turns it on or off, and the name says it beside the starting point ("Podcast · Low cut").                                                                                                                              |
 
 | Knob     | Centre  | Covers         | What it does to a voice or an instrument |
 | -------- | ------- | -------------- | ---------------------------------------- |

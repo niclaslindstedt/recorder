@@ -220,7 +220,8 @@ export const en = {
       "Drag up or down, or use the arrow keys. All the way down is off. Double-tap to put it back to 0.",
     lowCut: "Low cut",
     lowCutHint:
-      "Takes out rumble under 80 Hz — traffic, handling, the air conditioning.",
+      "Takes out rumble under 80 Hz — traffic, handling, the air conditioning. A switch of its own: picking a starting point leaves it as it is.",
+    withLowCut: "{name} · Low cut",
     compare: "Compare",
     compareHint: "Hear it without the EQ while this is on.",
     reset: "Flat",
@@ -242,7 +243,6 @@ export const en = {
       podcast: "Podcast",
       warm: "Warm",
       bright: "Bright",
-      rumble: "No rumble",
       lofi: "Lo-fi",
     },
     forRecord:
@@ -272,6 +272,7 @@ export const en = {
     bitrate: "Bitrate, kbit/s",
     flac: "FLAC",
     perMinute: "≈{size}/min",
+    roomFor: "room for {span}",
     preset: {
       memo: "Memo",
       standard: "Standard",
@@ -293,6 +294,9 @@ export const en = {
     hint: "Where the peaks should land, shaded on the waveform. Over −3 dB is always too hot.",
     range: "{low} to {high} dB",
     value: "{db} dB",
+    // Over the Record screen's meter while listening and recording.
+    onMeter: "Target",
+    named: "{name} · {range}",
     preset: {
       voice: "Voice",
       music: "Music",
