@@ -457,6 +457,13 @@ export function TakeStats({
   );
 }
 
+/** The framework's segmented buttons keep their text's width and their
+ *  padding, so six (or five longer) of them run out of the bar on a narrow
+ *  phone (the Quality sheet's bitrate and target rows). Let each shrink to its text with a little padding, and wrap onto
+ *  a second line inside the bar rather than ever leaving it. */
+export const SEGMENTS_FIT =
+  "flex-wrap [&>button]:min-w-0 [&>button]:basis-auto [&>button]:px-1";
+
 /** The room the browser says this site has left, bytes — read once each
  *  time `when` turns true, since it changes slowly and asking is not free.
  *  `null` where the browser does not say. Nothing leaves the device: this

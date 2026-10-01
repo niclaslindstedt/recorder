@@ -392,10 +392,10 @@ whole screen on two fields and put a big red Discard under a small Save.
 ```
 ┌───────────────────────────────────────────┐
 │  Quality                              ✕   │
-│  ◉ Memo      Speech, smallest    64 kbit/s  ≈480 kB/min
-│  ○ Standard  Voices, interviews  128 kbit/s ≈960 kB/min
-│  ○ High      Music, near CD      256 kbit/s ≈1.9 MB/min
-│  ○ Lossless  Every sample, FLAC  FLAC       ≈3.5 MB/min
+│  ◉ Memo      Speech, smallest    64 kbit/s  ≈480 kB/min  room for 34 h
+│  ○ Standard  Voices, interviews  128 kbit/s ≈960 kB/min  room for 17 h
+│  ○ High      Music, near CD      256 kbit/s ≈1.9 MB/min  room for 9 h
+│  ○ Lossless  Every sample, FLAC  FLAC       ≈3.5 MB/min  room for 5 h
 │  Bitrate, kbit/s  64  96 [128] 192 256 320│  fine-tune (compact only)
 │  ☐ Voice processing                       │  echo / noise / auto-gain
 │    Cancel echo, suppress noise, level …   │
@@ -413,7 +413,11 @@ whole screen on two fields and put a big red Discard under a small Save.
   be good enough?" is the musician's. Each row says who it is for in a few
   words. Memo, Standard and High are the device's own encoder at 64, 128 and
   256 kbit/s; Lossless is the samples as 16-bit FLAC (its size is an
-  estimate: 48 kHz mono at about 60 % of the raw samples).
+  estimate: 48 kHz mono at about 60 % of the raw samples). Under the size,
+  **room for** how long this device could record at that quality — the
+  browser's own estimate of its free space (`navigator.storage.estimate`,
+  read on the device, sent nowhere), in whole hours once there is an hour;
+  the line is left out where the browser does not say.
 - **The bitrate row** is for the person who wants a number the presets
   don't offer. Choosing one that matches a preset selects the preset; the
   button on Ready then says "Custom".
@@ -426,6 +430,9 @@ whole screen on two fields and put a big red Discard under a small Save.
   Custom is two steppers, held between −48 and −3 dB and at least 3 dB
   apart. The strip under them draws the range on the meter's own scale, so
   it is the waveform's band turned on its side.
+- **Both segmented rows stay inside their bar.** On a narrow phone the
+  buttons shrink to their text, and past that the row wraps onto a second
+  line within the bar (`SEGMENTS_FIT`) — a choice never sits outside it.
 - The choice is remembered on this device and is what the next take starts
   on. It is not a per-space or per-folder setting. A quality is a fact about
   a take, and the take records it (Player → facts).

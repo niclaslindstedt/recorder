@@ -271,6 +271,7 @@ export const en = {
     bitrate: "Bitrate, kbit/s",
     flac: "FLAC",
     perMinute: "≈{size}/min",
+    roomFor: "room for {span}",
     preset: {
       memo: "Memo",
       standard: "Standard",

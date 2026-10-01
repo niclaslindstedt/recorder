@@ -6,15 +6,18 @@ import {
   ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
 
-import { formatSize } from "./format.ts";
+import { formatSize, formatSpan } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { SheetTitle } from "./ModalHeader.tsx";
+import { SEGMENTS_FIT, useFreeBytes } from "./RecordParts.tsx";
 import { TargetLevel } from "./TargetLevel.tsx";
 import {
   QUALITY_PRESETS,
   bytesPerMinute,
   presetFor,
+  recordingTimeLeft,
   type QualityId,
+  type QualityPreset,
 } from "./quality.ts";
 import { BITRATES, type AppSettings } from "./useAppSettings.ts";
 
@@ -23,12 +26,15 @@ import { BITRATES, type AppSettings } from "./useAppSettings.ts";
 // an interview at 128 kbit/s, a song idea lossless — rather than being a
 // setting three levels down.
 //
-// Presets first, each with who it is for and what a minute costs, because
-// "will an hour fit?" and "will it be good enough?" are the two questions.
+// Presets first, each with who it is for, what a minute costs and how long
+// the room left on this device would hold, because "will an hour fit?" and
+// "will it be good enough?" are the two questions.
 // The bitrate row is for a number the presets do not offer. Voice
 // processing lives here too: it changes what is recorded, and whether you
 // want it depends on the take. So does the target level (`TargetLevel.tsx`):
 // where the peaks should land depends on what is in front of the microphone.
+
+const HOUR = 3_600_000;
 
 type Props = {
   settings: AppSettings;
@@ -40,6 +46,19 @@ type Props = {
 export function QualitySheet({ settings, update, locale, onClose }: Props) {
   const t = useT();
   const current = presetFor(settings);
+  // The browser's own estimate of its free space, read once as the sheet
+  // opens — the same figure as "Room for" while recording.
+  const freeBytes = useFreeBytes(true);
+  const roomFor = (p: QualityPreset) => {
+    const ms = recordingTimeLeft(freeBytes, p.kind, p.bitrate);
+    if (ms === null) return null;
+    // A rough figure: whole hours once there is an hour, so the column
+    // stays narrow ("room for 16 h", not "16 h 32 min").
+    return formatSpan(ms < HOUR ? ms : Math.round(ms / HOUR) * HOUR, {
+      hours: t("common.hours"),
+      minutes: t("common.minutes"),
+    });
+  };
 
   const choose = (id: QualityId) => {
     const preset = QUALITY_PRESETS.find((p) => p.id === id);
@@ -69,6 +88,7 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
         >
           {QUALITY_PRESETS.map((p) => {
             const on = current === p.id;
+            const room = roomFor(p);
             return (
               <button
                 key={p.id}
@@ -110,6 +130,11 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
                       ),
                     })}
                   </span>
+                  {room !== null && (
+                    <span className="block">
+                      {t("quality.roomFor", { span: room })}
+                    </span>
+                  )}
                 </span>
               </button>
             );
@@ -135,6 +160,7 @@ export function QualitySheet({ settings, update, locale, onClose }: Props) {
               }
               ariaLabel={t("quality.bitrate")}
               fullWidth
+              className={SEGMENTS_FIT}
             />
           </div>
         )}
