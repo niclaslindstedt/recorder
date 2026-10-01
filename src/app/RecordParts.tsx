@@ -27,6 +27,7 @@ import type { Eq } from "./eq.ts";
 import type { Ambient, Verdict } from "./levels.ts";
 import { useRouting } from "./useAudioRouting.ts";
 import { useEqPlayer } from "./useEqPlayer.ts";
+import { usePlayhead } from "./usePlayhead.ts";
 import type { MonitorState } from "./useMonitor.ts";
 
 // The pieces the Record screen's four modes are built from
@@ -229,7 +230,8 @@ export function TakeReview({
   const { sinkId } = useRouting();
   const player = useEqPlayer(preview, eq, sinkId);
   const duration = player.duration || take.durationMs / 1000;
-  const progress = duration > 0 ? player.time / duration : 0;
+  const time = usePlayhead(player, duration);
+  const progress = duration > 0 ? time / duration : 0;
   useEffect(() => {
     if (wantPlay && preview && !player.loading) {
       setWantPlay(false);
@@ -269,19 +271,24 @@ export function TakeReview({
   );
   const hear = (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
+      {/* The shape fills the card: a percentage height inside a flexed box
+          is not resolved everywhere (WebKit), and the SVG then falls back to
+          its viewBox's 10:1 — a strip along the card's top. */}
       <div
-        className={`rounded-md bg-surface-2 px-2 py-1 text-accent ${
+        className={`relative rounded-md bg-surface-2 text-accent ${
           beside ? "min-h-16 flex-1" : "max-h-72 min-h-24 flex-1"
         }`}
       >
-        <Waveform
-          peaks={take.peaks}
-          progress={progress}
-          onSeek={
-            preview ? (share) => player.seek(share * duration) : undefined
-          }
-          label={t("player.position")}
-        />
+        <div className="absolute inset-x-2 inset-y-1">
+          <Waveform
+            peaks={take.peaks}
+            progress={progress}
+            onSeek={
+              preview ? (share) => player.seek(share * duration) : undefined
+            }
+            label={t("player.position")}
+          />
+        </div>
       </div>
       <div className="flex items-center gap-3">
         <button
@@ -300,8 +307,7 @@ export function TakeReview({
           )}
         </button>
         <span className="font-figures text-sm text-fg tabular-nums">
-          {formatDuration(player.time * 1000)} /{" "}
-          {formatDuration(take.durationMs)}
+          {formatDuration(time * 1000)} / {formatDuration(take.durationMs)}
         </span>
         <span className="flex min-w-0 flex-1 flex-wrap justify-end gap-1.5">
           <Chip>
