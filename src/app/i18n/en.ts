@@ -217,7 +217,7 @@ export const en = {
     presets: "Starting points",
     knobs: "Bands",
     knobHint:
-      "Drag up or down, or use the arrow keys. Double-tap to put it back to 0.",
+      "Drag up or down, or use the arrow keys. All the way down is off. Double-tap to put it back to 0.",
     lowCut: "Low cut",
     lowCutHint:
       "Takes out rumble under 80 Hz — traffic, handling, the air conditioning. A switch of its own: picking a starting point leaves it as it is.",
@@ -226,6 +226,7 @@ export const en = {
     compareHint: "Hear it without the EQ while this is on.",
     reset: "Flat",
     db: "{value} dB",
+    off: "Off",
     band: {
       bass: { name: "Bass", hz: "100 Hz", hint: "Weight and boom" },
       warmth: { name: "Warmth", hz: "300 Hz", hint: "Body — or mud" },

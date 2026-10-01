@@ -10,10 +10,12 @@ import {
 import {
   EQ_BANDS,
   EQ_MAX_DB,
+  EQ_MIN_DB,
   EQ_STEP_DB,
   clampGain,
+  eqResponse,
+  isOff,
   presetOf,
-  responseDb,
   type Eq,
 } from "./eq.ts";
 import { useT } from "./i18n/index.ts";
@@ -24,12 +26,23 @@ import { palette, useCanvas } from "./Visualizer.tsx";
 // to show (`EqSheet.tsx`). And the curve small, for a button that opens
 // the sheet, with the EQ's name in words.
 
-/** How far a knob turns for a pixel dragged, dB — the whole range in a
- *  thumb's comfortable reach. */
-const DB_PER_PX = (2 * EQ_MAX_DB) / 160;
+/** How far a drag goes for the knob's whole sweep, px — off to +12 dB in
+ *  a thumb's comfortable reach. */
+const SWEEP_PX = 160;
 
-/** The knob's sweep either side of 0 dB at the top, degrees. */
+/** The knob's sweep either side of 0 dB at the top, degrees: the cut side
+ *  runs to off, the boost side to +12 dB. */
 const SWEEP = 135;
+
+/** Where a dB sits on the knob, −1 (off) to 1 (+12), 0 dB at the top. */
+function positionOf(db: number): number {
+  return db >= 0 ? db / EQ_MAX_DB : db / -EQ_MIN_DB;
+}
+
+function dbAt(position: number): number {
+  const p = Math.max(-1, Math.min(1, position));
+  return p >= 0 ? p * EQ_MAX_DB : p * -EQ_MIN_DB;
+}
 
 function polar(cx: number, cy: number, r: number, deg: number) {
   const rad = ((deg - 90) * Math.PI) / 180;
@@ -44,17 +57,20 @@ function arc(cx: number, cy: number, r: number, from: number, to: number) {
   return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
 }
 
-/** A dB as the knob prints it: "+3.5", "−6", "0". */
-export function formatGain(db: number): string {
+/** A dB as the knob prints it: "+3.5", "−6", "0" — or `null` for a band
+ *  turned off, which is said in words. */
+export function formatGain(db: number): string | null {
+  if (isOff(db)) return null;
   if (db === 0) return "0";
   const text =
     Math.abs(db) % 1 === 0 ? String(Math.abs(db)) : Math.abs(db).toFixed(1);
   return db > 0 ? `+${text}` : `−${text}`;
 }
 
-/** One band's knob: drag up to boost and down to cut, the arrow keys in
- *  half-dB steps, Page Up / Down in threes, a double-tap back to 0. It is
- *  a slider to assistive tech, and says its value in words. */
+/** One band's knob: drag up to boost and down to cut — all the way down
+ *  is off — the arrow keys in half-dB steps, Page Up / Down in threes,
+ *  Home for off, a double-tap back to 0. It is a slider to assistive tech,
+ *  and says its value in words. */
 export function Knob({
   name,
   hz,
@@ -71,13 +87,15 @@ export function Knob({
   const t = useT();
   const drag = useRef<{ y: number; from: number; moved: boolean } | null>(null);
   const lastTap = useRef(0);
-  const angle = (value / EQ_MAX_DB) * SWEEP;
+  const angle = positionOf(value) * SWEEP;
   const tip = polar(28, 28, 15, angle);
+  const off = isOff(value);
+  const shown = formatGain(value) ?? t("eq.off");
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     e.currentTarget.focus();
-    drag.current = { y: e.clientY, from: value, moved: false };
+    drag.current = { y: e.clientY, from: positionOf(value), moved: false };
   };
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
@@ -85,7 +103,7 @@ export function Knob({
     const dy = d.y - e.clientY;
     if (Math.abs(dy) > 2) d.moved = true;
     const fine = e.shiftKey ? 0.25 : 1;
-    onChange(clampGain(d.from + dy * DB_PER_PX * fine));
+    onChange(clampGain(dbAt(d.from + ((2 * dy) / SWEEP_PX) * fine)));
   };
   const onPointerUp = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current;
@@ -112,7 +130,7 @@ export function Knob({
     };
     let next: number | null = null;
     if (e.key in step) next = value + step[e.key]!;
-    else if (e.key === "Home") next = -EQ_MAX_DB;
+    else if (e.key === "Home") next = EQ_MIN_DB;
     else if (e.key === "End") next = EQ_MAX_DB;
     else if (e.key === "0" || e.key === "Delete" || e.key === "Backspace")
       next = 0;
@@ -127,10 +145,10 @@ export function Knob({
         role="slider"
         tabIndex={0}
         aria-label={name}
-        aria-valuemin={-EQ_MAX_DB}
+        aria-valuemin={EQ_MIN_DB}
         aria-valuemax={EQ_MAX_DB}
         aria-valuenow={value}
-        aria-valuetext={t("eq.db", { value: formatGain(value) })}
+        aria-valuetext={off ? shown : t("eq.db", { value: shown })}
         aria-description={`${hint}. ${t("eq.knobHint")}`}
         title={`${name} · ${hz} — ${hint}`}
         onPointerDown={onPointerDown}
@@ -152,7 +170,7 @@ export function Knob({
             <path
               d={arc(28, 28, 24, 0, angle)}
               fill="none"
-              stroke="var(--accent)"
+              stroke={off ? "var(--muted)" : "var(--accent)"}
               strokeWidth={4}
               strokeLinecap="round"
             />
@@ -180,10 +198,10 @@ export function Knob({
       </span>
       <span
         className={`font-figures text-[0.6875rem] tabular-nums ${
-          value === 0 ? "text-muted" : "text-accent"
+          value === 0 || off ? "text-muted" : "text-accent"
         }`}
       >
-        {formatGain(value)}
+        {shown}
       </span>
       <span className="text-[0.625rem] text-muted">{hz}</span>
     </div>
@@ -192,11 +210,16 @@ export function Knob({
 
 const MIN_HZ = 20;
 const MAX_HZ = 20000;
-/** The curve's dB range, either side of 0: a little past the knobs. */
-const RANGE_DB = EQ_MAX_DB + 3;
+/** The curve's dB range: a little past the knobs up, and down past the
+ *  last step before off — a band turned off runs out of the bottom. */
+const TOP_DB = EQ_MAX_DB + 3;
+const BOTTOM_DB = EQ_MIN_DB - 6;
 /** The spectrum's dB range, bottom to top. */
 const SPEC_FLOOR = -100;
 const SPEC_CEIL = -20;
+/** A spectrum bar's width and the gap after it, CSS px. */
+const BAR_PX = 4;
+const GAP_PX = 1;
 
 function xOf(hz: number, w: number) {
   return (Math.log(hz / MIN_HZ) / Math.log(MAX_HZ / MIN_HZ)) * w;
@@ -206,17 +229,27 @@ function hzOf(x: number, w: number) {
   return MIN_HZ * (MAX_HZ / MIN_HZ) ** (x / w);
 }
 
+/** A level in dBFS as a share of the spectrum's height. */
+function specShare(db: number) {
+  return Math.max(0, Math.min(1, (db - SPEC_FLOOR) / (SPEC_CEIL - SPEC_FLOOR)));
+}
+
 /** The EQ's curve from 20 Hz to 20 kHz, the bands marked on it, and —
  *  while something is playing or the microphone is monitored — the sound's
- *  spectrum after the EQ behind it, so a cut can be seen taking a hum out. */
+ *  spectrum as bars behind it, moved by the EQ as it is turned: what is
+ *  left of each bar plain, what the EQ adds in the accent, and what it
+ *  takes away as the bar that was, hollow, so a cut can be seen taking
+ *  a hum out. Comparing, the EQ's part is drawn faint, as it is not being
+ *  heard. */
 export function EqCurve({
   eq,
   analyser,
   bypassed,
 }: {
   eq: Eq | null;
+  /** The sound before the EQ, when there is one to show. */
   analyser: AnalyserNode | null;
-  /** Comparing: the curve is drawn faint, as it is not being heard. */
+  /** Comparing: the EQ is drawn faint, as it is not being heard. */
   bypassed: boolean;
 }) {
   const t = useT();
@@ -230,14 +263,44 @@ export function EqCurve({
     const colours = palette(el);
     const freq = analyser ? new Float32Array(analyser.frequencyBinCount) : null;
     const rate = analyser?.context.sampleRate ?? 48000;
+    const w = el.width;
+    const h = el.height;
+    // Kept inside the frame, so a band turned off still shows its dot.
+    const edge = 4 * dpr;
+    const yOf = (db: number) =>
+      Math.max(
+        edge,
+        Math.min(h - edge, ((TOP_DB - db) / (TOP_DB - BOTTOM_DB)) * h),
+      );
+    const fg =
+      getComputedStyle(el).getPropertyValue("--fg").trim() || colours.muted;
+    const faint = bypassed;
+
+    // Everything that only moves with the EQ, worked out once: the curve,
+    // the knobs' places on it, and what it does under each bar.
+    const response = eqResponse(eq, 48000);
+    const points: Array<[number, number]> = [];
+    for (let x = 0; x <= w; x += dpr)
+      points.push([x, yOf(response(hzOf(x, w)))]);
+    const dots = EQ_BANDS.map((b) => [xOf(b.hz, w), yOf(response(b.hz))]);
+    const step = (BAR_PX + GAP_PX) * dpr;
+    const bars: Array<{ x: number; lo: number; hi: number; db: number }> = [];
+    if (freq) {
+      const bin = rate / 2 / freq.length;
+      for (let x = 0; x + BAR_PX * dpr <= w; x += step) {
+        const lo = Math.min(freq.length - 1, Math.round(hzOf(x, w) / bin));
+        const hi = Math.min(
+          freq.length - 1,
+          Math.max(lo, Math.round(hzOf(x + BAR_PX * dpr, w) / bin)),
+        );
+        bars.push({ x, lo, hi, db: response(hzOf(x + (BAR_PX * dpr) / 2, w)) });
+      }
+    }
 
     const draw = () => {
-      const w = el.width;
-      const h = el.height;
-      const yOf = (db: number) => h / 2 - (db / RANGE_DB) * (h / 2);
       ctx.clearRect(0, 0, w, h);
 
-      // The grid: 100 Hz, 1 kHz, 10 kHz across; ±6 and ±12 dB along.
+      // The grid: 100 Hz, 1 kHz, 10 kHz across; ±6, ±12 and −24 dB along.
       ctx.strokeStyle = colours.line;
       ctx.lineWidth = dpr;
       ctx.globalAlpha = 0.6;
@@ -249,7 +312,7 @@ export function EqCurve({
         ctx.stroke();
       }
       ctx.setLineDash([3 * dpr, 4 * dpr]);
-      for (const db of [-12, -6, 6, 12]) {
+      for (const db of [-24, -12, -6, 6, 12]) {
         const y = Math.round(yOf(db)) + 0.5;
         ctx.beginPath();
         ctx.moveTo(0, y);
@@ -263,36 +326,42 @@ export function EqCurve({
       ctx.lineTo(w, Math.round(yOf(0)) + 0.5);
       ctx.stroke();
 
-      // The sound now, after the EQ.
+      // The sound now: each bar as it came in, and what the EQ does to it.
       if (analyser && freq) {
         analyser.getFloatFrequencyData(freq);
-        const bin = rate / 2 / freq.length;
-        ctx.beginPath();
-        ctx.moveTo(0, h);
-        for (let x = 0; x <= w; x += 2 * dpr) {
-          const i = Math.min(freq.length - 1, Math.round(hzOf(x, w) / bin));
-          const v = freq[i]!;
-          const share = Math.max(
-            0,
-            Math.min(1, (v - SPEC_FLOOR) / (SPEC_CEIL - SPEC_FLOOR)),
-          );
-          ctx.lineTo(x, h - share * h);
+        const barW = BAR_PX * dpr;
+        for (const bar of bars) {
+          let level = -Infinity;
+          for (let i = bar.lo; i <= bar.hi; i++)
+            level = Math.max(level, freq[i]!);
+          const before = h - specShare(level) * h;
+          const after = h - specShare(level + bar.db) * h;
+          // What is left of it.
+          ctx.fillStyle = colours.muted;
+          ctx.globalAlpha = 0.35;
+          ctx.fillRect(bar.x, Math.max(before, after), barW, h);
+          if (after < before) {
+            // What the EQ adds.
+            ctx.fillStyle = colours.accent;
+            ctx.globalAlpha = faint ? 0.25 : 0.7;
+            ctx.fillRect(bar.x, after, barW, before - after);
+          } else if (after > before + dpr) {
+            // What it takes away: the bar that was, hollow.
+            ctx.strokeStyle = fg;
+            ctx.lineWidth = dpr;
+            ctx.globalAlpha = faint ? 0.2 : 0.45;
+            ctx.strokeRect(
+              bar.x + dpr / 2,
+              before + dpr / 2,
+              barW - dpr,
+              after - before,
+            );
+          }
         }
-        ctx.lineTo(w, h);
-        ctx.closePath();
-        ctx.fillStyle = colours.muted;
-        ctx.globalAlpha = 0.28;
-        ctx.fill();
         ctx.globalAlpha = 1;
       }
 
       // The curve, filled to 0 dB.
-      const e = eq;
-      const points: Array<[number, number]> = [];
-      for (let x = 0; x <= w; x += dpr) {
-        points.push([x, yOf(responseDb(e, hzOf(x, w), 48000))]);
-      }
-      const faint = bypassed;
       ctx.beginPath();
       ctx.moveTo(0, yOf(0));
       for (const [x, y] of points) ctx.lineTo(x, y);
@@ -310,11 +379,9 @@ export function EqCurve({
 
       // Where each knob sits on it.
       ctx.fillStyle = colours.accent;
-      for (const b of EQ_BANDS) {
-        const x = xOf(b.hz, w);
-        const y = yOf(responseDb(e, b.hz, 48000));
+      for (const [x, y] of dots) {
         ctx.beginPath();
-        ctx.arc(x, y, 3.5 * dpr, 0, Math.PI * 2);
+        ctx.arc(x!, y!, 3.5 * dpr, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -363,13 +430,13 @@ export function EqCurve({
         aria-hidden
         className="pointer-events-none absolute top-0.5 left-1 font-figures text-[9px] leading-none text-muted"
       >
-        +{RANGE_DB}
+        +{TOP_DB}
       </span>
       <span
         aria-hidden
         className="pointer-events-none absolute bottom-0.5 left-1 font-figures text-[9px] leading-none text-muted"
       >
-        −{RANGE_DB}
+        −{-BOTTOM_DB}
       </span>
     </div>
   );
@@ -410,11 +477,9 @@ export function EqLine({
   const W = 48;
   const H = 32;
   const { line, fill } = useMemo(() => {
+    const response = eqResponse(eq);
     const dbs = Array.from({ length: LINE_POINTS + 1 }, (_, i) =>
-      Math.max(
-        -RANGE_DB,
-        Math.min(RANGE_DB, responseDb(eq, hzOf(i, LINE_POINTS))),
-      ),
+      Math.max(BOTTOM_DB, Math.min(TOP_DB, response(hzOf(i, LINE_POINTS)))),
     );
     const range = Math.max(LINE_MIN_DB, ...dbs.map(Math.abs));
     const pad = 3;

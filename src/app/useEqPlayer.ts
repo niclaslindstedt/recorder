@@ -25,7 +25,7 @@ export type EqPlayer = Player & {
   /** Take the sound through the EQ now — call it from a press, such as
    *  the one that opens the EQ sheet. */
   attachEq: () => void;
-  /** The analyser at the chain's end, once attached. */
+  /** The sound before the EQ, once attached — the sheet draws the EQ over it. */
   analyser: AnalyserNode | null;
 };
 
@@ -74,7 +74,7 @@ export function useEqPlayer(
       src.connect(chain.input);
       chain.output.connect(ctx.destination);
       graph.current = { ctx, chain };
-      setAnalyser(chain.output);
+      setAnalyser(chain.analyser);
       void ctx.resume();
     } catch {
       // No routing here: the element plays as it is, without the EQ.

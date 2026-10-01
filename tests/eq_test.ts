@@ -4,9 +4,12 @@ import { describe, expect, it } from "vitest";
 import {
   EQ_BANDS,
   EQ_MAX_DB,
+  EQ_MIN_DB,
   EQ_PRESETS,
+  EQ_STEP_DB,
   FLAT_EQ,
   applyEq,
+  bandGain,
   clampGain,
   isFlat,
   normalizeEq,
@@ -52,7 +55,7 @@ describe("the equalizer", () => {
 
   it("boosts a band at its centre by what the knob says", () => {
     const eq = withGain(FLAT_EQ, "mids", 6);
-    expect(responseDb(eq, 1000)).toBeCloseTo(6, 1);
+    expect(responseDb(eq, 1000)).toBeCloseTo(6, 0);
     expect(measured(eq, 1000)).toBeCloseTo(6, 0);
     // An octave and more away it hardly moves.
     expect(Math.abs(measured(eq, 8000))).toBeLessThan(0.6);
@@ -60,8 +63,63 @@ describe("the equalizer", () => {
 
   it("cuts as far as it boosts", () => {
     const eq = withGain(FLAT_EQ, "presence", -9);
-    expect(responseDb(eq, 3500)).toBeCloseTo(-9, 1);
+    expect(responseDb(eq, 3500)).toBeCloseTo(-9, 0);
     expect(measured(eq, 3500)).toBeCloseTo(-9, 0);
+  });
+
+  it("puts every band's knob on the curve at its centre", () => {
+    for (const b of EQ_BANDS) {
+      for (const db of [-12, -6, 6, 12]) {
+        const at = responseDb(withGain(FLAT_EQ, b.id, db), b.hz);
+        expect(Math.abs(at - db)).toBeLessThan(0.6);
+      }
+    }
+  });
+
+  it("is that much everywhere when every band is turned alike", () => {
+    for (const db of [-12, -3, 6]) {
+      const eq = { lowCut: false, gains: { ...FLAT_EQ.gains } };
+      for (const b of EQ_BANDS) eq.gains[b.id] = db;
+      for (const hz of [30, 120, 173, 400, 548, 1400, 1871, 4000, 5916, 16000])
+        expect(responseDb(eq, hz)).toBeCloseTo(db, 2);
+      expect(measured(eq, 700)).toBeCloseTo(db, 1);
+    }
+  });
+
+  it("stays down between two bands turned down together", () => {
+    const pairs = [
+      ["bass", "warmth"],
+      ["warmth", "mids"],
+      ["mids", "presence"],
+      ["presence", "air"],
+    ] as const;
+    for (const [low, high] of pairs) {
+      const eq = withGain(withGain(FLAT_EQ, low, -12), high, -12);
+      const from = EQ_BANDS.find((b) => b.id === low)!.hz;
+      const to = EQ_BANDS.find((b) => b.id === high)!.hz;
+      // No bump on the way from one centre to the next.
+      for (let i = 0; i <= 20; i++) {
+        const hz = from * (to / from) ** (i / 20);
+        expect(responseDb(eq, hz)).toBeLessThan(-11.4);
+      }
+    }
+  });
+
+  it("silences a band turned all the way down", () => {
+    expect(bandGain(EQ_MIN_DB)).toBe(0);
+    expect(bandGain(EQ_MIN_DB + EQ_STEP_DB)).toBeGreaterThan(0);
+    const one = withGain(FLAT_EQ, "mids", EQ_MIN_DB);
+    expect(responseDb(one, 1000)).toBeLessThan(-30);
+    expect(measured(one, 1000)).toBeLessThan(-30);
+    const two = withGain(one, "presence", EQ_MIN_DB);
+    expect(responseDb(two, 2000)).toBeLessThan(-60);
+    expect(measured(two, 2000)).toBeLessThan(-50);
+    // The rest of the sound is left as it was.
+    expect(Math.abs(responseDb(two, 150))).toBeLessThan(0.1);
+    expect(Math.abs(responseDb(two, 14000))).toBeLessThan(0.1);
+    const all = { lowCut: false, gains: { ...FLAT_EQ.gains } };
+    for (const b of EQ_BANDS) all.gains[b.id] = EQ_MIN_DB;
+    expect(responseDb(all, 1000)).toBeLessThan(-100);
   });
 
   it("lifts everything under Bass and over Air like a shelf", () => {
@@ -99,8 +157,11 @@ describe("the equalizer", () => {
 
   it("leaves a band out that the rate cannot carry", () => {
     const eq = withGain(FLAT_EQ, "air", 6);
-    const low = { sampleRate: 16000, channels: [sine(1000)] };
+    const low = { sampleRate: 11025, channels: [sine(1000)] };
     expect(applyEq(low, eq)).toBe(low);
+    // At 16 kHz Air's crossover still fits, and Air runs to the top.
+    const wide = { sampleRate: 16000, channels: [sine(1000)] };
+    expect(applyEq(wide, eq)).not.toBe(wide);
   });
 });
 
@@ -108,7 +169,8 @@ describe("an EQ as stored", () => {
   it("keeps the knob's range and step", () => {
     expect(clampGain(3.3)).toBe(3.5);
     expect(clampGain(40)).toBe(EQ_MAX_DB);
-    expect(clampGain(-40)).toBe(-EQ_MAX_DB);
+    expect(clampGain(-40)).toBe(EQ_MIN_DB);
+    expect(clampGain(-23.8)).toBe(EQ_MIN_DB);
     expect(clampGain(Number.NaN)).toBe(0);
     expect(Object.is(clampGain(-0.1), 0)).toBe(true);
   });
@@ -118,10 +180,13 @@ describe("an EQ as stored", () => {
     expect(normalizeEq("loud")).toBeNull();
     expect(normalizeEq({ lowCut: false, gains: { bass: 0 } })).toBeNull();
     expect(
-      normalizeEq({ lowCut: "yes", gains: { bass: "3", treble: 9, air: 99 } }),
+      normalizeEq({
+        lowCut: "yes",
+        gains: { bass: "3", treble: 9, mids: -99, air: 99 },
+      }),
     ).toEqual({
       lowCut: false,
-      gains: { bass: 3, warmth: 0, mids: 0, presence: 0, air: 12 },
+      gains: { bass: 3, warmth: 0, mids: EQ_MIN_DB, presence: 0, air: 12 },
     });
     expect(normalizeEq({ lowCut: true })).toEqual({
       ...FLAT_EQ,
@@ -155,5 +220,16 @@ describe("an EQ as stored", () => {
     expect(presetOf({ ...podcast, lowCut: true })).toBe("podcast");
     expect(presetOf({ ...podcast, lowCut: false })).toBe("podcast");
     expect(presetOf(cut)).toBe("flat");
+  });
+
+  it("reads an EQ kept before a band could be turned off as it was", () => {
+    const old = { lowCut: true, gains: { bass: -12, mids: 4.5, air: 12 } };
+    expect(normalizeEq(old)?.gains).toEqual({
+      bass: -12,
+      warmth: 0,
+      mids: 4.5,
+      presence: 0,
+      air: 12,
+    });
   });
 });

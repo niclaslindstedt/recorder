@@ -242,7 +242,9 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   player's line: a smooth clock at the playback rate, kept on the audio
   element's coarse `currentTime`.
 - `src/app/eq.ts` — the **equalizer**: a low cut and five bands (Bass,
-  Warmth, Mids, Presence, Air), the presets, `normalizeEq` (flat is
+  Warmth, Mids, Presence, Air) that split the sound at four crossovers and
+  add back up to it, so a band can be turned off and two cut bands stay
+  cut between them, the presets, `normalizeEq` (flat is
   `null`), the curve (`responseDb`) and `applyEq`, which runs samples
   through the same biquads the Web Audio spec gives `BiquadFilterNode` —
   what an export is encoded from. Pure. An EQ is a fact about a recording

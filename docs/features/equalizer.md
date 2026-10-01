@@ -19,21 +19,32 @@ One sheet, opened in two places:
 
 In it, top to bottom:
 
-| Part                | What it does                                                                                                                                                                                                      |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **The curve**       | What the EQ does from 20 Hz to 20 kHz, each band marked on it. While something plays — or the microphone is monitored — the sound itself is drawn behind it, after the EQ, so a cut can be seen taking a hum out. |
-| **Compare**         | Hear it without the EQ while it is on, to judge the difference. Nothing is changed.                                                                                                                               |
-| **Starting points** | Flat, Podcast, Warm, Bright, Lo-fi: a setting of the five knobs. Turning a knob afterwards makes it Custom. Picking one leaves the low cut as it was.                                                             |
-| **Five knobs**      | Drag up to boost and down to cut, ±12 dB in half-dB steps; double-tap for 0. Arrow keys work, Page Up / Down move three.                                                                                          |
-| **Low cut**         | Takes out what is under 80 Hz — traffic, handling noise, the air conditioning. A switch of its own: no starting point turns it on or off, and the name says it beside the starting point ("Podcast · Low cut").   |
+| Part                | What it does                                                                                                                                                                                                                                                                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The curve**       | What the EQ does from 20 Hz to 20 kHz, each band marked on it. While something plays — or the microphone is monitored — the sound itself is drawn behind it as bars, moved by the EQ as you turn it: what it adds in the accent colour, what it takes away as the hollow outline of the bar that was, so a cut can be seen taking a hum out. |
+| **Compare**         | Hear it without the EQ while it is on, to judge the difference. Nothing is changed.                                                                                                                                                                                                                                                          |
+| **Starting points** | Flat, Podcast, Warm, Bright, Lo-fi: a setting of the five knobs. Turning a knob afterwards makes it Custom. Picking one leaves the low cut as it was.                                                                                                                                                                                        |
+| **Five knobs**      | Drag up to boost and down to cut: up to +12 dB, down to −24 dB in half-dB steps, and all the way down is **off** — that band is not heard at all. Double-tap for 0. Arrow keys work, Page Up / Down move three, Home turns a band off.                                                                                                       |
+| **Low cut**         | Takes out what is under 80 Hz — traffic, handling noise, the air conditioning. A switch of its own: no starting point turns it on or off, and the name says it beside the starting point ("Podcast · Low cut").                                                                                                                              |
 
-| Knob     | Where   | What it does to a voice or an instrument         |
-| -------- | ------- | ------------------------------------------------ |
-| Bass     | 100 Hz  | Weight and boom (a shelf: everything under it)   |
-| Warmth   | 300 Hz  | Body — or, too much, mud                         |
-| Mids     | 1 kHz   | Honk and punch                                   |
-| Presence | 3.5 kHz | How clearly words come through                   |
-| Air      | 10 kHz  | Sparkle and breath (a shelf: everything over it) |
+| Knob     | Centre  | Covers         | What it does to a voice or an instrument |
+| -------- | ------- | -------------- | ---------------------------------------- |
+| Bass     | 100 Hz  | under 173 Hz   | Weight and boom                          |
+| Warmth   | 300 Hz  | 173–548 Hz     | Body — or, too much, mud                 |
+| Mids     | 1 kHz   | 548 Hz–1.9 kHz | Honk and punch                           |
+| Presence | 3.5 kHz | 1.9–5.9 kHz    | How clearly words come through           |
+| Air      | 10 kHz  | over 5.9 kHz   | Sparkle and breath                       |
+
+### How the bands work
+
+The five knobs split the sound rather than bend it. Four crossovers, each
+halfway between two bands on a log scale, cut it into five pieces that add
+back up to the whole, and a knob is how loud its piece is. So turning every
+knob the same way turns the whole sound that much; two neighbouring bands
+turned down stay down all the way between them, with no bump where one
+filter ends before the next begins; and a band turned off is gone. The
+crossovers are steep (48 dB an octave, Linkwitz–Riley), which is what lets
+a band turned off actually fall silent rather than just quieter.
 
 ## Monitoring
 

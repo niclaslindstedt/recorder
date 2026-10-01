@@ -119,18 +119,24 @@ export function useMonitor(eq: Eq | null, processing: boolean): Monitor {
         chain.output.connect(out);
         out.connect(ctx.destination);
 
+        // The guard listens to what is sent out, after the EQ — the
+        // sheet's spectrum is the sound before it.
+        const sent = ctx.createAnalyser();
+        sent.fftSize = 4096;
+        sent.smoothingTimeConstant = 0.75;
+        out.connect(sent);
         const howl = new HowlDetector();
-        const spectrum = new Float32Array(chain.output.frequencyBinCount);
+        const spectrum = new Float32Array(sent.frequencyBinCount);
         let last = performance.now();
         const guard = setInterval(() => {
           const now = performance.now();
-          chain.output.getFloatFrequencyData(spectrum);
+          sent.getFloatFrequencyData(spectrum);
           if (howl.step(spectrum, ctx.sampleRate, now - last)) stop("feedback");
           last = now;
         }, GUARD_MS);
 
         open.current = { ctx, stream, chain, out, guard };
-        setAnalyser(chain.output);
+        setAnalyser(chain.analyser);
         setState("on");
       })
       .catch((err: unknown) => {
