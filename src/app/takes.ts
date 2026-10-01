@@ -16,6 +16,7 @@ import {
   type FlacLevel,
 } from "@niclaslindstedt/oss-framework/audio";
 
+import { normalizeEq, type Eq } from "./eq.ts";
 import type { Ctx } from "./folders.ts";
 import type { Recording } from "./types.ts";
 
@@ -42,6 +43,8 @@ export function finishTake(
     folderId: string | null;
     ctx: Ctx;
     flacLevel?: FlacLevel;
+    /** The Record screen's EQ, which a new take starts with. */
+    eq?: Eq | null;
   },
 ): FinishedTake {
   const id = options.ctx.id();
@@ -80,5 +83,7 @@ export function finishTake(
     clipCount: result.clipCount,
     maxPeakDb: Math.round(result.maxPeakDb * 10) / 10,
   };
+  const eq = normalizeEq(options.eq);
+  if (eq) recording.eq = eq;
   return { recording, blob };
 }

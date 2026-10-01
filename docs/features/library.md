@@ -30,6 +30,8 @@ Tap a row and the player opens, a recording's page:
 - the recording's shape with the playhead over it (tap or drag to seek) —
   the line runs on its own smooth clock at the playback rate, kept on the
   audio's own time, so it glides over a voice rather than catching on it;
+- the **EQ** glyph, left of the transport and lit when the recording has
+  one, which opens the [equalizer](equalizer.md) for this recording;
 - play and pause, skip back and forward by the length set under **Settings →
   Playback**, and a **speed** button that steps through the rates;
 - a **note**;

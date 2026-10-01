@@ -11,6 +11,7 @@ import {
 } from "@niclaslindstedt/oss-framework/audio";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 
+import { normalizeEq, type Eq } from "./eq.ts";
 import {
   isDarkLook,
   isLightLook,
@@ -71,6 +72,9 @@ export type AppSettings = {
    *  suppression, automatic gain) is asked for. Off records what the
    *  microphone hears. */
   voiceProcessing: boolean;
+  /** The EQ a new take starts with, set (and monitored) from the Record
+   *  screen's EQ sheet; `null` is flat. */
+  recordEq: Eq | null;
   /** What the Record screen draws while listening and recording. */
   visualizer: VisualizerKind;
   /** Where the peaks should land, by what is being recorded
@@ -104,6 +108,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   recordingKind: "compact",
   recordingBitrate: 128,
   voiceProcessing: false,
+  recordEq: null,
   visualizer: "wave",
   levelTarget: "voice",
   targetLowDb: -18,
@@ -156,6 +161,7 @@ export function parseSettings(raw: string): AppSettings {
       DEFAULT_SETTINGS.recordingBitrate,
     ),
     voiceProcessing: m.voiceProcessing === true,
+    recordEq: normalizeEq(m.recordEq),
     visualizer: oneOf(VISUALIZERS, m.visualizer, DEFAULT_SETTINGS.visualizer),
     levelTarget: oneOf(TARGET_IDS, m.levelTarget, DEFAULT_SETTINGS.levelTarget),
     targetLowDb: target.lowDb,

@@ -10,10 +10,14 @@ remembers what you pick.
 | **FLAC** | Lossless, about half the size of WAV.                     | Compression: Fast, Normal or Best |
 | **MP3**  | Small and plays everywhere; some of the sound is dropped. | Bitrate: 64 to 320 kbit/s         |
 
-Two more apply to any format: the **sample rate** (as recorded, or 22.05,
-44.1 or 48 kHz — MP3 lands on the nearest of the nine it knows), and
+Two more apply to any format: the **sample rate** (as recorded, or 22 kHz —
+22,050 Hz exactly — 44.1 or 48 kHz — MP3 lands on the nearest of the nine it knows), and
 **Mono**, which folds both channels into one. Mono is on by default: a voice
 memo is mono in all but name, and the file halves for it.
+
+A recording with an [EQ](equalizer.md) is exported through it: the
+samples are run through the same filters the player plays it through,
+before they are folded, resampled and encoded. The summary line says so.
 
 Before you press **Export**, a line under the choices says what you will
 get — roughly how large the file will be, its sample rate, mono or stereo,
@@ -25,7 +29,7 @@ how small FLAC gets depends on the sound.
 The file is named after the recording — `<title>.<ext>`, lowercase, no space
 in it — and goes to a download on the website and to the share sheet in the
 phone app. **Share the original file** hands over the take exactly as the
-device kept it, with no re-encoding.
+device kept it, with no re-encoding and so without its EQ.
 
 The encoders run on the device: WAV and FLAC are the framework's own, and the
 MP3 encoder is a package bundled with the build and loaded the first time an

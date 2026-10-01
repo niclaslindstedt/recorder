@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   PLAYBACK_RATES,
   Waveform,
-  usePlayer,
   type Player,
 } from "@niclaslindstedt/oss-framework/audio";
 import {
@@ -31,10 +30,13 @@ import {
   formatSize,
   formatWhen,
 } from "./format.ts";
-import { StarFilledIcon } from "./icons.tsx";
+import { presetOf, sameEq, type Eq } from "./eq.ts";
+import { EqSheet } from "./EqSheet.tsx";
+import { EqIcon, StarFilledIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import type { BlobStore } from "./blobStore.ts";
 import { stepPlayhead, type Playhead } from "./playhead.ts";
+import { useEqPlayer } from "./useEqPlayer.ts";
 import type { Recording } from "./types.ts";
 import type { DocStore } from "./useDocStore.ts";
 
@@ -76,7 +78,36 @@ export function PlayerModal({
   const t = useT();
   const [blob, setBlob] = useState<Blob | null>(null);
   const [missing, setMissing] = useState(false);
-  const player = usePlayer(blob);
+  // The recording's EQ, as it is being heard: the stored one until the EQ
+  // sheet turns it, kept when the sheet closes. Compare hears it flat.
+  const [eq, setEq] = useState<Eq | null>(recording.eq ?? null);
+  useEffect(() => setEq(recording.eq ?? null), [recording.eq]);
+  const [eqOpen, setEqOpen] = useState(false);
+  const [bypassed, setBypassed] = useState(false);
+  const player = useEqPlayer(blob, bypassed ? null : eq);
+  // Kept on the way out too, should the player close under the sheet.
+  const pending = useRef({ eq, recording, store });
+  pending.current = { eq, recording, store };
+  useEffect(
+    () => () => {
+      const p = pending.current;
+      if (!sameEq(p.eq, p.recording.eq ?? null))
+        p.store.setRecordingEq(p.recording.id, p.eq);
+    },
+    [],
+  );
+  const closeEq = () => {
+    setEqOpen(false);
+    setBypassed(false);
+    if (!sameEq(eq, recording.eq ?? null))
+      store.setRecordingEq(recording.id, eq);
+  };
+  const eqName = eq
+    ? (() => {
+        const id = presetOf(eq);
+        return id ? t(`eq.preset.${id}`) : t("eq.custom");
+      })()
+    : t("eq.preset.flat");
 
   useEffect(() => {
     let live = true;
@@ -124,205 +155,263 @@ export function PlayerModal({
   };
 
   return (
-    <Modal
-      open
-      onClose={onClose}
-      labelledBy="player-title"
-      centered
-      size="max-w-lg"
-      closeLabel={t("common.close")}
-    >
-      <div className="flex flex-col gap-4 p-4">
-        {/* The title, editable in place — a take named "New recording 4"
+    <>
+      <Modal
+        open
+        onClose={onClose}
+        labelledBy="player-title"
+        centered
+        size="max-w-lg"
+        closeLabel={t("common.close")}
+      >
+        <div className="flex flex-col gap-4 p-4">
+          {/* The title, editable in place — a take named "New recording 4"
             gets its real name here — the star, and the way out. */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1">
-            <input
-              id="player-title"
-              type="text"
-              value={title}
-              maxLength={200}
-              aria-label={t("player.rename")}
-              onInput={(e) => setTitle(e.currentTarget.value)}
-              onBlur={commitTitle}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") e.currentTarget.blur();
-              }}
-              className="-ml-2 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-bold text-fg-bright outline-none hover:border-line focus:border-accent"
-            />
-            <IconButton
-              label={
-                recording.favorite
-                  ? t("library.unfavorite")
-                  : t("library.favorite")
-              }
-              pressed={recording.favorite}
-              className="border-transparent text-flag"
-              onClick={() =>
-                store.patchRecording(recording.id, {
-                  favorite: !recording.favorite,
-                })
-              }
-            >
-              {recording.favorite ? (
-                <StarFilledIcon className="h-5 w-5" />
-              ) : (
-                <StarIcon className="h-5 w-5" />
-              )}
-            </IconButton>
-            <IconButton
-              label={t("common.close")}
-              className="border-transparent"
-              onClick={onClose}
-            >
-              <CloseIcon className="h-5 w-5" />
-            </IconButton>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1">
+              <input
+                id="player-title"
+                type="text"
+                value={title}
+                maxLength={200}
+                aria-label={t("player.rename")}
+                onInput={(e) => setTitle(e.currentTarget.value)}
+                onBlur={commitTitle}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.currentTarget.blur();
+                }}
+                className="-ml-2 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 py-1 text-lg font-bold text-fg-bright outline-none hover:border-line focus:border-accent"
+              />
+              <IconButton
+                label={
+                  recording.favorite
+                    ? t("library.unfavorite")
+                    : t("library.favorite")
+                }
+                pressed={recording.favorite}
+                className="border-transparent text-flag"
+                onClick={() =>
+                  store.patchRecording(recording.id, {
+                    favorite: !recording.favorite,
+                  })
+                }
+              >
+                {recording.favorite ? (
+                  <StarFilledIcon className="h-5 w-5" />
+                ) : (
+                  <StarIcon className="h-5 w-5" />
+                )}
+              </IconButton>
+              <IconButton
+                label={t("common.close")}
+                className="border-transparent"
+                onClick={onClose}
+              >
+                <CloseIcon className="h-5 w-5" />
+              </IconButton>
+            </div>
+            {/* When, and where — the folder is a chip that files it. */}
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+              <span>{formatWhen(recording.createdAt, locale)}</span>
+              <button
+                type="button"
+                onClick={onMove}
+                aria-label={t("player.folder", {
+                  folder: folderName ?? t("record.noFolder"),
+                })}
+                className="flex max-w-full items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-fg transition-colors hover:border-accent/60 hover:bg-surface-2"
+              >
+                <FolderIcon className="h-3.5 w-3.5 shrink-0 text-accent" />
+                <span className="truncate">
+                  {folderName ?? t("record.noFolder")}
+                </span>
+                <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted" />
+              </button>
+            </div>
           </div>
-          {/* When, and where — the folder is a chip that files it. */}
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-            <span>{formatWhen(recording.createdAt, locale)}</span>
-            <button
-              type="button"
-              onClick={onMove}
-              aria-label={t("player.folder", {
-                folder: folderName ?? t("record.noFolder"),
-              })}
-              className="flex max-w-full items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-fg transition-colors hover:border-accent/60 hover:bg-surface-2"
-            >
-              <FolderIcon className="h-3.5 w-3.5 shrink-0 text-accent" />
-              <span className="truncate">
-                {folderName ?? t("record.noFolder")}
-              </span>
-              <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted" />
-            </button>
-          </div>
-        </div>
 
-        <PlayerWave
-          player={player}
-          peaks={recording.peaks}
-          duration={duration}
-          canSeek={blob !== null}
-          label={t("player.position")}
-        />
+          <PlayerWave
+            player={player}
+            peaks={recording.peaks}
+            duration={duration}
+            canSeek={blob !== null}
+            label={t("player.position")}
+          />
 
-        {missing && <p className="text-sm text-muted">{t("player.missing")}</p>}
-        {player.error && (
-          <p role="alert" className="text-sm text-danger">
-            {t("player.playFailed", { reason: player.error })}
-          </p>
-        )}
+          {missing && (
+            <p className="text-sm text-muted">{t("player.missing")}</p>
+          )}
+          {player.error && (
+            <p role="alert" className="text-sm text-danger">
+              {t("player.playFailed", { reason: player.error })}
+            </p>
+          )}
 
-        {/* The transport, and the speed beside it — one button that steps,
+          {/* The transport, and the speed beside it — one button that steps,
             because it changes the transport and is set now and then. The
             spacer on the left keeps Play in the middle. */}
-        <div className="flex items-center justify-center gap-4">
-          <span aria-hidden className="w-12" />
-          <Button
-            variant="secondary"
-            className="h-12 w-12 rounded-full p-0"
-            aria-label={t("player.skipBack", { seconds: String(skipSeconds) })}
-            disabled={!blob}
-            onClick={() => player.skip(-skipSeconds)}
-          >
-            <SkipBackIcon className="h-6 w-6" />
-          </Button>
-          <button
-            type="button"
-            aria-label={player.playing ? t("player.pause") : t("player.play")}
-            disabled={!blob}
-            onClick={() => void player.toggle()}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-page-bg transition-transform active:scale-95 disabled:opacity-50"
-          >
-            {!blob && !missing ? (
-              <SpinnerIcon className="h-6 w-6 animate-spin" />
-            ) : player.playing ? (
-              <PauseIcon className="h-7 w-7" />
-            ) : (
-              <PlayIcon className="h-7 w-7 translate-x-0.5" />
-            )}
-          </button>
-          <Button
-            variant="secondary"
-            className="h-12 w-12 rounded-full p-0"
-            aria-label={t("player.skipForward", {
-              seconds: String(skipSeconds),
-            })}
-            disabled={!blob}
-            onClick={() => player.skip(skipSeconds)}
-          >
-            <SkipForwardIcon className="h-6 w-6" />
-          </Button>
-          <button
-            type="button"
-            onClick={nextRate}
-            aria-label={t("player.speedIs", { rate: `${player.rate}×` })}
-            className="h-9 w-12 rounded-full border border-line font-figures text-xs text-fg tabular-nums transition-colors hover:bg-surface-2"
-          >
-            {player.rate}×
-          </button>
-        </div>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => {
+                player.attachEq();
+                setEqOpen(true);
+              }}
+              aria-haspopup="dialog"
+              aria-label={t("eq.player", { name: eqName })}
+              title={t("eq.player", { name: eqName })}
+              className={`flex h-9 w-12 items-center justify-center rounded-full border transition-colors ${
+                eq
+                  ? "border-accent/60 bg-accent/15 text-accent"
+                  : "border-line text-fg hover:bg-surface-2"
+              }`}
+            >
+              <EqIcon className="h-5 w-5" />
+            </button>
+            <Button
+              variant="secondary"
+              className="h-12 w-12 rounded-full p-0"
+              aria-label={t("player.skipBack", {
+                seconds: String(skipSeconds),
+              })}
+              disabled={!blob}
+              onClick={() => player.skip(-skipSeconds)}
+            >
+              <SkipBackIcon className="h-6 w-6" />
+            </Button>
+            <button
+              type="button"
+              aria-label={player.playing ? t("player.pause") : t("player.play")}
+              disabled={!blob}
+              onClick={() => void player.toggle()}
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-page-bg transition-transform active:scale-95 disabled:opacity-50"
+            >
+              {!blob && !missing ? (
+                <SpinnerIcon className="h-6 w-6 animate-spin" />
+              ) : player.playing ? (
+                <PauseIcon className="h-7 w-7" />
+              ) : (
+                <PlayIcon className="h-7 w-7 translate-x-0.5" />
+              )}
+            </button>
+            <Button
+              variant="secondary"
+              className="h-12 w-12 rounded-full p-0"
+              aria-label={t("player.skipForward", {
+                seconds: String(skipSeconds),
+              })}
+              disabled={!blob}
+              onClick={() => player.skip(skipSeconds)}
+            >
+              <SkipForwardIcon className="h-6 w-6" />
+            </Button>
+            <button
+              type="button"
+              onClick={nextRate}
+              aria-label={t("player.speedIs", { rate: `${player.rate}×` })}
+              className="h-9 w-12 rounded-full border border-line font-figures text-xs text-fg tabular-nums transition-colors hover:bg-surface-2"
+            >
+              {player.rate}×
+            </button>
+          </div>
 
-        <textarea
-          value={notes}
-          rows={2}
-          maxLength={2000}
-          aria-label={t("player.notes")}
-          placeholder={t("player.notesPlaceholder")}
-          onInput={(e) => setNotes(e.currentTarget.value)}
-          onBlur={commitNotes}
-          className="w-full resize-y rounded-md border border-line bg-surface-2 px-3 py-2 text-fg outline-none focus:border-accent"
-        />
+          <textarea
+            value={notes}
+            rows={2}
+            maxLength={2000}
+            aria-label={t("player.notes")}
+            placeholder={t("player.notesPlaceholder")}
+            onInput={(e) => setNotes(e.currentTarget.value)}
+            onBlur={commitNotes}
+            className="w-full resize-y rounded-md border border-line bg-surface-2 px-3 py-2 text-fg outline-none focus:border-accent"
+          />
 
-        {/* The facts, always shown: what someone checks before dragging
+          {/* The facts, always shown: what someone checks before dragging
             it into a session, and before calling a take a keeper. */}
-        <dl className="flex flex-col gap-0.5 text-xs text-muted">
-          <div className="flex flex-wrap gap-x-2">
-            <dt className="sr-only">{t("player.format")}</dt>
-            <dd>{format}</dd>
-          </div>
-          <div className="flex flex-wrap gap-x-2">
-            <dt className="sr-only">{t("player.peak")}</dt>
-            <dd>
-              {t("record.peak")}{" "}
-              <span className="font-figures tabular-nums">
-                {recording.maxPeakDb.toFixed(1)} dB
-              </span>
-            </dd>
-            <span aria-hidden>·</span>
-            <dt className="sr-only">{t("player.clipped")}</dt>
-            <dd className={recording.clipCount > 0 ? "text-danger" : ""}>
-              {recording.clipCount > 0
-                ? t("record.clippedTimes", {
-                    count: String(recording.clipCount),
-                  })
-                : t("player.clippedNone")}
-            </dd>
-          </div>
-        </dl>
+          <dl className="flex flex-col gap-0.5 text-xs text-muted">
+            <div className="flex flex-wrap gap-x-2">
+              <dt className="sr-only">{t("player.format")}</dt>
+              <dd>{format}</dd>
+            </div>
+            <div className="flex flex-wrap gap-x-2">
+              <dt className="sr-only">{t("player.peak")}</dt>
+              <dd>
+                {t("record.peak")}{" "}
+                <span className="font-figures tabular-nums">
+                  {recording.maxPeakDb.toFixed(1)} dB
+                </span>
+              </dd>
+              <span aria-hidden>·</span>
+              <dt className="sr-only">{t("player.clipped")}</dt>
+              <dd className={recording.clipCount > 0 ? "text-danger" : ""}>
+                {recording.clipCount > 0
+                  ? t("record.clippedTimes", {
+                      count: String(recording.clipCount),
+                    })
+                  : t("player.clippedNone")}
+              </dd>
+            </div>
+          </dl>
 
-        {/* The way out, labelled because it is what the player is opened
+          {/* The way out, labelled because it is what the player is opened
             for as often as listening; Delete a glyph at the other end. */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="primary"
-            className="flex h-11 flex-1 items-center justify-center gap-2"
-            onClick={onExport}
-            disabled={!blob}
-          >
-            <DownloadIcon className="h-4 w-4" />
-            {t("library.export")}
-          </Button>
-          <IconButton
-            label={t("common.delete")}
-            className="h-11 w-11 hover:border-danger/60 hover:bg-danger/10"
-            onClick={onTrash}
-          >
-            <TrashIcon className="h-5 w-5 text-danger" />
-          </IconButton>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="primary"
+              className="flex h-11 flex-1 items-center justify-center gap-2"
+              onClick={onExport}
+              disabled={!blob}
+            >
+              <DownloadIcon className="h-4 w-4" />
+              {t("library.export")}
+            </Button>
+            <IconButton
+              label={t("common.delete")}
+              className="h-11 w-11 hover:border-danger/60 hover:bg-danger/10"
+              onClick={onTrash}
+            >
+              <TrashIcon className="h-5 w-5 text-danger" />
+            </IconButton>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+      {eqOpen && (
+        <EqSheet
+          eq={eq}
+          onChange={setEq}
+          bypassed={bypassed}
+          onBypass={setBypassed}
+          analyser={player.analyser}
+          note={t("eq.forRecording")}
+          onClose={closeEq}
+        >
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label={player.playing ? t("player.pause") : t("player.play")}
+              disabled={!blob}
+              onClick={() => void player.toggle()}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-page-bg transition-transform active:scale-95 disabled:opacity-50"
+            >
+              {player.playing ? (
+                <PauseIcon className="h-5 w-5" />
+              ) : (
+                <PlayIcon className="h-5 w-5 translate-x-px" />
+              )}
+            </button>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-fg-bright">
+                {recording.title}
+              </p>
+              <p className="font-figures text-xs text-muted tabular-nums">
+                {formatDuration(player.time * 1000)} /{" "}
+                {formatDuration(duration * 1000)}
+              </p>
+            </div>
+          </div>
+        </EqSheet>
+      )}
+    </>
   );
 }
 

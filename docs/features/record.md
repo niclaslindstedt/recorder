@@ -8,11 +8,14 @@ is in [`../design.md`](../design.md).
 
 ## Ready
 
-The microphone is closed. At the top are the take's two choices, as
-buttons: **Quality** (the preset's name, with its bitrate on the caption)
-opens the Quality sheet, and **Save to** (the folder a new take is filed
-in) opens the folder picker. Save to starts on the folder the library is
-showing, so pressing Record while you are in Interviews files the take
+The microphone is closed. At the top are the take's three choices, as
+buttons. Side by side, how it will sound: **Quality** (the preset's name,
+with its bitrate on the caption) opens the Quality sheet, and **EQ** (Flat,
+a preset's name, or Custom) opens the [equalizer](equalizer.md) — the EQ
+new takes start with, which you can **Monitor** on headphones before you
+record. Under them, the whole width, **Save to** (the folder a new take is
+filed in) opens the folder picker. Save to starts on the folder the library
+is showing, so pressing Record while you are in Interviews files the take
 there.
 
 Under them, **Check your level** offers Listening. What you have recorded
@@ -141,8 +144,9 @@ needs, inline:
 
 - **Title** — focused and selected, so typing replaces the numbered "New
   recording" and Enter saves.
-- **Listen back** — play the take before keeping it, with its shape above as
-  the playhead's track; tap or drag to seek.
+- **Listen back** — play the take before keeping it, through the EQ it will
+  be saved with, with its shape above as the playhead's track; tap or drag
+  to seek.
 - **One line of facts** — length, peak, and clipping (with the count, in the
   danger colour).
 - **Save to** — the folder picker again, preset to what Ready showed.

@@ -6,7 +6,6 @@ import {
   Waveform,
   encodeWav,
   formatDb,
-  usePlayer,
   type CaptureResult,
 } from "@niclaslindstedt/oss-framework/audio";
 import {
@@ -23,7 +22,9 @@ import {
 import { formatDuration } from "./format.ts";
 import { ClipIcon, HeadphonesIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import type { Eq } from "./eq.ts";
 import type { Ambient, Verdict } from "./levels.ts";
+import { useEqPlayer } from "./useEqPlayer.ts";
 
 // The pieces the Record screen's four modes are built from
 // (docs/design.md, "Record"). The screen itself (`RecordScreen.tsx`) owns
@@ -217,6 +218,7 @@ export function TakeReview({
   suggested,
   destination,
   saving,
+  eq,
   beside = false,
   onSave,
   onDiscard,
@@ -229,6 +231,8 @@ export function TakeReview({
   /** The "Save to" choice, drawn by the screen. */
   destination: ReactNode;
   saving: boolean;
+  /** The EQ the take is saved with, and heard through here. */
+  eq: Eq | null;
   onSave: (title: string) => void;
   onDiscard: () => void;
 }) {
@@ -247,7 +251,8 @@ export function TakeReview({
     take.mode === "encoded" && take.blob.size > 0 ? take.blob : null,
   );
   const [wantPlay, setWantPlay] = useState(false);
-  const player = usePlayer(preview);
+  // Heard through the EQ it will be saved with.
+  const player = useEqPlayer(preview, eq);
   const duration = player.duration || take.durationMs / 1000;
   const progress = duration > 0 ? player.time / duration : 0;
   useEffect(() => {

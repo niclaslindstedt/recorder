@@ -32,6 +32,7 @@ import type { PwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import { backupFileName, readBackupFile, saveBackup } from "./backup.ts";
 import type { DemoDataToggle } from "./dev/useDemoData.ts";
 import { useEncryptionLabels } from "./encryptionLabels.ts";
+import { formatRate } from "./format.ts";
 import { useT } from "./i18n/index.ts";
 import { logStore } from "./log.ts";
 import { LookPicker } from "./LookPicker.tsx";
@@ -292,10 +293,7 @@ export function SettingsScreen({
             value={String(settings.exportRate)}
             options={EXPORT_RATES.map((r) => ({
               value: String(r),
-              label:
-                r === 0
-                  ? t("export.rateKeep")
-                  : t("export.rateHz", { khz: String(r / 1000) }),
+              label: r === 0 ? t("export.rateKeep") : formatRate(r),
             }))}
             onChange={(next) =>
               update("exportRate", Number(next) as AppSettings["exportRate"])

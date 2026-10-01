@@ -206,6 +206,62 @@ export const en = {
     },
   },
 
+  // The equalizer (`eq.ts`, `EqSheet.tsx`): a low cut and five bands named
+  // for what they do, heard in the player and baked into an export, never
+  // written into the recording.
+  eq: {
+    title: "Equalizer",
+    caption: "EQ",
+    custom: "Custom",
+    curve: "The EQ's curve, from 20 Hz to 20 kHz",
+    presets: "Starting points",
+    knobs: "Bands",
+    knobHint:
+      "Drag up or down, or use the arrow keys. Double-tap to put it back to 0.",
+    lowCut: "Low cut",
+    lowCutHint:
+      "Takes out rumble under 80 Hz — traffic, handling, the air conditioning.",
+    compare: "Compare",
+    compareHint: "Hear it without the EQ while this is on.",
+    reset: "Flat",
+    db: "{value} dB",
+    band: {
+      bass: { name: "Bass", hz: "100 Hz", hint: "Weight and boom" },
+      warmth: { name: "Warmth", hz: "300 Hz", hint: "Body — or mud" },
+      mids: { name: "Mids", hz: "1 kHz", hint: "Honk and punch" },
+      presence: {
+        name: "Presence",
+        hz: "3.5 kHz",
+        hint: "How clearly words come through",
+      },
+      air: { name: "Air", hz: "10 kHz", hint: "Sparkle and breath" },
+    },
+    preset: {
+      flat: "Flat",
+      podcast: "Podcast",
+      warm: "Warm",
+      bright: "Bright",
+      rumble: "No rumble",
+      lofi: "Lo-fi",
+    },
+    forRecord:
+      "New takes start with this EQ. It is kept beside each recording and never written into it, so it can be changed later in the player.",
+    forRecording:
+      "Heard here and baked into exports. The recording itself is not changed: Flat brings it back as it was.",
+    player: "Equalizer: {name}",
+    exportLine: "Through its EQ: {name}",
+    monitor: {
+      title: "Hear yourself through it",
+      hint: "Put headphones on first — on speakers it will howl.",
+      start: "Monitor",
+      stop: "Stop",
+      starting: "Opening the microphone…",
+      on: "Monitoring. Nothing is kept.",
+      denied: "The microphone is blocked for this site.",
+      failed: "The microphone could not be opened here.",
+    },
+  },
+
   // The Quality sheet: how the next take is kept.
   quality: {
     title: "Quality",
@@ -356,7 +412,6 @@ export const en = {
     kbps: "{kbps} kbit/s",
     rate: "Sample rate",
     rateKeep: "As recorded",
-    rateHz: "{khz} kHz",
     mono: "Mono",
     monoHint:
       "Fold both channels into one. Half the file, and nothing a voice memo needs is lost.",
@@ -367,7 +422,8 @@ export const en = {
     done: "Exported {file}",
     shared: "Shared {file}",
     original: "Share the original file",
-    originalHint: "The take as the device kept it — {format}, no re-encoding.",
+    originalHint:
+      "The take as the device kept it — {format}, no re-encoding and no EQ.",
   },
 
   // The folder picker: the library's scope, Move, and a take's destination.

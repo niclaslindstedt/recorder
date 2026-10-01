@@ -92,6 +92,30 @@ export const SCREENS = {
       await h.settle();
     },
   },
+  eq: {
+    label: "EQ sheet (Record)",
+    async stage(page, h) {
+      await page.getByRole("button", { name: /^EQ: / }).click();
+      await page
+        .getByRole("dialog")
+        .last()
+        .getByRole("slider", { name: "Presence" })
+        .waitFor();
+      await h.settle();
+    },
+  },
+  "eq-monitor": {
+    label: "EQ sheet, monitoring",
+    async stage(page, h) {
+      await page.getByRole("button", { name: /^EQ: / }).click();
+      const sheet = page.getByRole("dialog").last();
+      await sheet.getByRole("radio", { name: "Podcast" }).click();
+      await sheet.getByRole("button", { name: "Monitor" }).click();
+      await sheet.getByText("Monitoring. Nothing is kept.").waitFor();
+      await page.waitForTimeout(600);
+      await h.settle();
+    },
+  },
   recording: {
     label: "Recording",
     stage: recording,
@@ -152,6 +176,20 @@ export const SCREENS = {
       await h.settle();
     },
   },
+  "player-eq": {
+    label: "EQ sheet (player)",
+    async stage(page, h) {
+      await h.tab("Recordings");
+      await h.open("Interview: Mira, part 1");
+      await page.getByRole("button", { name: /^Equalizer: / }).click();
+      await page
+        .getByRole("dialog")
+        .last()
+        .getByRole("slider", { name: "Presence" })
+        .waitFor();
+      await h.settle();
+    },
+  },
   folders: {
     label: "Folder picker",
     stage: (page, h) => scope(page, h),
@@ -187,9 +225,17 @@ export const SCREEN_SETS = {
     "library-trash",
     "library-search",
     "player",
+    "player-eq",
     "export",
   ],
-  "record-flow": ["record", "listening", "quality", "recording", "review"],
+  "record-flow": [
+    "record",
+    "listening",
+    "quality",
+    "eq",
+    "recording",
+    "review",
+  ],
   all: Object.keys(SCREENS),
 };
 

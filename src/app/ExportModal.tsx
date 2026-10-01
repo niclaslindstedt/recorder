@@ -20,8 +20,9 @@ import {
   type ExportOptions,
 } from "./export.ts";
 import { formatContainer, formatRate, formatSize } from "./format.ts";
+import { presetOf, type Eq } from "./eq.ts";
 import { useT } from "./i18n/index.ts";
-import { ShareIcon } from "./icons.tsx";
+import { EqIcon, ShareIcon } from "./icons.tsx";
 import { ModalHeader } from "./ModalHeader.tsx";
 import type { Recording } from "./types.ts";
 import {
@@ -67,6 +68,10 @@ export function ExportModal({
     mono: settings.exportMono,
   };
 
+  const eqName = (eq: Eq) => {
+    const id = presetOf(eq);
+    return id ? t(`eq.preset.${id}`) : t("eq.custom");
+  };
   const plan = exportPlan(recording, options);
   const outcome = t("export.outcome", {
     size: formatSize(estimateExportBytes(recording, options), locale),
@@ -223,10 +228,7 @@ export function ExportModal({
             value={String(settings.exportRate)}
             options={EXPORT_RATES.map((r) => ({
               value: String(r),
-              label:
-                r === 0
-                  ? t("export.rateKeep")
-                  : t("export.rateHz", { khz: String(r / 1000) }),
+              label: r === 0 ? t("export.rateKeep") : formatRate(r),
             }))}
             onChange={(next) =>
               update("exportRate", Number(next) as AppSettings["exportRate"])
@@ -248,6 +250,12 @@ export function ExportModal({
           className="rounded-md bg-surface-2 px-3 py-2 text-center text-sm font-medium text-fg-bright"
         >
           {outcome}
+          {recording.eq && (
+            <span className="mt-0.5 flex items-center justify-center gap-1.5 text-xs font-normal text-accent">
+              <EqIcon className="h-3.5 w-3.5" />
+              {t("eq.exportLine", { name: eqName(recording.eq) })}
+            </span>
+          )}
         </p>
 
         {busy && (
