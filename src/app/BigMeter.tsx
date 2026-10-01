@@ -24,6 +24,9 @@ import { targetTone, type TargetRange, type TargetTone } from "./target.ts";
 //   peak, not the bar's length, because the target is a range for peaks:
 //   the bar is the average, which sits well under them.
 //
+// - the sound trigger's level, when it is on, as a mark across the track
+//   (`.app-trigger-mark`): the bar past it is sound the take keeps.
+//
 // Over the meter, the target in words — its name and its range, beside a
 // swatch drawn like the band — so "under the target" and "over the
 // target" in Listening's verdict have something on screen to point at.
@@ -38,9 +41,17 @@ type Props = {
   target: TargetRange;
   /** The target in words: "Target", and what it is — "Voice · −18 to −6 dB". */
   targetLabel: { caption: string; value: string };
+  /** The sound trigger, when it is on: its level and its words. */
+  trigger?: { db: number; caption: string; value: string };
 };
 
-export function BigMeter({ subscribe, labels, target, targetLabel }: Props) {
+export function BigMeter({
+  subscribe,
+  labels,
+  target,
+  targetLabel,
+  trigger,
+}: Props) {
   const box = useRef<HTMLDivElement>(null);
   const { lowDb, highDb } = target;
 
@@ -70,6 +81,17 @@ export function BigMeter({ subscribe, labels, target, targetLabel }: Props) {
         <span className="min-w-0 truncate font-medium text-fg-bright">
           {targetLabel.value}
         </span>
+        {trigger && (
+          <span className="ml-auto flex shrink-0 items-center gap-1.5">
+            <span aria-hidden className="app-trigger-swatch h-3 w-0.5" />
+            <span className="text-[0.6875rem] font-semibold tracking-wide text-muted uppercase">
+              {trigger.caption}
+            </span>
+            <span className="font-figures font-medium text-fg-bright tabular-nums">
+              {trigger.value}
+            </span>
+          </span>
+        )}
       </p>
       <div
         ref={box}
@@ -80,6 +102,15 @@ export function BigMeter({ subscribe, labels, target, targetLabel }: Props) {
         }}
       >
         <LevelMeter subscribe={subscribe} labels={labels} />
+        {trigger && (
+          <span
+            aria-hidden
+            className="app-trigger-mark"
+            style={{
+              ["--trigger-at" as string]: String(meterFill(trigger.db)),
+            }}
+          />
+        )}
       </div>
     </div>
   );

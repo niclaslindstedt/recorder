@@ -121,6 +121,32 @@
   background-color: var(--danger);
 }
 
+/* The sound trigger's level across the track, over the bar: the track runs
+   from the meter's left edge to where the reading and the lamp begin (the
+   same width the scale is cut to, below), and the mark stands at the
+   trigger's share of it. `--trigger-at` (0…1) is set by BigMeter. */
+.app-meter-big {
+  position: relative;
+}
+
+.app-trigger-mark {
+  position: absolute;
+  top: -0.1875rem;
+  height: 1.875rem;
+  width: 3px;
+  left: calc((100% - 3.75rem - 2.25rem - 2 * 0.5rem) * var(--trigger-at, 0));
+  translate: -50% 0;
+  border-radius: 2px;
+  background-color: var(--fg-bright);
+  box-shadow: 0 0 0 1px var(--page-bg, transparent);
+  pointer-events: none;
+}
+
+.app-trigger-swatch {
+  background-color: var(--fg-bright);
+  border-radius: 1px;
+}
+
 .app-meter-big [role="meter"] + span {
   width: 3.75rem;
   font-size: 0.9375rem;

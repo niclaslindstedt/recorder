@@ -264,7 +264,7 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   curve. Both the player and the monitor are candidates for the
   framework's `audio` module once it can route an element's or a capture's
   sound.
-- `src/app/useAppSettings.ts` — the per-device settings: the theme and its looks, the EQ new takes start with (`recordEq`), how a
+- `src/app/useAppSettings.ts` — the per-device settings: the theme and its looks, the EQ new takes start with (`recordEq`), the sound trigger (`gate*`, on the Record screen's Trigger sheet), how a
   take is kept (compact at a bitrate, or lossless) and voice processing —
   both chosen on the Record screen's Quality sheet, not in Settings — the
   visualizer (`wave`, `spectrum` or `spectrogram`), the skip length, the
@@ -313,6 +313,20 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   minute of each costs; pure, so the Record screen's button and
   `QualitySheet.tsx`'s ticked row never disagree. The sheet also carries the
   bitrate fine-tune, voice processing and the target level.
+- `src/app/gate.ts` — the **sound trigger**: a gate over the take's
+  levels (each 2048-sample window's RMS, the meter's bar), opening at
+  `gateDb`, reaching back `gatePreMs` and holding `gateHoldMs`; `stepGate`
+  is one state machine read live (`useGateLive.ts`, the Record screen's
+  "Hearing sound / Waiting") and over the whole take at Stop (`gateTake`),
+  and `applyGate` cuts the quiet out or turns it to silence, with 10 ms
+  fades. Pure. With the trigger on, the capture runs in `pcm` mode whatever
+  the kind, and `takes.ts`'s `gateCapture` keeps the stretches — a lossless
+  take stays samples for FLAC, a compact one is encoded to MP3 at its
+  bitrate (the browser's encoder cannot be handed the edited sound).
+  `TriggerSheet.tsx` is its sheet; the meter draws the level as a mark
+  (`.app-trigger-mark`). The whole take is in memory until Stop, as a
+  lossless one is; a gate that ran inside the capture is a candidate for the
+  framework's `audio` module.
 - `src/app/target.ts` — the target level: where a take's peaks should land,
   as a range in dBFS, by what is being recorded (Voice, Music, Loud,
   Ambience, or a clamped Custom range), and `targetTone`, where a peak lands
@@ -511,6 +525,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 | A new export format or quality                 | `src/app/export.ts` (tested) + `useAppSettings.ts` (the default) + `ExportModal.tsx` + `SettingsScreen.tsx` — the encoder itself is the framework's                                |
 | The EQ: its bands, presets or arithmetic       | `src/app/eq.ts` (pure, tested in `tests/eq_test.ts`; the record side in `tests/eq_record_test.ts`) + `eqChain.ts` for the browser's half — the two must stay the same curve        |
 | A preset for how a take is kept                | `src/app/quality.ts` (pure, tested in `tests/quality_test.ts`) + `QualitySheet.tsx` — the capture reads `recordingKind` / `recordingBitrate`, nothing else                         |
+| The sound trigger: when a take records         | `src/app/gate.ts` (pure, tested in `tests/gate_test.ts`) + `gateCapture` in `takes.ts` + `TriggerSheet.tsx` — the live view (`useGateLive.ts`) reads the same `stepGate`           |
 | Where a take's peaks should land               | `src/app/target.ts` (pure, tested in `tests/target_test.ts`) + `TargetLevel.tsx` — the ceiling stays under the framework's hot zone                                                |
 | What Listening reads, or its verdict           | `src/app/levels.ts` (pure, tested in `tests/levels_test.ts`) — read against the target (`target.ts`); hot and clipping are the framework's `meterTone` and lamp, never the range's |
 | How the meter shows the target                 | `src/app/BigMeter.tsx` + `.app-meter-big` in `styles.css` — the meter itself is the framework's `LevelMeter`, never a second one                                                   |
@@ -536,7 +551,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
 `migrations`, `takes`, `export`, `format`, `levels`, `quality`, `target`, `pacing`,
-`playhead`, `look`, `eq`, `howl`,
+`playhead`, `look`, `eq`, `howl`, `gate`,
 `useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
 `demoData`), which is where the app's
 real logic is. `native_icloud_test.ts` pins the strings the wrapper and the app

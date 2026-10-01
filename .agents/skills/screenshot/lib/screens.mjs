@@ -102,6 +102,18 @@ export const SCREENS = {
       await h.settle();
     },
   },
+  trigger: {
+    label: "Trigger sheet",
+    async stage(page, h) {
+      await page.getByRole("button", { name: /^Trigger: / }).click();
+      await page
+        .getByRole("dialog")
+        .last()
+        .getByText("Record only when there is sound")
+        .waitFor();
+      await h.settle();
+    },
+  },
   eq: {
     label: "EQ sheet (Record)",
     async stage(page, h) {
@@ -269,6 +281,7 @@ export const SCREEN_SETS = {
     "record",
     "listening",
     "quality",
+    "trigger",
     "eq",
     "recording",
     "review",
