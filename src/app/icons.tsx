@@ -190,3 +190,14 @@ export function EqIcon({ className }: IconProps) {
     </Glyph>
   );
 }
+
+/** The sound trigger: a flat line where it is quiet, and a burst of sound
+ *  rising through the trigger level, drawn dashed across it. */
+export function TriggerIcon({ className }: IconProps) {
+  return (
+    <Glyph className={className}>
+      <path d="M2 9h20" strokeDasharray="2 2.5" opacity="0.55" />
+      <path d="M2 16h5l2-3 2 7 2-15 2 11 2-3h5" />
+    </Glyph>
+  );
+}

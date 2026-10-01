@@ -159,6 +159,9 @@ columns across the whole width, not the reading column:
 │  │   Standard      │ │ ╯  Podcast       │ │
 │  └─────────────────┘ └──────────────────┘ │
 │  ┌─────────────────────────────────────┐  │
+│  │ ⌇ TRIGGER·−40dB·2s  On sound · cut› │  │  when it records, the whole width
+│  └─────────────────────────────────────┘  │
+│  ┌─────────────────────────────────────┐  │
 │  │ 🗀 SAVE TO  Ideas › Songs         › │  │  where it goes, the whole width
 │  └─────────────────────────────────────┘  │
 │  ┌─────────────────────────────────────┐  │
@@ -185,6 +188,14 @@ columns across the whole width, not the reading column:
   like and not only what the EQ is called. It sits beside Quality because
   the two together are how the take will sound. It opens **the EQ sheet**
   (below).
+- **Trigger** (under them, the whole width, because "On sound · quiet cut
+  out" and its level and hold on the caption's line do not fit half of it)
+  is the same shape again: whether a take records everything or only while
+  there is sound. It sits under how the take sounds and over where it goes,
+  because it is _when_ — decided before the take, like the other three. It
+  opens **the Trigger sheet** (below). A switch inside the Quality sheet was
+  the other place, and was not taken: a take that waits for sound behaves
+  differently all the way to Stop, so Ready says so on its face.
 - **Destination** (under them, the whole width, because a folder's path is
   long and a half-width button cut it short) is the same shape: the folder
   a new take will be saved to. It opens the folder picker. It starts on the folder the
@@ -323,6 +334,15 @@ level, placing a microphone, checking a room, or just watching sound.
   last few seconds.
 - **The big meter** is the same as Listening's. The clip warning under it is
   one line with a glyph, and it stays once the take has clipped.
+- **With the sound trigger on**, the context line is the gate instead:
+  **Hearing sound** or **Waiting for sound**, and how much has been kept
+  ("0:12 kept"). The dot beside the timer pulses while it hears sound and
+  is a hollow ring while it waits, so "is it taking this down?" is answered
+  in two ways, not by colour alone. The timer still counts the whole take,
+  because it is still running; the meter carries the trigger as a mark
+  across its track, with "TRIGGER −40 dB" over it beside the target, so the
+  bar crossing the mark _is_ the gate opening. **Size** is what the file
+  will hold.
 - **The four figures** are what the take is so far, each one a decision:
   **Peak** (the loudest moment, red past −3: back off?), **Clips** (red
   once any: is it ruined?), **Size** (will it fit an email?) and **Room
@@ -453,6 +473,45 @@ whole screen on two fields and put a big red Discard under a small Save.
 - The choice is remembered on this device and is what the next take starts
   on. It is not a per-space or per-folder setting. A quality is a fact about
   a take, and the take records it (Player → facts).
+
+### The Trigger sheet
+
+```
+┌───────────────────────────────────────────┐
+│  Sound trigger                        ✕   │
+│  ☑ Record only when there is sound        │  the switch; the rest dims while off
+│  Trigger level             ( − ) −40 dB ( + )
+│  ░░░░░░░░░░░░│███████████████████████████ │  what will be kept, on the meter's scale
+│  The room is at −52 dB right now.         │  while Listening, with the live meter
+│  Keep recording after the sound           │
+│  0.5 s  1 s [2 s] 3 s  5 s  10 s          │
+│  Keep from before the sound               │
+│  0 s  0.25 s [0.5 s]  1 s  2 s            │
+│  The quiet parts                          │
+│  [Cut out]        Keep as silence         │
+│  A shorter file with only the sound in it.│
+└───────────────────────────────────────────┘
+```
+
+- **The switch first**, with what the trigger does in one sentence; the
+  rest of the sheet is dimmed and disabled while it is off, so the numbers
+  are seen before they are needed.
+- **The level is in dB on the meter's scale**, because that is what the
+  reader watches: the bar reaching the line is the take starting. It is a
+  stepper, a decibel at a time like the target's Custom range, held
+  between −60 and −10. The strip shades everything from the trigger up —
+  what will be kept. While Listening, the room's noise floor is a mark on it
+  and a sentence under it, and the live meter is in the sheet, so the
+  trigger is set above the room by watching, not guessing.
+- **After and before** are the two times a person tunes: how long a pause
+  may be before the take stops (the hold), and how much is kept from before
+  the sound crossed (the pre-roll), so a word's first sound is never lost.
+- **The quiet parts** says what becomes of the rest: cut out for the
+  shortest file, or kept as silence so the take keeps its length beside a
+  video. The line under the choice says which is which in words.
+- It is remembered on this device, like Quality. The gate is cut from every
+  sample at Stop; the screen's "Hearing sound" runs the same rule live
+  (`gate.ts`), so what the screen said is what was kept.
 
 ### The EQ sheet
 

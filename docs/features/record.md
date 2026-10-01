@@ -8,13 +8,15 @@ is in [`../design.md`](../design.md).
 
 ## Ready
 
-The microphone is closed. At the top are the take's three choices, as
+The microphone is closed. At the top are the take's four choices, as
 buttons. Side by side, how it will sound: **Quality** (the preset's name,
 with its bitrate on the caption) opens the Quality sheet, and **EQ** (Flat,
 a preset's name, or Custom) opens the [equalizer](equalizer.md) — the EQ
 new takes start with, which you can **Monitor** on headphones before you
-record (and while Listening or Recording, from the headphones glyph). Under them, the whole width, **Save to** (the folder a new take is
-filed in) opens the folder picker. Save to starts on the folder the library
+record (and while Listening or Recording, from the headphones glyph). Under them, the whole width, **Trigger** (Off, or On sound with
+its level and hold on the caption) opens the [sound trigger](#sound-trigger)
+sheet, and **Save to** (the folder a new take is filed in) opens the folder
+picker. Save to starts on the folder the library
 is showing, so pressing Record while you are in Interviews files the take
 there.
 
@@ -194,6 +196,47 @@ choice is remembered on this device, not per space or folder.
 suppress noise and level the volume, the way a call does. It is off by
 default, because it also changes what was recorded: on records what the
 microphone hears less the room.
+
+## Sound trigger
+
+The **Trigger** button on Ready opens the sheet that decides whether a take
+records everything or only while there is something to hear — what a
+dictaphone calls voice-operated recording and a call app voice activity. With
+**Record only when there is sound** on:
+
+- **Trigger level** (−60 to −10 dB, a decibel at a time; −40 by default) is
+  read on the meter's own scale: sound whose bar reaches it starts the
+  recording. The strip under it shades what will be kept; while Listening it
+  also marks the room's noise floor and shows the live meter, so the trigger
+  is set above the room by watching the bar cross it.
+- **Keep recording after the sound** (0.5 to 10 s; 2 s by default): how long
+  the take runs on once the sound drops under the trigger, so a pause for
+  breath is not a cut.
+- **Keep from before the sound** (0 to 2 s; 0.5 s by default): the buffer
+  the take reaches back into when the sound crosses, so the first syllable
+  is in it rather than cut in half.
+- **The quiet parts**: **Cut out** (the default) leaves a shorter file with
+  only the sound in it; **Keep as silence** turns the quiet to silence and
+  keeps the take its full length, so it still lines up with a video shot at
+  the same time.
+
+While a take runs, the trigger's level is a mark across the meter's track
+("TRIGGER −40 dB" over it), and the line under the timer says **Hearing
+sound** (the dot pulsing) or **Waiting for sound** (the dot hollow), with
+how much has been kept so far. The timer counts the whole take; **Size** is
+what the file will hold. Each kept stretch is faded in and out over 10 ms so
+the cuts do not click.
+
+At Stop the take is gated from every sample the microphone heard — the same
+rule the screen showed, read over 2048-sample windows — then reviewed as
+usual. A **Lossless** take is FLAC as always; a **compact** take is encoded
+on the device as **MP3** at the chosen bitrate, since the browser's own
+encoder cannot be handed the edited sound. If nothing ever reached the
+trigger, nothing is kept and the screen says so.
+
+Until Stop the whole take is held in memory as samples, as a Lossless take
+is (about 700 MB an hour for a mono microphone), and only what is kept is
+saved. Nothing is written before Save, and nothing leaves the device.
 
 ## On its side
 

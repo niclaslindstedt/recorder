@@ -13,6 +13,18 @@ import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 
 import { normalizeEq, type Eq } from "./eq.ts";
 import {
+  DEFAULT_GATE_DB,
+  DEFAULT_GATE_HOLD_MS,
+  DEFAULT_GATE_PRE_MS,
+  GATE_HOLDS_MS,
+  GATE_PRES_MS,
+  GATE_QUIETS,
+  clampGateDb,
+  type GateHoldMs,
+  type GatePreMs,
+  type GateQuiet,
+} from "./gate.ts";
+import {
   isDarkLook,
   isLightLook,
   type DarkLook,
@@ -22,7 +34,7 @@ import { TARGET_IDS, clampTarget, type TargetId } from "./target.ts";
 import type { RecordingKind } from "./types.ts";
 
 // The app's own (non-document) settings: the theme and its looks, how a take is kept, the
-// level a take aims for, what
+// level a take aims for, the sound trigger, what
 // an export defaults to, and the developer knobs. Per device on purpose —
 // which format your laptop exports in is not a fact about a recording — and
 // persisted to localStorage so a reload keeps your choices. Everything else
@@ -75,6 +87,16 @@ export type AppSettings = {
   /** The EQ a new take starts with, set (and monitored) from the Record
    *  screen's EQ sheet; `null` is flat. */
   recordEq: Eq | null;
+  /** The sound trigger (`gate.ts`), set on the Record screen's Trigger
+   *  sheet: a take keeps only what is loud enough, from `gatePreMs` before
+   *  the sound reached `gateDb` until `gateHoldMs` after it fell under. */
+  gate: boolean;
+  gateDb: number;
+  gateHoldMs: GateHoldMs;
+  gatePreMs: GatePreMs;
+  /** What becomes of the quiet: cut out, or kept as silence so the take
+   *  keeps its length. */
+  gateQuiet: GateQuiet;
   /** What the Record screen draws while listening and recording. */
   visualizer: VisualizerKind;
   /** Where the peaks should land, by what is being recorded
@@ -109,6 +131,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   recordingBitrate: 128,
   voiceProcessing: false,
   recordEq: null,
+  gate: false,
+  gateDb: DEFAULT_GATE_DB,
+  gateHoldMs: DEFAULT_GATE_HOLD_MS,
+  gatePreMs: DEFAULT_GATE_PRE_MS,
+  gateQuiet: "cut",
   visualizer: "wave",
   levelTarget: "voice",
   targetLowDb: -18,
@@ -162,6 +189,11 @@ export function parseSettings(raw: string): AppSettings {
     ),
     voiceProcessing: m.voiceProcessing === true,
     recordEq: normalizeEq(m.recordEq),
+    gate: m.gate === true,
+    gateDb: clampGateDb(m.gateDb),
+    gateHoldMs: oneOf(GATE_HOLDS_MS, m.gateHoldMs, DEFAULT_GATE_HOLD_MS),
+    gatePreMs: oneOf(GATE_PRES_MS, m.gatePreMs, DEFAULT_GATE_PRE_MS),
+    gateQuiet: oneOf(GATE_QUIETS, m.gateQuiet, DEFAULT_SETTINGS.gateQuiet),
     visualizer: oneOf(VISUALIZERS, m.visualizer, DEFAULT_SETTINGS.visualizer),
     levelTarget: oneOf(TARGET_IDS, m.levelTarget, DEFAULT_SETTINGS.levelTarget),
     targetLowDb: target.lowDb,

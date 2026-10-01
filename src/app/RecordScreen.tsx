@@ -27,11 +27,16 @@ import {
 
 import { FolderPicker } from "./FolderPicker.tsx";
 import { folderPath } from "./folders.ts";
-import { formatSize, formatSpan, formatTimer } from "./format.ts";
+import {
+  formatDuration,
+  formatSize,
+  formatSpan,
+  formatTimer,
+} from "./format.ts";
 import { presetOf } from "./eq.ts";
 import { EqSheet } from "./EqSheet.tsx";
 import { EqLine } from "./EqParts.tsx";
-import { ClipIcon } from "./icons.tsx";
+import { ClipIcon, TriggerIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import { liveCtx } from "./ids.ts";
 import { paced } from "./pacing.ts";
@@ -48,7 +53,7 @@ import {
   TakeStats,
   useFreeBytes,
 } from "./RecordParts.tsx";
-import { defaultTitle, finishTake } from "./takes.ts";
+import { defaultTitle, finishTake, gateCapture } from "./takes.ts";
 import { formatTargetDb, targetRange } from "./target.ts";
 import { liveRecordings, type AppData, type Recording } from "./types.ts";
 import type { AppSettings } from "./useAppSettings.ts";
@@ -56,6 +61,8 @@ import type { DocStore } from "./useDocStore.ts";
 import { useListen } from "./useListen.ts";
 import { useMonitor } from "./useMonitor.ts";
 import { useStand } from "./useShape.ts";
+import { TriggerSheet } from "./TriggerSheet.tsx";
+import { useGateLive } from "./useGateLive.ts";
 import { Visualizer } from "./Visualizer.tsx";
 import { BigMeter } from "./BigMeter.tsx";
 
@@ -70,7 +77,9 @@ import { BigMeter } from "./BigMeter.tsx";
 //   verdict in words — the mode for setting a level before a take.
 // - Recording: the timer, the visualizer with the whole take along its
 //   foot, the big meter with its clip lamp, and the take's four figures;
-//   Pause, Stop and Discard, all glyphs.
+//   Pause, Stop and Discard, all glyphs. With the sound trigger on, the
+//   line under the timer says whether it is hearing sound or waiting, and
+//   how much it has kept.
 // - Review: the take is in memory, getting its name and its place, and can
 //   be heard back. Save is the big button; Discard is a glyph and asks first.
 //
@@ -107,11 +116,14 @@ export function RecordScreen({
   onCaptureChange,
 }: Props) {
   const t = useT();
+  // A take with the sound trigger on is captured as samples whatever its
+  // kind: the stretches worth keeping are cut from them at Stop
+  // (`gateCapture`), and the browser's encoder cannot be handed them back.
   const recorder = useRecorder(
     useMemo(
       () => ({
         mode:
-          settings.recordingKind === "lossless"
+          settings.recordingKind === "lossless" || settings.gate
             ? ("pcm" as const)
             : ("encoded" as const),
         bitsPerSecond: settings.recordingBitrate * 1000,
@@ -122,6 +134,7 @@ export function RecordScreen({
         settings.recordingKind,
         settings.recordingBitrate,
         settings.voiceProcessing,
+        settings.gate,
       ],
     ),
   );
@@ -138,9 +151,12 @@ export function RecordScreen({
   const [saving, setSaving] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [clipped, setClipped] = useState(false);
-  const [sheet, setSheet] = useState<"quality" | "eq" | "destination" | null>(
-    null,
-  );
+  const [sheet, setSheet] = useState<
+    "quality" | "eq" | "trigger" | "destination" | null
+  >(null);
+  // Stopped, and the trigger's stretches being cut out and encoded: still
+  // the take's, so the shell keeps the reader here.
+  const [finishing, setFinishing] = useState(false);
 
   // The monitor: the microphone through the EQ new takes start with, into
   // headphones — from the headphones glyph, while Listening and Recording
@@ -204,7 +220,11 @@ export function RecordScreen({
   const state = recorder.state;
   const live = state === "recording" || state === "paused";
   const capturing =
-    live || state === "starting" || state === "stopping" || take !== null;
+    live ||
+    state === "starting" ||
+    state === "stopping" ||
+    finishing ||
+    take !== null;
   useEffect(() => onCaptureChange(capturing), [capturing, onCaptureChange]);
   const freeBytes = useFreeBytes(live);
   useEffect(() => () => onCaptureChange(false), [onCaptureChange]);
@@ -253,10 +273,55 @@ export function RecordScreen({
     <MonitorGlyph state={monitorState} onToggle={toggleMonitor} />
   );
 
+  // The sound trigger, as the take is gated by it and as the screen shows
+  // it while the take runs.
+  const { gate, gateDb, gatePreMs, gateHoldMs, gateQuiet } = settings;
+  const trigger = useMemo(
+    () => ({
+      thresholdDb: gateDb,
+      preMs: gatePreMs,
+      holdMs: gateHoldMs,
+      quiet: gateQuiet,
+    }),
+    [gateDb, gatePreMs, gateHoldMs, gateQuiet],
+  );
+  const gateLive = useGateLive(recorder.subscribe, gate && live, trigger);
+
   const stop = useCallback(async () => {
     const result = await recorder.stop();
-    if (result) setTake(result);
-  }, [recorder]);
+    if (!result) return;
+    if (!gate) {
+      setTake(result);
+      return;
+    }
+    setFinishing(true);
+    try {
+      // Let "Keeping the sound…" paint before the encoder takes the thread.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const kept = await gateCapture(result, trigger, {
+        kind: settings.recordingKind,
+        bitrate: settings.recordingBitrate,
+      });
+      if (kept) setTake(kept);
+      else onNotice(t("trigger.nothing"));
+    } catch (err) {
+      onNotice(
+        t("record.failed", {
+          reason: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    } finally {
+      setFinishing(false);
+    }
+  }, [
+    recorder,
+    gate,
+    trigger,
+    settings.recordingKind,
+    settings.recordingBitrate,
+    onNotice,
+    t,
+  ]);
 
   const titles = useMemo(
     () => liveRecordings(data).map((r) => r.title),
@@ -364,6 +429,31 @@ export function RecordScreen({
       onClick={() => setSheet("eq")}
     />
   );
+  // When a take records: always, or only on sound — and then what becomes
+  // of the quiet, with the level and the hold on the caption's line.
+  const triggerButton = (slim = false) => (
+    <ChoiceButton
+      slim={slim}
+      icon={<TriggerIcon className="h-5 w-5" />}
+      caption={t("trigger.caption")}
+      detail={
+        gate
+          ? t("trigger.detail", {
+              db: formatTargetDb(gateDb),
+              hold: t("trigger.seconds", { n: String(gateHoldMs / 1000) }),
+            })
+          : undefined
+      }
+      value={
+        !gate
+          ? t("trigger.off")
+          : gateQuiet === "cut"
+            ? t("trigger.onCut")
+            : t("trigger.onSilence")
+      }
+      onClick={() => setSheet("trigger")}
+    />
+  );
   const destinationButton = (slim = false) => (
     <ChoiceButton
       slim={slim}
@@ -424,6 +514,15 @@ export function RecordScreen({
         clip: t("record.clip"),
         clipping: t("record.clipping"),
       }}
+      trigger={
+        gate
+          ? {
+              db: gateDb,
+              caption: t("trigger.onMeter"),
+              value: t("target.value", { db: formatTargetDb(gateDb) }),
+            }
+          : undefined
+      }
     />
   );
   const visualizerSize = stand ? "min-h-32 flex-1" : "min-h-44 flex-1";
@@ -456,7 +555,11 @@ export function RecordScreen({
           <span
             aria-hidden
             className={`inline-block h-4 w-4 rounded-full ${
-              state === "recording" ? "app-rec-dot bg-danger" : "bg-muted"
+              state !== "recording"
+                ? "bg-muted"
+                : !gate || gateLive.open
+                  ? "app-rec-dot bg-danger"
+                  : "border-2 border-danger"
             }`}
           />
           {formatTimer(recorder.elapsedMs)}
@@ -471,16 +574,23 @@ export function RecordScreen({
             role="status"
             aria-live="polite"
           >
-            {state === "starting"
-              ? t("record.starting")
-              : state === "paused"
-                ? t("record.paused")
-                : state === "stopping"
-                  ? t("record.saving")
-                  : t("record.recordingTo", {
-                      quality: qualityValue,
-                      folder: destinationValue,
-                    })}
+            {finishing
+              ? t("trigger.finishing")
+              : state === "starting"
+                ? t("record.starting")
+                : state === "paused"
+                  ? t("record.paused")
+                  : state === "stopping"
+                    ? t("record.saving")
+                    : gate
+                      ? `${gateLive.open ? t("trigger.hearing") : t("trigger.waiting")} · ${t(
+                          "trigger.kept",
+                          { time: formatDuration(gateLive.keptMs) },
+                        )}`
+                      : t("record.recordingTo", {
+                          quality: qualityValue,
+                          folder: destinationValue,
+                        })}
           </div>
           {monitorGlyph}
         </div>
@@ -519,7 +629,13 @@ export function RecordScreen({
         clipCount={recorder.meter.clipCount}
         size={formatSize(
           (bytesPerSecond(settings.recordingKind, settings.recordingBitrate) *
-            recorder.elapsedMs) /
+            // What the file will hold: with the trigger on, what it kept —
+            // or, kept as silence, the whole length at a compact take's
+            // constant bitrate (FLAC makes next to nothing of silence).
+            (gate &&
+            !(gateQuiet === "silence" && settings.recordingKind === "compact")
+              ? gateLive.keptMs
+              : recorder.elapsedMs)) /
             1000,
           locale,
         )}
@@ -654,6 +770,7 @@ export function RecordScreen({
         <div className="hidden grid-cols-2 gap-2 tall:grid">
           {qualityButton(true)}
           {eqButton(true)}
+          <div className="col-span-2 flex flex-col">{triggerButton(true)}</div>
           <div className="col-span-2 flex flex-col">
             {destinationButton(true)}
           </div>
@@ -663,12 +780,14 @@ export function RecordScreen({
     );
   } else {
     // The take's choices, decided before it and never during: how it
-    // sounds side by side — its quality and its EQ — and where it goes
-    // under them, the whole width, since a folder's path is long.
+    // sounds side by side — its quality and its EQ — then when it records,
+    // and where it goes, each the whole width: the trigger's value and a
+    // folder's path are long.
     const choices = (
       <div className="grid grid-cols-2 gap-2">
         {qualityButton()}
         {eqButton()}
+        <div className="col-span-2 flex flex-col">{triggerButton()}</div>
         <div className="col-span-2 flex flex-col">{destinationButton()}</div>
       </div>
     );
@@ -724,6 +843,15 @@ export function RecordScreen({
           settings={settings}
           update={update}
           locale={locale}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === "trigger" && (
+        <TriggerSheet
+          settings={settings}
+          update={update}
+          roomDb={listen.on ? (listen.ambient?.roomDb ?? null) : null}
+          meter={listen.on ? meter(listenFrames) : undefined}
           onClose={() => setSheet(null)}
         />
       )}

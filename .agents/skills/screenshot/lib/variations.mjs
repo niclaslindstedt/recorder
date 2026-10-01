@@ -48,6 +48,10 @@ export const VARIANTS = {
     label: "Target level: Custom −30 to −12",
     settings: { levelTarget: "custom", targetLowDb: -30, targetHighDb: -12 },
   },
+  trigger: {
+    label: "Sound trigger on",
+    settings: { gate: true, gateDb: -40, gateHoldMs: 2000 },
+  },
   "voice-processing": {
     label: "Voice processing on",
     settings: { voiceProcessing: true },

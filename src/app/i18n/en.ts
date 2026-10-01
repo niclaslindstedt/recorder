@@ -288,6 +288,46 @@ export const en = {
     },
   },
 
+  // The sound trigger: a take that keeps only what is loud enough
+  // (`gate.ts`), set on its own sheet from the Record screen.
+  trigger: {
+    title: "Sound trigger",
+    caption: "Trigger",
+    off: "Off — records everything",
+    onCut: "On sound · quiet cut out",
+    onSilence: "On sound · quiet kept silent",
+    detail: "{db} dB · {hold}",
+    switch: "Record only when there is sound",
+    switchHint:
+      "Waits for the level to reach the trigger, keeps a moment from before it, and stops a little after the sound does.",
+    level: "Trigger level",
+    levelHint:
+      "Sound at or over this on the meter starts the recording. Set it above the room.",
+    room: "The room is at {db} dB right now.",
+    lower: "Lower the trigger",
+    raise: "Raise the trigger",
+    hold: "Keep recording after the sound",
+    pre: "Keep from before the sound",
+    seconds: "{n} s",
+    quiet: "The quiet parts",
+    quietOption: {
+      cut: "Cut out",
+      silence: "Keep as silence",
+    },
+    quietHint: {
+      cut: "A shorter file with only the sound in it.",
+      silence:
+        "The take keeps its length, so it still lines up with a video shot at the same time.",
+    },
+    onMeter: "Trigger",
+    // While a take runs with the trigger on.
+    waiting: "Waiting for sound",
+    hearing: "Hearing sound",
+    kept: "{time} kept",
+    finishing: "Keeping the sound…",
+    nothing: "Nothing reached the trigger level — nothing was kept.",
+  },
+
   // The target level, on the Quality sheet: where a take's peaks should
   // land for what is being recorded (`target.ts`).
   target: {

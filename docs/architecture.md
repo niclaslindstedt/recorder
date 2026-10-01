@@ -17,6 +17,8 @@ src/
     ├── takes.ts             a take finished: what the microphone handed back → a record + bytes
     ├── quality.ts           the four ways a take is kept (Memo, Standard, High, Lossless) and a minute's cost
     ├── levels.ts            Listening's readings: the room, the peak, the headroom, a verdict
+    ├── gate.ts              the sound trigger: which stretches a take keeps, cut or silenced
+    ├── useGateLive.ts       the trigger as the Record screen shows it while a take runs
     ├── target.ts            the target level: where a take's peaks should land, by source, and a peak's tone against it
     ├── pacing.ts            the capture's frames paced to the display, so the meter moves every frame
     ├── eq.ts                the equalizer: bands, presets, the curve, and the samples through it (exports)
@@ -42,6 +44,7 @@ src/
     ├── Visualizer.tsx       the waveform, spectrum or spectrogram card
     ├── BigMeter.tsx         the framework's meter at the Record screen's size, with the target on it
     ├── QualitySheet.tsx     how the next take is kept, voice processing, and the target level (TargetLevel.tsx)
+    ├── TriggerSheet.tsx     the sound trigger: on or off, its level, the hold, the pre-roll, the quiet
     ├── LibraryScreen.tsx    the scope, the search glyph, the list under day headings
     ├── FolderPicker.tsx     the one folder picker: the library's scope, Move, a take's destination
     ├── SearchSheet.tsx      search across the space's titles, notes and folder names
