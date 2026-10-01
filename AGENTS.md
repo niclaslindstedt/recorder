@@ -255,7 +255,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   sound can only be routed by its holder — taken through the chain only
   once an EQ is wanted, and only on a press; `useMonitor.ts` is the
   microphone through the EQ into headphones, opened on Monitor and keeping
-  nothing. `EqSheet.tsx` / `EqParts.tsx` are the sheet, its knobs and its
+  nothing, with `howl.ts` (pure, tested in `tests/howl_test.ts`) listening
+  to what it sends out and stopping it the moment it hears feedback — one
+  dominant, steady, loud tone; never loosen that guard into something a
+  speaker loop gets past. `EqSheet.tsx` / `EqParts.tsx` are the sheet, its knobs and its
   curve. Both the player and the monitor are candidates for the
   framework's `audio` module once it can route an element's or a capture's
   sound.
@@ -531,7 +534,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
 `migrations`, `takes`, `export`, `format`, `levels`, `quality`, `target`, `pacing`,
-`playhead`, `look`, `eq`,
+`playhead`, `look`, `eq`, `howl`,
 `useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
 `demoData`), which is where the app's
 real logic is. `native_icloud_test.ts` pins the strings the wrapper and the app

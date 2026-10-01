@@ -183,8 +183,13 @@ export function MonitorPanel({ monitor }: { monitor: Monitor }) {
           ? t("eq.monitor.denied")
           : monitor.state === "failed"
             ? t("eq.monitor.failed")
-            : t("eq.monitor.hint");
-  const trouble = monitor.state === "denied" || monitor.state === "failed";
+            : monitor.state === "feedback"
+              ? t("eq.monitor.feedback")
+              : t("eq.monitor.hint");
+  const trouble =
+    monitor.state === "denied" ||
+    monitor.state === "failed" ||
+    monitor.state === "feedback";
   return (
     <div
       className={`flex items-center gap-3 rounded-lg border p-3 ${

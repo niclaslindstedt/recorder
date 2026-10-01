@@ -48,7 +48,21 @@ a band turned off actually fall silent rather than just quieter.
 
 On the Record screen the sheet can **Monitor**: the microphone, through the
 EQ, into your headphones, so you can set it by ear before pressing Record.
-Put headphones on first — on speakers it will feed back. It opens the
+Put headphones on first — on speakers it will feed back.
+
+It doesn't trust that you did. While it runs it listens to what it is
+sending out, twenty times a second, for the sound of feedback: one tone
+standing far above everything else, holding its pitch, loud, for about a
+third of a second. A voice or a sung note has harmonics and wavers, so it
+passes; a loop rings at one pure pitch. The moment it hears one it cuts the
+sound and stops, and says why: "Stopped: it was hearing itself through the
+speaker." Start it again with headphones on. It also fades in over a moment
+rather than starting at full level, so a loop has to build where the guard
+can hear it, and it stops when the app goes to the background. A long,
+steady whistle right at the microphone can look like feedback too; then it
+stops just the same, and can be started again.
+
+It opens the
 microphone only when you press Monitor and closes it when you press Stop or
 close the sheet; it keeps nothing (there is no recorder on that path). It
 asks for the same voice processing the Quality sheet says a take will have,

@@ -253,13 +253,15 @@ export const en = {
     exportLine: "Through its EQ: {name}",
     monitor: {
       title: "Hear yourself through it",
-      hint: "Put headphones on first — on speakers it will howl.",
+      hint: "Put headphones on first. If it hears itself through a speaker, it stops.",
       start: "Monitor",
       stop: "Stop",
       starting: "Opening the microphone…",
       on: "Monitoring. Nothing is kept.",
       denied: "The microphone is blocked for this site.",
       failed: "The microphone could not be opened here.",
+      feedback:
+        "Stopped: it was hearing itself through the speaker. Put headphones on and start it again.",
     },
   },
 
