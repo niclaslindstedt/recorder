@@ -463,6 +463,7 @@ export function App() {
               : null
           }
           onTrash={() => trash(open.id)}
+          onNotice={notice}
           onClose={() => setOpenId(null)}
         />
       )}

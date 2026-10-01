@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   ChevronDownIcon,
   ConfirmDialog,
+  ContextMenu,
   DownloadIcon,
   FolderIcon,
   IconButton,
@@ -21,6 +22,7 @@ import { FolderPicker, type LibraryView } from "./FolderPicker.tsx";
 import { folderPath, subtreeIds } from "./folders.ts";
 import { formatClock, formatDay, groupByDay } from "./format.ts";
 import { useT } from "./i18n/index.ts";
+import { StarFilledIcon } from "./icons.tsx";
 import { RecordingRow } from "./RecordingRow.tsx";
 import { SearchSheet } from "./SearchSheet.tsx";
 import {
@@ -85,6 +87,10 @@ export function LibraryScreen({
   const [purge, setPurge] = useState<Recording | null>(null);
   const [picking, setPicking] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [menu, setMenu] = useState<{
+    recording: Recording;
+    at: { x: number; y: number };
+  } | null>(null);
 
   const rows = useMemo((): Recording[] => {
     if (view.kind === "trash") return trashedRecordings(data, now);
@@ -182,6 +188,30 @@ export function LibraryScreen({
           </span>
           <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted" />
         </button>
+        {/* Favorites at a press, and back: the scope's commonest change,
+            as a glyph beside it. */}
+        <IconButton
+          label={
+            view.kind === "favorites"
+              ? t("library.showAll")
+              : t("library.showFavorites")
+          }
+          pressed={view.kind === "favorites"}
+          onClick={() =>
+            onView(
+              view.kind === "favorites"
+                ? { kind: "all" }
+                : { kind: "favorites" },
+            )
+          }
+          className={`h-11 w-11 ${view.kind === "favorites" ? "text-flag" : ""}`}
+        >
+          {view.kind === "favorites" ? (
+            <StarFilledIcon className="h-5 w-5" />
+          ) : (
+            <StarIcon className="h-5 w-5" />
+          )}
+        </IconButton>
         <IconButton
           label={t("library.search")}
           onClick={() => setSearching(true)}
@@ -245,6 +275,8 @@ export function LibraryScreen({
                           recording={r}
                           detail={detailOf(r)}
                           onOpen={() => onOpen(r.id)}
+                          onMore={(at) => setMenu({ recording: r, at })}
+                          moreLabel={t("library.more", { title: r.title })}
                         />
                       </RowActionMenu>
                     </SwipeableRow>
@@ -279,6 +311,15 @@ export function LibraryScreen({
           now={now}
           onOpen={onOpen}
           onClose={() => setSearching(false)}
+        />
+      )}
+
+      {menu && (
+        <ContextMenu
+          position={menu.at}
+          actions={actionsFor(menu.recording)}
+          onClose={() => setMenu(null)}
+          ariaLabel={menu.recording.title}
         />
       )}
 

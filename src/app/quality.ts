@@ -74,3 +74,13 @@ export function recordingTimeLeft(
     return null;
   return (freeBytes / bytesPerSecond(kind, bitrate)) * 1000;
 }
+
+/** How full the quality glyph's bars are, one to four: Memo one, Standard
+ *  two, High three — a custom bitrate takes the step it reaches — and
+ *  Lossless all four, so the glyph says the same as the preset's name. */
+export function qualityLevel(kind: RecordingKind, bitrate: number): number {
+  if (kind === "lossless") return 4;
+  if (bitrate >= 256) return 3;
+  if (bitrate >= 128) return 2;
+  return 1;
+}

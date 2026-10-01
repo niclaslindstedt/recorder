@@ -5,7 +5,7 @@
 the sound as a thumbnail, the title (with a star when it is a favorite), the
 time and — where the heading has not already said it — the folder, and the
 length on the right, lined up so a long interview stands out from a
-thirty-second memo.
+thirty-second memo. A **⋯** glyph ends each row and opens its menu.
 
 The heading is the **scope**: where you are (**All recordings**,
 **Favorites**, a folder's path, or **Recently deleted**) and how many
@@ -14,7 +14,9 @@ the folder tree with counts, **New folder** and Recently deleted — and each
 folder's own menu, for arranging the tree (see [`folders.md`](folders.md)).
 A folder shows what is filed in it and in the folders under it.
 
-The **search** glyph beside the scope opens a sheet with the field at the
+Beside the scope are two glyphs. The **star** shows only the favorites,
+lit while it does, and a second press shows everything again. The
+**search** glyph opens a sheet with the field at the
 top. It looks through every folder in the space — titles, notes and folder
 names — because the reason to search is not knowing where something was
 filed. A result opens the player; closing it comes back to the results.
@@ -35,14 +37,16 @@ Tap a row and the player opens, a recording's page:
 - play and pause, skip back and forward by the length set under **Settings →
   Playback**, and a **speed** button that steps through the rates;
 - a **note**;
-- the facts about the take, always in view: the container and how it was
-  kept (compact or lossless), the sample rate, mono or stereo and the size
-  on one line, and the loudest peak and whether it clipped (and how often)
-  on the next;
-- **Export…**, and a trash glyph at the other end to delete it.
+- the facts about the take, always in view, as chips: the container and
+  how it was kept (compact or lossless), the sample rate, mono or stereo,
+  the size, the loudest peak and whether it clipped (and how often, in red
+  with the clip glyph);
+- a toolbar of labelled glyphs at the foot: **Export** (filled, the one the
+  player is most often opened for), **Share** (the original file, as it
+  is), **Move** (the folder picker) and **Delete** in red at the far end.
 
 Swipe a row left to bare its red trash button, and press it to delete;
-hold one (or use the right button) for the rest:
+press its **⋯**, or hold it (or use the right button), for the rest:
 favorite, move to a folder, export, delete. The export sheet is also where
 the original file is shared as it is (see [`export.md`](export.md)).
 

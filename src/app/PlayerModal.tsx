@@ -8,9 +8,9 @@ import {
 } from "@niclaslindstedt/oss-framework/audio";
 import {
   Button,
-  ChevronRightIcon,
   CloseIcon,
   DownloadIcon,
+  FileIcon,
   FolderIcon,
   IconButton,
   Modal,
@@ -33,7 +33,9 @@ import {
 import { sameEq, type Eq } from "./eq.ts";
 import { EqLine, useEqName } from "./EqParts.tsx";
 import { EqSheet } from "./EqSheet.tsx";
-import { EqIcon, StarFilledIcon } from "./icons.tsx";
+import { shareOriginal } from "./export.ts";
+import { Chip, FolderChip, ToolGlyph } from "./Glyphs.tsx";
+import { ClipIcon, EqIcon, ShareIcon, StarFilledIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
 import type { BlobStore } from "./blobStore.ts";
 import { stepPlayhead, type Playhead } from "./playhead.ts";
@@ -61,6 +63,7 @@ type Props = {
   /** The folder's name, for the chip beside the date. */
   folderName: string | null;
   onTrash: () => void;
+  onNotice: (message: string) => void;
   onClose: () => void;
 };
 
@@ -75,6 +78,7 @@ export function PlayerModal({
   onMove,
   folderName,
   onTrash,
+  onNotice,
   onClose,
 }: Props) {
   const t = useT();
@@ -137,13 +141,25 @@ export function PlayerModal({
       store.patchRecording(recording.id, { notes });
   };
 
-  // The format line: container and how it was kept, rate, channels, size.
-  const format = [
-    `${formatContainer(recording.mimeType)} · ${t(`record.kind.${recording.kind}`)}`,
-    formatRate(recording.sampleRate),
-    recording.channels > 1 ? t("player.stereo") : t("player.mono"),
-    formatSize(recording.size, locale),
-  ].join(" · ");
+  // The take as it is — the container the browser wrote, without its EQ.
+  const share = async () => {
+    if (!blob) return;
+    try {
+      const outcome = await shareOriginal(recording, blob);
+      onNotice(
+        outcome === "shared"
+          ? t("export.shared", { file: recording.fileName })
+          : t("export.done", { file: recording.fileName }),
+      );
+    } catch (err) {
+      onNotice(
+        t("common.exportFailed", {
+          file: recording.fileName,
+          reason: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    }
+  };
 
   const nextRate = () => {
     const at = PLAYBACK_RATES.indexOf(
@@ -211,20 +227,13 @@ export function PlayerModal({
             {/* When, and where — the folder is a chip that files it. */}
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
               <span>{formatWhen(recording.createdAt, locale)}</span>
-              <button
-                type="button"
-                onClick={onMove}
-                aria-label={t("player.folder", {
+              <FolderChip
+                name={folderName ?? t("record.noFolder")}
+                label={t("player.folder", {
                   folder: folderName ?? t("record.noFolder"),
                 })}
-                className="flex max-w-full items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-fg transition-colors hover:border-accent/60 hover:bg-surface-2"
-              >
-                <FolderIcon className="h-3.5 w-3.5 shrink-0 text-accent" />
-                <span className="truncate">
-                  {folderName ?? t("record.noFolder")}
-                </span>
-                <ChevronRightIcon className="h-3.5 w-3.5 shrink-0 text-muted" />
-              </button>
+                onClick={onMove}
+              />
             </div>
           </div>
 
@@ -328,52 +337,87 @@ export function PlayerModal({
             className="w-full resize-y rounded-md border border-line bg-surface-2 px-3 py-2 text-fg outline-none focus:border-accent"
           />
 
-          {/* The facts, always shown: what someone checks before dragging
-            it into a session, and before calling a take a keeper. */}
-          <dl className="flex flex-col gap-0.5 text-xs text-muted">
-            <div className="flex flex-wrap gap-x-2">
-              <dt className="sr-only">{t("player.format")}</dt>
-              <dd>{format}</dd>
-            </div>
-            <div className="flex flex-wrap gap-x-2">
-              <dt className="sr-only">{t("player.peak")}</dt>
-              <dd>
+          {/* The facts, always shown, as chips: what someone checks
+            before dragging it into a session, and before calling a take a
+            keeper. */}
+          <ul
+            aria-label={t("player.details")}
+            className="flex flex-wrap gap-1.5"
+          >
+            {[
+              <Chip key="container" icon={<FileIcon className="h-3.5 w-3.5" />}>
+                {formatContainer(recording.mimeType)} ·{" "}
+                {t(`record.kind.${recording.kind}`)}
+              </Chip>,
+              <Chip key="rate">{formatRate(recording.sampleRate)}</Chip>,
+              <Chip key="channels">
+                {recording.channels > 1 ? t("player.stereo") : t("player.mono")}
+              </Chip>,
+              <Chip key="size">{formatSize(recording.size, locale)}</Chip>,
+              <Chip key="peak">
                 {t("record.peak")}{" "}
                 <span className="font-figures tabular-nums">
                   {recording.maxPeakDb.toFixed(1)} dB
                 </span>
-              </dd>
-              <span aria-hidden>·</span>
-              <dt className="sr-only">{t("player.clipped")}</dt>
-              <dd className={recording.clipCount > 0 ? "text-danger" : ""}>
+              </Chip>,
+              <Chip
+                key="clips"
+                tone={recording.clipCount > 0 ? "danger" : "plain"}
+                icon={
+                  recording.clipCount > 0 ? (
+                    <ClipIcon className="h-3.5 w-3.5" />
+                  ) : undefined
+                }
+              >
                 {recording.clipCount > 0
                   ? t("record.clippedTimes", {
                       count: String(recording.clipCount),
                     })
                   : t("player.clippedNone")}
-              </dd>
-            </div>
-          </dl>
+              </Chip>,
+            ].map((chip) => (
+              <li key={chip.key} className="flex min-w-0">
+                {chip}
+              </li>
+            ))}
+          </ul>
 
-          {/* The way out, labelled because it is what the player is opened
-            for as often as listening; Delete a glyph at the other end. */}
-          <div className="flex items-center gap-3">
-            <Button
-              variant="primary"
-              className="flex h-11 flex-1 items-center justify-center gap-2"
+          {/* The ways out, as a toolbar of labelled glyphs: Export the one
+            it is opened for (filled), sharing the take as it is, filing it,
+            and Delete in red at the far end. */}
+          <div className="flex items-start justify-between border-t border-line pt-3">
+            <ToolGlyph
+              label={t("library.export")}
+              caption={t("player.exportShort")}
+              tone="primary"
               onClick={onExport}
               disabled={!blob}
             >
-              <DownloadIcon className="h-4 w-4" />
-              {t("library.export")}
-            </Button>
-            <IconButton
+              <DownloadIcon className="h-5 w-5" />
+            </ToolGlyph>
+            <ToolGlyph
+              label={t("export.original")}
+              caption={t("player.shareShort")}
+              onClick={() => void share()}
+              disabled={!blob}
+            >
+              <ShareIcon className="h-5 w-5" />
+            </ToolGlyph>
+            <ToolGlyph
+              label={t("library.move")}
+              caption={t("player.moveShort")}
+              onClick={onMove}
+            >
+              <FolderIcon className="h-5 w-5" />
+            </ToolGlyph>
+            <ToolGlyph
               label={t("common.delete")}
-              className="h-11 w-11 hover:border-danger/60 hover:bg-danger/10"
+              caption={t("player.deleteShort")}
+              tone="danger"
               onClick={onTrash}
             >
-              <TrashIcon className="h-5 w-5 text-danger" />
-            </IconButton>
+              <TrashIcon className="h-5 w-5" />
+            </ToolGlyph>
           </div>
         </div>
       </Modal>

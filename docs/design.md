@@ -58,8 +58,7 @@ edge, not labelled controls competing with the content.
 
 **6. Quality is a choice you make at the microphone.** The format a take is
 kept in varies between takes: an interview at 128 kbit/s, a song idea
-lossless. So it is a visible, button-shaped control on the Record screen that
-opens its own sheet, not a setting three levels down. The same goes for the
+lossless. So it is a visible tile on the Record screen that opens its own sheet, not a setting three levels down. The same goes for the
 export: the sheet says what the file will be and roughly how large before you
 press Export.
 
@@ -133,11 +132,12 @@ columns across the whole width, not the reading column:
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │  THE STAGE (the instrument)                │  THE RAIL        │
-│  Ready:     choices · listen card          │  (●) Tap to rec  │
-│  Listening: status · visualizer · meter    │  readings · (●)  │
+│  Ready:     tiles · the face at rest       │  ≋  (●)  🗀      │
+│  Listening: status · visualizer · meter    │  readings        │
+│                                            │  ■  (●)  🎧      │
 │  Recording: visualizer · meter · warning   │  timer · figures │
 │                                            │  ‖  (■)  🗑      │
-│  Review:    title · shape · listen back    │  Save to · Save  │
+│  Review:    title · shape · listen back    │  🗀 chip · Save  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -147,88 +147,85 @@ columns across the whole width, not the reading column:
 - **The rail** (16rem) is on the right, where a right thumb holds a phone
   on its side. The big button, the timer and the figures sit there, centred
   in the height.
-- The figures go two by two, the big buttons drop from 96 to 80 px, and
-  the listen card is slimmer. The bottom bar stays: this is still a phone.
+- The figures go two by two, the big buttons drop from 96 to 80 px, the
+  action row's glyphs sit closer, and the face at rest is smaller. The bottom bar stays: this is still a phone.
 
 ### Ready: the microphone is closed
 
 ```
 ┌───────────────────────────────────────────┐
-│  ┌─────────────────┐ ┌──────────────────┐ │
-│  │ ◈ QUALITY·128k› │ │ ╭╮ EQ·Low cut  › │ │  how the take sounds
-│  │   Standard      │ │ ╯  Podcast       │ │
-│  └─────────────────┘ └──────────────────┘ │
-│  ┌─────────────────────────────────────┐  │
-│  │ 🎙 MICROPHONE·Out: AirPods          │  │  what it records through, the whole width
-│  │    iPhone Microphone              › │  │
-│  └─────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────┐  │
-│  │ ⌇ TRIGGER·−40dB·2s  On sound · cut› │  │  when it records, the whole width
-│  └─────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────┐  │
-│  │ 🗀 SAVE TO  Ideas › Songs         › │  │  where it goes, the whole width
-│  └─────────────────────────────────────┘  │
-│  ┌─────────────────────────────────────┐  │
-│  │ ≈  Check your level     [🎧 Listen] │  │  the invitation to listen
-│  │    Hear the room … Nothing is kept. │  │
-│  └─────────────────────────────────────┘  │
+│ ┌────────┐┌────────┐┌────────┐┌────────┐  │
+│ │QUALITY ││   EQ   ││  MIC   ││TRIGGER │  │  four choices, as tiles
+│ │  ▂▄▆█  ││  ╭─╯   ││   🎙   ││  ⌇-‐-  │  │  a glyph each — lit when not the default
+│ │  High  ││Podcast ││Automat…││On sound│  │
+│ │256 kb/s││Low cut ││        ││−40 dB·2s│ │
+│ └────────┘└────────┘└────────┘└────────┘  │
 │                                           │
+│               ○ 0:00.0                    │  the instrument at rest
+│        ┌───────────┐┌───────────┐         │
+│        │PER MINUTE ││ ROOM FOR  │         │  what this quality costs, and how long
+│        │  1.9 MB   ││   9 h     │         │
+│        └───────────┘└───────────┘         │
+│    Listen first … nothing is kept.        │
 │                                           │
-│                 (  ●  )                   │  the one button, centred in the room left
-│              Tap to record                │
+│     (≋)          (  ●  )         (🗀)      │  the action row
+│    Listen     Tap to record     Ideas     │
 └───────────────────────────────────────────┘
 ```
 
-- **Quality** (top left) is a real button: bordered, a glyph, a caption that
-  carries the bitrate ("QUALITY · 128 kbit/s"), the preset's name large under
-  it, and a chevron that says it opens something. It opens the **Quality
-  sheet** (below). It sits at the top because it is decided before a take
-  and never during one. The bitrate is on the caption's line so the name is
-  never cut short in a half-width button.
-- **EQ** (top right) is the same shape: the EQ a new take starts with —
-  Flat, a preset's name or Custom, with "Low cut" on the caption's line
-  when that switch is on. Where the other buttons have a glyph it has **the
-  EQ's own curve**, drawn small, so the button shows what a take will sound
-  like and not only what the EQ is called. It sits beside Quality because
-  the two together are how the take will sound. It opens **the EQ sheet**
-  (below).
-- **Microphone** (under them, the whole width, because a device's name —
-  "MacBook Pro Microphone (Built-in)" — does not fit half of it) is the
-  same shape: Automatic or the microphone a take records through, and once
-  an output has been chosen, "Out:" and its name on the caption's line. It
-  opens **the Microphone sheet** (below). It is on Ready, not in Settings,
-  because the microphone is chosen at the microphone: a lapel mic for an
-  interview, the phone's own for a memo, an interface for a rehearsal. It
-  sits under how the take sounds because it is the first thing that
-  decides it.
-- **Trigger** (under them, the whole width, because "On sound · quiet cut
-  out" and its level and hold on the caption's line do not fit half of it)
-  is the same shape again: whether a take records everything or only while
-  there is sound. It sits under how the take sounds and over where it goes,
-  because it is _when_ — decided before the take, like the other three. It
-  opens **the Trigger sheet** (below). A switch inside the Quality sheet was
-  the other place, and was not taken: a take that waits for sound behaves
-  differently all the way to Stop, so Ready says so on its face.
-- **Destination** (under them, the whole width, because a folder's path is
-  long and a half-width button cut it short) is the same shape: the folder
-  a new take will be saved to. It opens the folder picker. It starts on the folder the
-  library is showing, so "I'm in Interviews, I press Record" files the take
-  into Interviews without a question. Saying it _before_ the take is what
-  lets the Review mode ask nothing it doesn't have to.
-- **Check your level** invites you into the Listening mode. It is a card
-  with one sentence and one button, because the one thing a first-timer
-  needs to know is that Listen records nothing. Below a tall window it is
-  the slimmer card a phone on its side gets, and the rows sit a little
-  closer, so on the smallest phone "Tap to record" stays above the bottom
-  bar with five choices over it.
+- **Four tiles** across the top are the take's choices: how it is kept,
+  how it sounds, what it hears through, when it starts. Each is a button
+  in the shape of a tile — a small caption, a **glyph**, and the value in a
+  word or two, with a second fact under it — and opens its own sheet. They
+  used to be five bordered rows, three of them the whole width, which made
+  the screen a form: a list of labels to read before the button. As tiles
+  they are one row a glance takes in, and the glyph says which is which
+  before the word does.
+- **A tile is lit** (the accent's border and tint, its glyph in the
+  accent) when it is set to something other than its default: an EQ on, a
+  microphone or output chosen, the trigger armed. So "is anything unusual
+  about this take?" is answered by colour _and_ by the value under the
+  glyph, never colour alone. Quality is never lit — every quality is a
+  choice, none is unusual.
+- **Quality** (the tile's glyph is four bars, filled one step per preset —
+  Memo one, Lossless all four — so the picture says the same as the name)
+  opens the **Quality sheet** (below). The bitrate is the second line.
+- **EQ** has **the EQ's own curve** where the others have a glyph, so the
+  tile shows what a take will sound like and not only what it is called;
+  "Low cut" is the second line when that switch is on. It opens **the EQ
+  sheet** (below).
+- **Mic** is Automatic or the microphone a take records through, and once
+  an output has been chosen, "Out:" and its name on the second line. A
+  device's long name ("MacBook Pro Microphone (Built-in)") is cut short on
+  the tile and said whole in its accessible name and on the sheet. It opens
+  **the Microphone sheet** (below). It is on Ready, not in Settings,
+  because the microphone is chosen at the microphone.
+- **Trigger** is Off or On sound, with the level and the hold on the second
+  line. It opens **the Trigger sheet** (below). A take that waits for
+  sound behaves differently all the way to Stop, so Ready says so on its
+  face.
+- **The instrument at rest** fills the room between the tiles and the
+  button: the timer at **0:00.0**, dimmed, exactly where the running one
+  will stand, and two figures drawn like the take's four — **per minute**
+  (what a minute of this quality costs) and **room for** (how long this
+  device can record at it, from the browser's own estimate of its free
+  space). Both change what a journalist does before an hour-long
+  interview. Under them, one line: Listen keeps nothing. This replaced the
+  "Check your level" card, which said the same thing in a paragraph and a
+  button the width of the screen.
+- **The action row** is the thumb's: **Listen** (a waveform glyph) on the
+  left, the record button in the middle, and **where the take goes** on the
+  right — a folder glyph with the folder's name under it, lit when a folder
+  is chosen, opening the folder picker. Each side glyph carries its word
+  under it. The destination is beside the button rather than among the
+  tiles because it is the last thing decided before a take and the first
+  thing Review asks about. It starts on the folder the library is showing,
+  so "I'm in Interviews, I press Record" files the take into Interviews
+  without a question.
 - **No recordings.** What was recorded is the Recordings screen's, one
-  swipe or one tab away. A list here gave the screen two subjects and
-  pushed the button down on a small phone; the room it took is the
-  button's now.
+  swipe or one tab away.
 - **The record button** is the largest control on the screen: red, 96 px,
-  **centred in whatever room is left**, with "Tap to record" under it. That
-  keeps it in the lower half, where a thumb reaches, without a dead band
-  between the list and a button pinned to the edge.
+  in the middle of the action row, with "Tap to record" under it.
 
 ### Listening: ambient mode
 
@@ -237,7 +234,7 @@ level, placing a microphone, checking a room, or just watching sound.
 
 ```
 ┌───────────────────────────────────────────┐
-│  ● Listening — nothing is kept (🎧) ( ■ ) │  status: what mode, monitor, and a stop glyph to leave it
+│  ● Listening — nothing is kept            │  status: what mode
 │  ┌─────────────────────────────────────┐  │
 │  │ Waveform · the last few seconds ≋▥▦ │  │  the visualizer, and its switcher
 │  │ −6  - - - - - - - - - - - - - - -   │  │
@@ -250,17 +247,23 @@ level, placing a microphone, checking a room, or just watching sound.
 │   ROOM        PEAK        HEADROOM        │  three readings a person acts on
 │  −52 dB     −9.4 dB      9.4 dB           │
 │  ✓ Good level                             │  the verdict, in words
-│  ◈ Standard ›          🗀 Ideas ›         │  the choices (tall windows only)
-│                 (  ●  )                   │
+│   ▂▄▆█   ╭╯   🎙   ⌇    🗀               │  the choices as small glyphs (tall windows only)
+│   (■)          (  ●  )          (🎧)      │  stop · record · monitor
+│   Stop          Record         Monitor    │
 └───────────────────────────────────────────┘
 ```
 
 - **The visualizer** gets the stage (see _The visualizers_ below): the
   card grows to fill whatever height is left.
-- **The headphones glyph** in the status line is the monitor: the
-  microphone through the take's EQ into headphones, so a level is set by
-  ear as well as by eye. It is a toggle, lit while it runs, beside the stop
-  glyph because both are about the open microphone rather than the take.
+- **The action row** is the open microphone's: **Stop** on the left
+  (leave Listening), the record button in the middle, **Monitor** on the
+  right, each side glyph with its word under it. They used to be two small
+  glyphs at the end of the status line, at the top of the screen and far
+  from the thumb; the row at the foot is where Ready's Listen was and
+  Recording's Pause will be, so the thumb learns one place.
+- **Monitor** (the headphones glyph) is the microphone through the take's
+  EQ into headphones, so a level is set by ear as well as by eye. It is a
+  toggle, lit while it runs.
   The first press asks whether headphones are on (a sheet with Monitor
   inside it, so the sound starts within the press); the EQ sheet's own
   Monitor, which says so beside its button, counts as the answer. It
@@ -295,9 +298,11 @@ level, placing a microphone, checking a room, or just watching sound.
   clipping. With the default Voice target that is peaks under −18, −18 to
   −6, −6 to −3 and over −3 — the meter's own zones. It is coloured, but it
   is also words, because the clip warning is never colour alone.
-- **The choices** shrink to one line, and only on a tall window. They are
-  still changeable, but they are no longer what the screen is about, and on
-  a small phone the button's reach matters more.
+- **The choices** shrink to a strip of small round glyphs — the four
+  tiles and the folder, the value under each, lit the same way — and only
+  on a tall window. They are still changeable, but they are no longer what
+  the screen is about, and on a small phone the button's reach matters
+  more.
 - **Record from here** starts a take without a gap. Listening stops, and the
   take begins with the level already right.
 - Listening runs on the same capture path as a take, so what the meter says
@@ -314,7 +319,7 @@ level, placing a microphone, checking a room, or just watching sound.
 ```
 ┌───────────────────────────────────────────┐
 │               ● 0:42.3                    │  the timer is the headline (60 px)
-│    Standard · 128 kbit/s · to Ideas (🎧)  │  what this take is, read-only; the monitor
+│   [▂▄ Standard · 128 kbit/s] [🗀 Ideas] (🎧)│  what this take is, as chips; the monitor
 │  ┌─────────────────────────────────────┐  │
 │  │ Waveform · the last few seconds ≋▥▦ │  │  the visualizer — fills the room
 │  │        ▂▅█▅▂    ▃▇▃   ▂▃▅▃▂        │  │
@@ -329,13 +334,15 @@ level, placing a microphone, checking a room, or just watching sound.
 │  │−4.1dB│ │  0   │ │1.2 MB│ │   19 h   │  │
 │  └──────┘ └──────┘ └──────┘ └──────────┘  │
 │       ( ‖ )     (  ■  )      ( 🗑 )        │  pause · stop · discard
+│       Pause                  Discard      │
 └───────────────────────────────────────────┘
 ```
 
 - **The timer** is the largest type in the app and it ticks tenths, so a
   glance says "yes, it is running". The red dot beside it pulses.
 - **The context line** repeats the quality and the destination read-only,
-  because they can't change mid-take but a journalist wants to be sure.
+  as two chips with the tiles' glyphs on them, because they can't change
+  mid-take but a journalist wants to be sure.
 - **The headphones glyph** is the monitor, the same toggle as Listening's,
   at the end of the context line (upright, a spacer of its width at the
   other end keeps the line centred). Not in the timer's corner: an hour's
@@ -413,11 +420,12 @@ whole screen on two fields and put a big red Discard under a small Save.
 ┌───────────────────────────────────────────┐
 │  TITLE                                    │
 │  New recording 3________________________  │  the title, focused and selected
+│  [🗀 Ideas ›]                              │  where it goes: a chip (the same picker)
 │  ┌─────────────────────────────────────┐  │
-│  │ ▁▂▃▅▃▂▁▂▅▇▅▃▂▁▂▃▂▁▂▃▅▃▂▁▂▅▇▅▃▂      │  │  the take's shape, with a playhead
+│  │ ▁▂▃▅▃▂▁▂▅▇▅▃▂▁▂▃▂▁▂▃▅▃▂▁▂▅▇▅▃▂      │  │  the take's shape, with a playhead —
+│  │                                     │  │  it grows into the room
 │  └─────────────────────────────────────┘  │
-│  (▶) 0:00 / 0:42 · Peak −4.1 dB · No clip │  listen back, and what you got
-│  🗀 SAVE TO  Ideas                     ›  │  where it goes (the same picker)
+│  (▶) 0:00 / 0:42   [Peak −4.1 dB][No clip]│  listen back, and what you got, as chips
 │                                           │
 │  ( 🗑 )   [        ✓  Save        ]       │  discard glyph · the big Save
 └───────────────────────────────────────────┘
@@ -430,10 +438,13 @@ whole screen on two fields and put a big red Discard under a small Save.
   seekable. "Did I get it?" is the question this moment is for. A compact
   take plays as the encoder wrote it; a lossless one (still samples) is made
   into a WAV on the first press, so a take nobody plays back costs nothing.
-- **One line of facts** (length, peak, clipping) is what a musician checks
-  before deciding the take is a keeper. Clipping is shown in the danger
-  colour with the count.
-- **The destination** is the one picker again, preset to what Ready showed.
+- **The facts** (length, and peak and clipping as chips) are what a
+  musician checks before deciding the take is a keeper. Clipping is a red
+  chip with the clip glyph and the count.
+- **The destination** is a folder chip under the title — the player's
+  chip, so a take is filed the same way before and after it is saved —
+  preset to what Ready showed, opening the one picker. It used to be a
+  bordered row the width of the screen.
 - **Save** is the widest button on the screen, in the accent, in the thumb's
   reach. **Discard** is a trash glyph beside it, and it asks before it throws
   anything away. The bottom bar stays hidden until the take is saved or
@@ -445,10 +456,15 @@ whole screen on two fields and put a big red Discard under a small Save.
 ```
 ┌───────────────────────────────────────────┐
 │  Quality                              ✕   │
-│  ◉ Memo      Speech, smallest    64 kbit/s  ≈480 kB/min  room for 34 h
-│  ○ Standard  Voices, interviews  128 kbit/s ≈960 kB/min  room for 17 h
-│  ○ High      Music, near CD      256 kbit/s ≈1.9 MB/min  room for 9 h
-│  ○ Lossless  Every sample, FLAC  FLAC       ≈3.5 MB/min  room for 5 h
+│  ┌──────────────────┐┌──────────────────┐ │
+│  │ ▂          ◉     ││ ▂▄          ○    │ │  the presets as tiles, two by two:
+│  │ Memo             ││ Standard         │ │  the bars glyph, the name,
+│  │ Speech, smallest ││ Voices, intervi… │ │  who it is for,
+│  │ 64 kbit/s ≈480 kB││ 128 kbit/s ≈960kB│ │  and what a minute costs, room for
+│  └──────────────────┘└──────────────────┘ │
+│  ┌──────────────────┐┌──────────────────┐ │
+│  │ ▂▄▆  High     ○  ││ ▂▄▆█ Lossless ○  │ │
+│  └──────────────────┘└──────────────────┘ │
 │  Bitrate, kbit/s  64  96 [128] 192 256 320│  fine-tune (compact only)
 │  ☐ Voice processing                       │  echo / noise / auto-gain
 │    Cancel echo, suppress noise, level …   │
@@ -461,7 +477,9 @@ whole screen on two fields and put a big red Discard under a small Save.
 └───────────────────────────────────────────┘
 ```
 
-- **Presets first, with a size per minute**, because "how much room will an
+- **Presets first, as four tiles**, two by two, each wearing the bars the
+  Ready tile wears for it, so the sheet and the button it came from say the
+  same thing; **with a size per minute**, because "how much room will an
   hour-long interview take?" is the question a journalist has, and "will it
   be good enough?" is the musician's. Each row says who it is for in a few
   words. Memo, Standard and High are the device's own encoder at 64, 128 and
@@ -636,10 +654,10 @@ out.
 
 ```
 ┌───────────────────────────────────────────┐
-│  [🗀 Ideas ▾]  3                      🔍   │  scope (with count) · search glyph
+│  [🗀 Ideas ▾]  3                 (☆) (🔍)  │  scope (with count) · favorites · search
 │                                           │
 │  TODAY                                    │  day headings replace a date per row
-│  ▁▃▅▂  Idea: garden shed layout      0:10 │
+│  ▁▃▅▂  Idea: garden shed layout    0:10 ⋯ │  a row ends in its menu glyph
 │        7:58 AM                            │
 │  YESTERDAY                                │
 │  ▂▅▃▁  Song sketch, chorus  ★         0:10 │
@@ -655,6 +673,10 @@ out.
   recordings are in it, and pressing it opens the **folder picker** in its
   browsing form. It replaces the search field, four chips and a separate
   count line that together took a quarter of a phone screen.
+- **Favorites is a glyph** beside the scope, a star that is lit (and
+  filled) while only favorites are shown; a second press shows everything
+  again. It is the scope's commonest change, so it is one press rather than
+  a trip through the picker, which still lists Favorites too.
 - **Search is a glyph** at the right of the scope. It opens the **search
   sheet**: a field at the top, focused, and the results under it as the
   same rows. Searching is a moment, not a permanent fixture, and a full
@@ -667,11 +689,13 @@ out.
   (with a star when favourited), the time and folder, and the **length,
   right-aligned** in tabular figures. Lengths line up so a long interview
   stands out from a thirty-second memo. The chevron is gone: every row is
-  obviously tappable, and the length now lives in that corner.
+  obviously tappable. A **⋯** glyph ends the row and opens the row's menu,
+  because a hold is a gesture nobody can see.
 - **A tap** opens the player. **A swipe** left bares one red trash button,
   and pressing _it_ deletes (to Recently deleted) — a swipe that went too
   far, or was meant as a scroll, throws nothing away. **A hold** (or
-  right-click) offers favourite, move, export, delete, each with its glyph.
+  right-click, or the ⋯) offers favourite, move, export, delete, each with
+  its glyph.
 - **Recently deleted** says how long it keeps things in one line under the
   scope, and its rows offer Put back and Delete for good.
 
@@ -727,10 +751,11 @@ The player is a recording's page: listen, annotate, file, export.
 │                                           │
 │  Add a note…                              │  the note
 │                                           │
-│  AAC 128k · 48 kHz · Mono · 160 KB        │  the facts, always visible
-│  Peak −3.1 dB · No clipping               │
-│                                           │
-│  [ ⇪ Export… ]                      ( 🗑 ) │  export · delete glyph
+│  [🗎 AAC · Compact][48 kHz][Mono][160 kB] │  the facts, always visible, as chips
+│  [Peak −3.1 dB][No clipping]              │
+│  ─────────────────────────────────────── │
+│    (⇩)       (⇪)       (🗀)       (🗑)     │  the toolbar: labelled glyphs
+│   Export    Share     Move     Delete     │
 └───────────────────────────────────────────┘
 ```
 
@@ -745,14 +770,20 @@ The player is a recording's page: listen, annotate, file, export.
 - **Speed** is a single button that steps through the rates (0.5× … 2×).
   The six-way segmented control took a row for something set occasionally.
   It sits beside the transport because it changes the transport.
-- **The facts** used to be hidden under a Details disclosure, and now they
-  are two quiet lines. Format, rate, channels and size are what someone
+- **The facts** used to be hidden under a Details disclosure, then were two
+  quiet lines, and are now chips — one fact each, so the eye lands on the
+  one it wants, and a clipped take's count is a red chip with the clip
+  glyph. Format, rate, channels and size are what someone
   checks before exporting to a DAW; peak and clipping are what a musician
   checks before calling it a keeper.
-- **Export** is the one labelled action because it is the way out, and it is
-  what the player is opened for as often as listening. **Delete** is a
-  trash glyph at the opposite end, so the two can't be mistaken for each
-  other.
+- **The toolbar** at the foot is the ways out, as glyphs with their words
+  under them: **Export** first and filled in the accent, because it is
+  what the player is opened for as often as listening; **Share** (the
+  original file, as it is — before, two taps away inside the export
+  sheet); **Move** (the picker, for a reader who does not see the chip as a
+  button); and **Delete** in red at the opposite end, so it can't be
+  mistaken for Export. It replaced one wide Export button and a lone trash
+  glyph.
 
 ## Export
 
@@ -782,7 +813,11 @@ The player is a recording's page: listen, annotate, file, export.
 
 ## Settings
 
-Settings is for things you set once. After this change it holds: the
+Settings is for things you set once. It opens on **an index of glyphs** —
+a tile per section (Look, Record, Playback, Export, Storage, Data,
+Developer, About) wearing the section heading's own glyph — and a press
+scrolls to that section, so a setting is found by its picture rather than
+by scrolling past the rest of a long page. It holds: the
 theme and its looks (a card per look, drawn in its own colours — by day
 and by night while following the device), the Record screen's visualizer, the skip length, the export defaults,
 storage and encryption, your data, developer mode, and About. What left:
@@ -813,6 +848,12 @@ storage and encryption, your data, developer mode, and About. What left:
 | The Record screen's Latest list          | A second subject on the instrument. The recordings are the Recordings screen's.                                             |
 | Text "Stop" and "Cancel" buttons         | Now a stop glyph and a close glyph; a word is kept only where a glyph alone would not say what happens.                     |
 | Swipe-to-delete in one motion            | A swipe too far lost a recording. Now the swipe bares a red trash button and the press deletes.                             |
+| Ready's five full-width choice rows      | A form to read before the button. Now four tiles with glyphs, lit when not the default, and the folder by the button.       |
+| The "Check your level" card              | A paragraph and a wide button. Now Listen is a glyph in the action row, and one line says nothing is kept.                  |
+| Listening's stop and monitor at the top  | Far from the thumb. Now Stop and Monitor flank the record button in the action row.                                         |
+| Review's and the player's folder rows    | A row the width of the screen for one choice. Now a folder chip, the same in both.                                          |
+| The player's wide Export button          | One action among four. Now a toolbar of labelled glyphs: Export, Share, Move, Delete.                                       |
+| Quality's stacked preset rows            | Four rows of small type. Now four tiles, two by two, with the bars glyph the Ready tile wears.                              |
 | Toasts at the top of the screen          | Under the status bar and far from the thumb. Now on the bottom bar, and a tap anywhere on one puts it away.                 |
 
 ## Layout rules
@@ -832,7 +873,13 @@ storage and encryption, your data, developer mode, and About. What left:
   now, Delete everything). Delete is always red: the glyph, the swipe's
   button and the menu row.
 - **Glyph buttons** always carry an accessible name, and a tooltip under a
-  mouse (`IconButton`).
+  mouse (`IconButton`, and `Glyphs.tsx`'s tiles, round glyphs and toolbar
+  glyphs).
+- **Tiles, glyphs and chips before rows.** A choice is a tile (caption,
+  glyph, value) or a round glyph with its word under it; a fact is a chip;
+  a set of actions is a toolbar of labelled glyphs. A full-width row is
+  kept for what is a list — recordings, folders, devices, presets in a
+  sheet that only chooses — never for a single button.
 - **Toasts** stand on the bottom bar (on the screen's foot where there is
   no bar), above the update prompt when one is up. A tap anywhere on one
   dismisses it; the ✕ is only the visible half.

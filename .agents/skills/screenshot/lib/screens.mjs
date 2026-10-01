@@ -221,7 +221,10 @@ export const SCREENS = {
     label: "Recordings",
     async stage(page, h) {
       await h.tab("Recordings");
-      await page.getByRole("button", { name: "Standup, Monday" }).waitFor();
+      await page
+        .getByRole("button", { name: "Standup, Monday" })
+        .first()
+        .waitFor();
       await h.settle();
     },
   },

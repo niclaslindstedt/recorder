@@ -8,23 +8,37 @@ is in [`../design.md`](../design.md).
 
 ## Ready
 
-The microphone is closed. At the top are the take's five choices, as
-buttons. Side by side, how it will sound: **Quality** (the preset's name,
-with its bitrate on the caption) opens the Quality sheet, and **EQ** (Flat,
-a preset's name, or Custom) opens the [equalizer](equalizer.md) — the EQ
-new takes start with, which you can **Monitor** on headphones before you
-record (and while Listening or Recording, from the headphones glyph). Under them, the whole width, **Microphone** (Automatic, or the
-microphone you chose, with the output on the caption once you have chosen
-one) opens the [Microphone sheet](#microphone-and-output), **Trigger** (Off, or On sound with
-its level and hold on the caption) opens the [sound trigger](#sound-trigger)
-sheet, and **Save to** (the folder a new take is filed in) opens the folder
-picker. Save to starts on the folder the library
-is showing, so pressing Record while you are in Interviews files the take
-there.
+The microphone is closed. Across the top are four **tiles**, each a small
+caption, a glyph and the value in a word or two; a tile is lit in the
+accent when it is set to something other than its default, so a glance
+says what is out of the ordinary:
 
-Under them, **Check your level** offers Listening. What you have recorded
-is on the **Recordings** screen, not here. The big red button, **Tap to record**, sits centred in the room
-that is left. Press it and the browser asks for the microphone once.
+- **Quality** — its glyph's bars fill one step per preset (Memo one,
+  Lossless all four), with the preset's name and bitrate under it. It opens
+  the [Quality sheet](#quality).
+- **EQ** — the EQ's own curve as its glyph, and Flat, a preset's name or
+  Custom (with Low cut under it when that is on). It opens the
+  [equalizer](equalizer.md) — the EQ new takes start with, which you can
+  **Monitor** on headphones before you record (and while Listening or
+  Recording, from the headphones glyph).
+- **Mic** — Automatic, or the microphone you chose, with the output under
+  it once you have chosen one. It opens the
+  [Microphone sheet](#microphone-and-output).
+- **Trigger** — Off, or On sound with its level and hold under it. It opens
+  the [sound trigger](#sound-trigger) sheet.
+
+Under them the instrument is at rest: the timer at **0:00.0**, where the
+running one will stand, and two figures for the quality you have chosen —
+what a minute of it costs and how long this device has **room for** — with
+one line saying that Listen keeps nothing.
+
+At the foot, in the thumb's reach, is the **action row**: **Listen** on the
+left, the big red button (**Tap to record**) in the middle, and on the
+right a folder glyph with the folder a new take is filed in under it. It
+opens the folder picker, and starts on the folder the library is showing,
+so pressing Record while you are in Interviews files the take there. Press
+record and the browser asks for the microphone once. What you have recorded
+is on the **Recordings** screen, not here.
 
 ## Listening
 
@@ -51,7 +65,12 @@ and it quietly starts over every five minutes, so it never holds more than
 that in memory and writes nothing, ever. Pressing record from Listening
 starts the take with the level already set.
 
-The **headphones glyph** beside Stop monitors the microphone: you hear it
+The action row is **Stop** (leave Listening), the big record button, and
+**Monitor**. On a tall screen the choices sit above it as a row of small
+glyphs — the four tiles and the folder — still in reach but no longer the
+subject.
+
+The **Monitor** glyph monitors the microphone: you hear it
 through the take's EQ in your headphones, so a level and a placement can be
 judged by ear too. It asks whether your headphones are on the first time,
 and carries on into the take if you press record. See
@@ -59,8 +78,8 @@ and carries on into the take if you press record. See
 
 ## Recording
 
-The timer is the headline, in tenths, with a pulsing dot; the line under it
-repeats the quality and the folder, read-only. The **headphones glyph** by
+The timer is the headline, in tenths, with a pulsing dot; under it two
+chips repeat the quality and the folder, read-only. The **headphones glyph** by
 the timer monitors the take as it goes down, through its EQ, into your
 headphones; the take is the same with it on or off, and Stop closes it. The
 visualizer takes the
@@ -76,7 +95,8 @@ along its foot. Under the meter, four figures say what the take is so far:
 
 **Pause** holds the take and **Resume** carries on; the timer holds its
 figure meanwhile. **Stop** is the big button, where the record button was.
-The trash glyph discards the take, and asks first.
+**Discard**, the trash glyph on the right, throws the take away and asks
+first. The side glyphs carry their word under them.
 
 While a take is recording, and until it is saved or discarded, the bottom
 bar is hidden and the swipe and the tabs are off: the screen you are
@@ -162,17 +182,19 @@ needs, inline:
 - **Listen back** — play the take before keeping it, through the EQ it will
   be saved with, with its shape above as the playhead's track; tap or drag
   to seek.
-- **One line of facts** — length, peak, and clipping (with the count, in the
-  danger colour).
-- **Save to** — the folder picker again, preset to what Ready showed.
+- **Where it goes** — a folder chip under the title, preset to what Ready
+  showed; it opens the folder picker.
+- **The facts** — length, and the peak and clipping as chips (clipping with
+  the count and the clip glyph, in the danger colour).
 
 **Save** is the widest button; the trash glyph beside it discards, and asks
 first. Nothing is written until Save — a discarded take was never anywhere.
 
 ## Quality
 
-The **Quality** button on Ready opens the sheet that decides how the next
-take is kept, with roughly what a minute costs:
+The **Quality** tile on Ready opens the sheet that decides how the next
+take is kept. The four presets are tiles, two by two, each with the bars
+glyph, who it is for, and roughly what a minute costs:
 
 | Preset       | What it is                                           | Per minute |
 | ------------ | ---------------------------------------------------- | ---------- |
