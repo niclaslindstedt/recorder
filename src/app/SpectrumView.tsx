@@ -5,7 +5,7 @@ import type { CaptureFrame } from "@niclaslindstedt/oss-framework/audio";
 
 import { palette, targetColor, useCanvas } from "./canvas.ts";
 import type { Eq } from "./eq.ts";
-import { bandGains, levelShiftDb, shiftBar } from "./spectrumEq.ts";
+import { bandGains, carriers, levelShiftDb, shiftBar } from "./spectrumEq.ts";
 import { formatTargetDb, targetTone, type TargetRange } from "./target.ts";
 import { spectrumAt, spectrumMarks } from "./waveAxis.ts";
 
@@ -16,11 +16,12 @@ import { spectrumAt, spectrumMarks } from "./waveAxis.ts";
 // played or exported, so the frames' bars are the sound before the EQ. Each
 // bar is drawn moved to where the EQ puts it (`spectrumEq.ts`): what the EQ
 // adds is the bar carried on, paler; what it takes away is the bar that
-// was, hollow — the EQ sheet's own picture of a boost and a cut. And every
-// bar wears where the level *after* the EQ lands against the target, the
-// waveform's and the meter's colours: so a boost that pushes a take over
-// its target turns the spectrum amber, and the bar that did it stands out
-// above the rest.
+// was, hollow — the EQ sheet's own picture of a boost and a cut. And the
+// loud bars — those within a few dB of the loudest, the ones setting the
+// level (`carriers`) — wear where the level *after* the EQ lands against
+// the target, the waveform's and the meter's colours, while the quiet ones
+// stay grey: so a boost that pushes a take over its target turns the bars
+// that did it amber, and those are the ones to cut.
 //
 // The bars' heights are the framework's (`bandLevels`, smoothed in the
 // capture); only their colour and the EQ's part are the app's, which is why
@@ -96,6 +97,7 @@ export function SpectrumView({
         range,
       );
       const colour = targetColor(tone, colours);
+      const loud = carriers(levels, gains);
       const gap = Math.max(1, Math.round(dpr));
       const barW = (w - gap * (n - 1)) / n;
       for (let i = 0; i < n; i++) {
@@ -104,7 +106,7 @@ export function SpectrumView({
         const x = i * (barW + gap);
         const wasY = h - Math.round(was * h);
         const nowY = h - Math.round(now * h);
-        ctx.fillStyle = colour;
+        ctx.fillStyle = loud[i] ? colour : colours.muted;
         ctx.fillRect(x, Math.max(wasY, nowY), barW, h - Math.max(wasY, nowY));
         if (nowY < wasY) {
           // What the EQ adds: the bar carried on, paler.

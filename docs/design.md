@@ -400,13 +400,15 @@ Visualizer).
   take's EQ**. The microphone is captured as it is and the EQ applied on
   playback and export, so each bar is moved to where the EQ puts it: what
   the EQ adds is the bar carried on, paler; what it cuts is the bar that
-  was, hollow (the EQ sheet's own picture). Every bar wears the waveform's
-  colour for the level _after_ the EQ — the held peak, moved by what the
-  EQ does to the sound's power — against the target, so a boost that takes
-  a take over its target turns the spectrum amber and the bar that did it
-  stands out. There is no target band on it: a band's level is a share of
-  the sound, not its peak, and the target's range does not apply to one
-  bar. For a musician tuning a mic position or an EQ, or seeing a hum. The
+  was, hollow (the EQ sheet's own picture). The **loud bars** — within
+  6 dB of the loudest, the ones setting the level — wear the waveform's
+  colour for the level _after_ the EQ (the held peak, moved by what the EQ
+  does to the sound's power) against the target; the quiet ones stay grey.
+  So a boost that takes a take over its target turns the bars that did it
+  amber, and those are the ones to cut. No bar is judged against the
+  target on its own, and there is no target band on it: a bar is one slice
+  of the sound, and a voice right on its target has every bar well under
+  the target's figures. For a musician tuning a mic position or an EQ, or seeing a hum. The
   heights are the framework's (`bandLevels`); the bars are drawn here
   (`SpectrumView.tsx`), as the spectrogram's are, because their colour and
   the EQ's part are the app's.

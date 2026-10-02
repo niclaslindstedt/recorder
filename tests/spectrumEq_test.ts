@@ -7,7 +7,12 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { FLAT_EQ, responseDb, type Eq } from "../src/app/eq.ts";
-import { bandGains, levelShiftDb, shiftBar } from "../src/app/spectrumEq.ts";
+import {
+  bandGains,
+  carriers,
+  levelShiftDb,
+  shiftBar,
+} from "../src/app/spectrumEq.ts";
 
 const { edgesHz } = layoutBands(48, 2048, 48000);
 const SPAN = SPECTRUM_CEIL_DB - SPECTRUM_FLOOR_DB;
@@ -100,5 +105,36 @@ describe("levelShiftDb", () => {
     const voice = new Float32Array(48).fill(0.1);
     voice[barAt(1000)] = 0.8;
     expect(levelShiftDb(voice, gains)).toBeLessThan(-8);
+  });
+});
+
+describe("carriers", () => {
+  it("are the bars within a few dB of the loudest", () => {
+    const bars = new Float32Array(48).fill(0.2);
+    bars[10] = 0.8;
+    bars[11] = 0.8 - 5 / SPAN;
+    bars[12] = 0.8 - 7 / SPAN;
+    const loud = carriers(bars, null);
+    expect(loud[10]).toBe(true);
+    expect(loud[11]).toBe(true);
+    expect(loud[12]).toBe(false);
+    expect(loud[0]).toBe(false);
+  });
+
+  it("are judged after the EQ: a boost makes a bar one, a cut unmakes it", () => {
+    const bars = new Float32Array(48).fill(0.2);
+    bars[barAt(100)] = 0.7;
+    bars[barAt(1000)] = 0.8;
+    const before = carriers(bars, null);
+    expect(before[barAt(100)]).toBe(false);
+    expect(before[barAt(1000)]).toBe(true);
+    const gains = bandGains(eq({ bass: 9, mids: -12 }), edgesHz)!;
+    const after = carriers(bars, gains);
+    expect(after[barAt(100)]).toBe(true);
+    expect(after[barAt(1000)]).toBe(false);
+  });
+
+  it("is nothing at all in silence", () => {
+    expect(carriers(new Float32Array(48), null).some(Boolean)).toBe(false);
   });
 });

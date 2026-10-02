@@ -11,10 +11,17 @@
 // whole sound gets for it, so the spectrum's colour can say whether the EQ
 // pushes a take off its target.
 //
-// That last figure is an estimate: the bars are each band's peak bin, the
-// change in level is what the EQ does to their power summed, and a peak in
-// the samples does not move by exactly that. It is close enough to say
-// "this boost takes you over", which is what it is for.
+// Which bars wear that colour is the loud ones' (`carriers`): a bar is one
+// slice of the sound, and a voice right on its target has every bar well
+// under the target's figures, so no bar is judged against the range on its
+// own. The bars within a few dB of the loudest are the ones setting the
+// level — the ones to cut when it is too loud — so they carry its colour,
+// and the rest stay grey.
+//
+// That figure for the level is an estimate: the bars are each band's peak
+// bin, the change in level is what the EQ does to their power summed, and a
+// peak in the samples does not move by exactly that. It is close enough
+// to say "this boost takes you over", which is what it is for.
 
 import {
   SPECTRUM_CEIL_DB,
@@ -70,4 +77,31 @@ export function levelShiftDb(
   }
   if (before === 0) return 0;
   return 10 * Math.log10(after / before);
+}
+
+/** How far under the loudest bar a bar may be and still carry the level,
+ *  dB: the bars that set how loud the sound is, and the ones an EQ move
+ *  would change it by. */
+export const CARRY_DB = 6;
+
+/**
+ * Which bars carry the level, after the EQ: those within `CARRY_DB` of the
+ * loudest. These wear the level's colour against the target; the rest are
+ * too quiet to be what put it there, and stay grey. Silence carries
+ * nothing.
+ */
+export function carriers(
+  bars: ArrayLike<number>,
+  gains: readonly number[] | null,
+  withinDb: number = CARRY_DB,
+): boolean[] {
+  const after: number[] = [];
+  let top = 0;
+  for (let i = 0; i < bars.length; i++) {
+    const share = gains ? shiftBar(bars[i]!, gains[i] ?? 0) : bars[i]!;
+    after.push(share);
+    if (share > top) top = share;
+  }
+  const within = withinDb / SPAN_DB;
+  return after.map((share) => share > 0 && top - share <= within);
 }

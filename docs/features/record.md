@@ -121,10 +121,11 @@ under **Settings → Record screen → Visualizer**):
 - **Spectrum** — how loud each frequency is now, bass on the left, with
   the decibels up the side, drawn as it will sound through the take's
   [EQ](equalizer.md): what the EQ adds is paler, what it cuts is hollow.
-  The bars are coloured by where the level after the EQ lands against the
-  target — grey, the accent, amber or red, as the waveform is — so an EQ
-  that pushes the take over its target shows, and so does the band
-  responsible.
+  The loudest bars — those within 6 dB of the loudest, which set the level
+  — are coloured by where the level after the EQ lands against the target
+  (the accent, amber or red, as the waveform is), and the quiet ones stay
+  grey: so an EQ that pushes the take over its target turns the bars
+  responsible amber.
 - **Spectrogram** — frequency over time, brighter where louder, so a hum, a
   hiss or a voice's harmonics show as lines.
 
