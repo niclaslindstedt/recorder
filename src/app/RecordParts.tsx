@@ -3,7 +3,6 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import {
   MIME_WAV,
-  Waveform,
   encodeWav,
   formatDb,
   type CaptureResult,
@@ -22,9 +21,11 @@ import { formatDuration } from "./format.ts";
 import { Chip, RoundGlyph } from "./Glyphs.tsx";
 import { ClipIcon, HeadphonesIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import { LevelWave } from "./LevelWave.tsx";
 import { SheetTitle } from "./ModalHeader.tsx";
 import type { Eq } from "./eq.ts";
 import type { Ambient, Verdict } from "./levels.ts";
+import type { TargetRange } from "./target.ts";
 import { useRouting } from "./useAudioRouting.ts";
 import { useEqPlayer } from "./useEqPlayer.ts";
 import { usePlayhead } from "./usePlayhead.ts";
@@ -194,6 +195,7 @@ export function TakeReview({
   destination,
   saving,
   eq,
+  target,
   beside = false,
   onSave,
   onDiscard,
@@ -208,6 +210,8 @@ export function TakeReview({
   saving: boolean;
   /** The EQ the take is saved with, and heard through here. */
   eq: Eq | null;
+  /** Where the peaks should land: the shape's band and its colours. */
+  target: TargetRange;
   onSave: (title: string) => void;
   onDiscard: () => void;
 }) {
@@ -272,16 +276,17 @@ export function TakeReview({
   const hear = (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
       {/* The shape fills the card: a percentage height inside a flexed box
-          is not resolved everywhere (WebKit), and the SVG then falls back to
-          its viewBox's 10:1 — a strip along the card's top. */}
+          is not resolved everywhere (WebKit), and the canvas would then be
+          drawn into no height at all. */}
       <div
         className={`relative rounded-md bg-surface-2 text-accent ${
           beside ? "min-h-16 flex-1" : "max-h-72 min-h-24 flex-1"
         }`}
       >
         <div className="absolute inset-x-2 inset-y-1">
-          <Waveform
+          <LevelWave
             peaks={take.peaks}
+            target={target}
             progress={progress}
             onSeek={
               preview ? (share) => player.seek(share * duration) : undefined

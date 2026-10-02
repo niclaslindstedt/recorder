@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import {
   SpectrumBars,
@@ -10,16 +10,14 @@ import {
 } from "@niclaslindstedt/oss-framework/audio";
 import { WaveformIcon } from "@niclaslindstedt/oss-framework/components";
 
+import { drawWaveBackdrop, palette, targetColor, useCanvas } from "./canvas.ts";
 import { SpectrogramIcon, SpectrumIcon } from "./icons.tsx";
+import { WaveScale } from "./LevelWave.tsx";
 import { useT } from "./i18n/index.ts";
 import { bucketShare } from "./pacing.ts";
-import {
-  formatTargetDb,
-  targetTone,
-  type TargetRange,
-  type TargetTone,
-} from "./target.ts";
+import { formatTargetDb, targetTone, type TargetRange } from "./target.ts";
 import type { VisualizerKind } from "./useAppSettings.ts";
+import { spectrumAt, spectrumMarks, waveMarks } from "./waveAxis.ts";
 
 // The Record screen's big picture (docs/design.md, "Record"): the card that
 // takes the room between the timer and the meter while listening and
@@ -134,11 +132,10 @@ export function Visualizer({
             />
           )}
           {kind === "spectrum" && (
-            <SpectrumBars
+            <SpectrumView
               subscribe={subscribe}
               ticks={ticks}
               label={t("visualizer.spectrum")}
-              className="h-full"
             />
           )}
           {kind === "spectrogram" && (
@@ -163,66 +160,6 @@ export function Visualizer({
   );
 }
 
-/** A canvas that fills its box at the device's pixel density, and the
- *  box's size, which the drawing restarts on. */
-export function useCanvas() {
-  const box = useRef<HTMLDivElement>(null);
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  useEffect(() => {
-    const el = box.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver((entries) => {
-      const r = entries[entries.length - 1]?.contentRect;
-      if (!r) return;
-      const width = Math.round(r.width);
-      const height = Math.round(r.height);
-      setSize((prev) =>
-        prev.width === width && prev.height === height
-          ? prev
-          : { width, height },
-      );
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-  useEffect(() => {
-    const el = canvas.current;
-    if (!el || size.width === 0) return;
-    const dpr = window.devicePixelRatio || 1;
-    el.width = Math.round(size.width * dpr);
-    el.height = Math.round(size.height * dpr);
-  }, [size]);
-  return { box, canvas, size };
-}
-
-/** The theme's colours, read off the page so both themes draw right. */
-export function palette(el: Element) {
-  const css = getComputedStyle(el);
-  const v = (name: string, fallback: string) =>
-    css.getPropertyValue(name).trim() || fallback;
-  return {
-    accent: v("--accent", "#2da44e"),
-    flag: v("--flag", "#d4a72c"),
-    danger: v("--danger", "#cf222e"),
-    line: v("--line", "#8886"),
-    muted: v("--muted", "#888"),
-    ground: v("--surface-2", "transparent"),
-  };
-}
-
-/** A bar's colour by where its peak landed against the target: no colour
- *  under it, the accent in it, amber over it, red when hot. */
-function targetColor(tone: TargetTone, p: ReturnType<typeof palette>): string {
-  return tone === "hot"
-    ? p.danger
-    : tone === "over"
-      ? p.flag
-      : tone === "in"
-        ? p.accent
-        : p.muted;
-}
-
 function ScrollingWave({
   subscribe,
   running,
@@ -237,6 +174,10 @@ function ScrollingWave({
   const runningRef = useRef(running);
   runningRef.current = running;
   const { lowDb, highDb } = target;
+  const marks = useMemo(
+    () => waveMarks({ lowDb, highDb }, size.height / 2),
+    [lowDb, highDb, size.height],
+  );
 
   useEffect(() => {
     const el = canvas.current;
@@ -268,37 +209,10 @@ function ScrollingWave({
     const draw = () => {
       const w = el.width;
       const h = el.height;
-      const mid = h / 2;
       ctx.clearRect(0, 0, w, h);
-      // The target, mirrored: a band in a wash of the accent, so the bars
-      // that reach into it are the ones in the right place.
-      const lowY = meterFill(lowDb) * mid;
-      const highY = meterFill(highDb) * mid;
-      ctx.fillStyle = colours.accent;
-      ctx.globalAlpha = 0.1;
-      ctx.fillRect(0, mid - highY, w, highY - lowY);
-      ctx.fillRect(0, mid + lowY, w, highY - lowY);
-      ctx.globalAlpha = 1;
-      // Its edges, dashed across.
-      ctx.strokeStyle = colours.line;
-      ctx.lineWidth = dpr;
-      ctx.setLineDash([4 * dpr, 4 * dpr]);
-      for (const db of [lowDb, highDb]) {
-        const y = meterFill(db) * mid;
-        for (const yy of [mid - y, mid + y]) {
-          ctx.beginPath();
-          ctx.moveTo(0, yy);
-          ctx.lineTo(w, yy);
-          ctx.stroke();
-        }
-      }
-      ctx.setLineDash([]);
-      ctx.globalAlpha = 0.5;
-      ctx.beginPath();
-      ctx.moveTo(0, mid);
-      ctx.lineTo(w, mid);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+      // The target, mirrored, and the scale up the side: the bars that
+      // reach into the band are the ones in the right place.
+      drawWaveBackdrop(ctx, { w, h, dpr }, range, marks, colours);
       // Whole device pixels, so a bar's edges stay sharp as it slides.
       const offset = Math.round((phase / COLUMN_MS) * pitch);
       const edge = w - offset;
@@ -328,29 +242,92 @@ function ScrollingWave({
       if (cols.length > count) cols.splice(0, cols.length - count);
       draw();
     });
-  }, [subscribe, size, canvas, lowDb, highDb]);
+  }, [subscribe, size, canvas, lowDb, highDb, marks]);
 
   return (
-    <div ref={box} className="relative h-full w-full">
-      <canvas
-        ref={canvas}
-        role="img"
-        aria-label={t("visualizer.waveLabel", {
-          low: formatTargetDb(lowDb),
-          high: formatTargetDb(highDb),
-        })}
-        className="absolute inset-0 h-full w-full"
-      />
-      {[highDb, lowDb].map((db) => (
-        <span
-          key={db}
+    <div className="flex h-full w-full">
+      <WaveScale marks={marks} />
+      <div ref={box} className="relative h-full min-w-0 flex-1">
+        <canvas
+          ref={canvas}
+          role="img"
+          aria-label={t("visualizer.waveLabel", {
+            low: formatTargetDb(lowDb),
+            high: formatTargetDb(highDb),
+          })}
+          className="absolute inset-0 h-full w-full"
+        />
+      </div>
+    </div>
+  );
+}
+
+/** The framework's spectrum with the decibels beside it, on its own floor
+ *  and ceiling (`bandLevels`): faint lines behind the bars, and their
+ *  figures in a gutter on the left. The bars' box ends a frequency row
+ *  short of the card's foot — the row is `SpectrumBars`' own (`h-3` and its
+ *  `gap-1`, a rem together), so if the framework's markup moves, check the
+ *  lines still meet the bars. */
+function SpectrumView({
+  subscribe,
+  ticks,
+  label,
+}: {
+  subscribe: Subscribe;
+  ticks: Array<{ band: number; label: string }>;
+  label: string;
+}) {
+  const { box, canvas, size } = useCanvas();
+  const marks = useMemo(() => spectrumMarks(size.height), [size.height]);
+
+  useEffect(() => {
+    const el = canvas.current;
+    const ctx = el?.getContext("2d");
+    if (!el || !ctx || size.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    const colours = palette(el);
+    ctx.clearRect(0, 0, el.width, el.height);
+    ctx.strokeStyle = colours.line;
+    ctx.lineWidth = dpr;
+    ctx.globalAlpha = 0.5;
+    for (const m of marks) {
+      const y = Math.round((1 - m.at) * el.height) + 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(el.width, y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }, [size, canvas, marks]);
+
+  return (
+    <div className="flex h-full w-full">
+      <div aria-hidden className="relative mb-4 w-6 shrink-0">
+        {marks.map((m) => (
+          <span
+            key={m.db}
+            className="absolute right-1 translate-y-1/2 font-figures text-[9px] leading-none text-muted"
+            style={{ bottom: `${spectrumAt(m.db) * 100}%` }}
+          >
+            {formatTargetDb(m.db)}
+          </span>
+        ))}
+      </div>
+      <div className="relative min-w-0 flex-1">
+        <div
+          ref={box}
           aria-hidden
-          className="pointer-events-none absolute left-0 font-figures text-[9px] leading-none text-muted"
-          style={{ top: `calc(50% - ${meterFill(db) * 50}% - 0.7em)` }}
+          className="pointer-events-none absolute inset-x-0 top-0 bottom-4"
         >
-          {formatTargetDb(db)}
-        </span>
-      ))}
+          <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
+        </div>
+        <SpectrumBars
+          subscribe={subscribe}
+          ticks={ticks}
+          label={label}
+          className="h-full"
+        />
+      </div>
     </div>
   );
 }

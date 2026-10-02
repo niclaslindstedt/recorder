@@ -110,13 +110,16 @@ under **Settings → Record screen → Visualizer**):
 
 - **Waveform** (the default) — the sound's shape scrolling by, about six
   seconds across a phone, on the meter's decibel scale, with the **target
-  level** shaded across it and its two edges dashed and labelled. Each
+  level** shaded across it and its two edges dashed, and the decibels in a
+  gutter up the side (the target's edges, then as much of the meter's
+  scale as fits). Each
   moment is coloured by where its peak landed: grey under the target, the
   accent inside it, amber over it, and red once it is past −3 dB or has
   clipped. The caption says the range ("aim for −18 to −6 dB"), and the
   whole-take strip along the foot wears the same colours, so how much of a
   take sat in range is seen at once.
-- **Spectrum** — how loud each frequency is now, bass on the left.
+- **Spectrum** — how loud each frequency is now, bass on the left, with
+  the decibels up the side.
 - **Spectrogram** — frequency over time, brighter where louder, so a hum, a
   hiss or a voice's harmonics show as lines.
 
@@ -181,7 +184,10 @@ needs, inline:
   recording" and Enter saves.
 - **Listen back** — play the take before keeping it, through the EQ it will
   be saved with, with its shape above as the playhead's track; tap or drag
-  to seek.
+  to seek. The shape is drawn the way the live waveform is — the meter's
+  decibel scale, the target shaded across it, each bar coloured by where
+  it landed — so whether the take sat in range is seen before it is heard.
+  Once it is playing, what is still to come is dimmed.
 - **Where it goes** — a folder chip under the title, preset to what Ready
   showed; it opens the folder picker.
 - **The facts** — length, and the peak and clipping as chips (clipping with

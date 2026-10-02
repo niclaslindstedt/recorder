@@ -511,6 +511,7 @@ export function RecordScreen({
         suggested={suggested}
         saving={saving}
         eq={settings.recordEq}
+        target={target}
         beside={stand}
         destination={destinationChip}
         onSave={(title) => void save(title)}
