@@ -47,6 +47,7 @@ src/
     ├── recordChoices.tsx    the take's choices as tiles, glyphs and chips — one place says them all
     ├── Glyphs.tsx           the glyph-shaped controls: choice tiles, round glyphs, a toolbar's glyphs, chips
     ├── Visualizer.tsx       the waveform, spectrum or spectrogram card
+    ├── SpectrumView.tsx     the spectrum as it will sound through the EQ (spectrumEq.ts)
     ├── LevelWave.tsx        a take's shape against the target (Review, the player)
     ├── canvas.ts            what the waveforms' canvases share
     ├── waveAxis.ts          which decibels fit up a picture's side

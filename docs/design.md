@@ -395,10 +395,21 @@ Visualizer).
   names the range for the person who wants the number. The take's strip
   along the foot wears the same colours. This is the view most people know
   from a voice memo app.
-- **Spectrum**: the framework's bars, how loud each frequency is now, bass
-  on the left, with the decibels in the same gutter. The bars are not
-  coloured by the target: a band's level is a share of the sound, not its
-  peak, so the target's range does not apply to it. For a musician tuning a mic position, or seeing a hum.
+- **Spectrum**: how loud each frequency is now, bass on the left, with the
+  decibels in the same gutter — drawn **as it will sound through the
+  take's EQ**. The microphone is captured as it is and the EQ applied on
+  playback and export, so each bar is moved to where the EQ puts it: what
+  the EQ adds is the bar carried on, paler; what it cuts is the bar that
+  was, hollow (the EQ sheet's own picture). Every bar wears the waveform's
+  colour for the level _after_ the EQ — the held peak, moved by what the
+  EQ does to the sound's power — against the target, so a boost that takes
+  a take over its target turns the spectrum amber and the bar that did it
+  stands out. There is no target band on it: a band's level is a share of
+  the sound, not its peak, and the target's range does not apply to one
+  bar. For a musician tuning a mic position or an EQ, or seeing a hum. The
+  heights are the framework's (`bandLevels`); the bars are drawn here
+  (`SpectrumView.tsx`), as the spectrogram's are, because their colour and
+  the EQ's part are the app's.
 - **Spectrogram**: frequency over time, low at the foot, brighter where
   louder, in the theme's own colours (accent, then amber, then red at the
   top). A fridge's hum, a fan's hiss or the harmonics of a voice show up as
@@ -411,7 +422,8 @@ Listening verdict read the one target, so the picture, the bar and the
 words never disagree; the Voice target is exactly the meter's own zones. A
 scrolling waveform and a
 spectrogram are candidates to move into the framework's `audio` module next
-to `SpectrumBars` once a sibling app wants them.
+to `SpectrumBars` once a sibling app wants them; the spectrum would come
+back to `SpectrumBars` once it can take a colour and a per-bar shift.
 
 ### Review: the take is in memory
 

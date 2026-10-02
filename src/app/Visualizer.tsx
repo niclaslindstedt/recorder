@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 
 import {
-  SpectrumBars,
   meterFill,
   readFrame,
   toDb,
@@ -11,13 +10,15 @@ import {
 import { WaveformIcon } from "@niclaslindstedt/oss-framework/components";
 
 import { drawWaveBackdrop, palette, targetColor, useCanvas } from "./canvas.ts";
+import { isFlat, type Eq } from "./eq.ts";
 import { SpectrogramIcon, SpectrumIcon } from "./icons.tsx";
 import { WaveScale } from "./LevelWave.tsx";
+import { SpectrumView } from "./SpectrumView.tsx";
 import { useT } from "./i18n/index.ts";
 import { bucketShare } from "./pacing.ts";
 import { formatTargetDb, targetTone, type TargetRange } from "./target.ts";
 import type { VisualizerKind } from "./useAppSettings.ts";
-import { spectrumAt, spectrumMarks, waveMarks } from "./waveAxis.ts";
+import { waveMarks } from "./waveAxis.ts";
 
 // The Record screen's big picture (docs/design.md, "Record"): the card that
 // takes the room between the timer and the meter while listening and
@@ -28,7 +29,9 @@ import { spectrumAt, spectrumMarks, waveMarks } from "./waveAxis.ts";
 //   shaded across it and every bar coloured by where its peak landed —
 //   grey under the range, the accent in it, amber over it, red when hot or
 //   clipped — so "is this a good level?" is read off the picture;
-// - spectrum: the framework's bars, how loud each frequency is now;
+// - spectrum: how loud each frequency is now, drawn through the take's EQ
+//   and coloured by the level after it against the target
+//   (`SpectrumView.tsx`);
 // - spectrogram: frequency over time, brighter where louder, so a hum, a
 //   hiss or a voice's harmonics show as lines.
 //
@@ -49,6 +52,11 @@ type Props = {
   /** The frequency printed beside a band. */
   ticks: Array<{ band: number; label: string }>;
   bands: number;
+  /** Each bar's lower edge, Hz, and the top edge last — the framework's
+   *  layout, for what the EQ does under each. */
+  edgesHz: readonly number[];
+  /** The EQ the take is saved with: the spectrum is drawn through it. */
+  eq: Eq | null;
   /** Where the peaks should land: the waveform's band and its colours. */
   target: TargetRange;
   /** Draw the whole take so far as a strip along the card's foot, from the
@@ -74,6 +82,8 @@ export function Visualizer({
   running,
   ticks,
   bands,
+  edgesHz,
+  eq,
   target,
   overview,
   className = "",
@@ -95,7 +105,9 @@ export function Visualizer({
                 low: formatTargetDb(target.lowDb),
                 high: formatTargetDb(target.highDb),
               })
-            : t(`visualizer.caption.${kind}`)}
+            : kind === "spectrum" && !isFlat(eq)
+              ? t("visualizer.caption.spectrumEq")
+              : t(`visualizer.caption.${kind}`)}
         </span>
         <div
           role="radiogroup"
@@ -135,7 +147,13 @@ export function Visualizer({
             <SpectrumView
               subscribe={subscribe}
               ticks={ticks}
-              label={t("visualizer.spectrum")}
+              bands={bands}
+              edgesHz={edgesHz}
+              eq={eq}
+              target={target}
+              label={t(
+                isFlat(eq) ? "visualizer.spectrum" : "visualizer.spectrumEq",
+              )}
             />
           )}
           {kind === "spectrogram" && (
@@ -256,76 +274,6 @@ function ScrollingWave({
             high: formatTargetDb(highDb),
           })}
           className="absolute inset-0 h-full w-full"
-        />
-      </div>
-    </div>
-  );
-}
-
-/** The framework's spectrum with the decibels beside it, on its own floor
- *  and ceiling (`bandLevels`): faint lines behind the bars, and their
- *  figures in a gutter on the left. The bars' box ends a frequency row
- *  short of the card's foot — the row is `SpectrumBars`' own (`h-3` and its
- *  `gap-1`, a rem together), so if the framework's markup moves, check the
- *  lines still meet the bars. */
-function SpectrumView({
-  subscribe,
-  ticks,
-  label,
-}: {
-  subscribe: Subscribe;
-  ticks: Array<{ band: number; label: string }>;
-  label: string;
-}) {
-  const { box, canvas, size } = useCanvas();
-  const marks = useMemo(() => spectrumMarks(size.height), [size.height]);
-
-  useEffect(() => {
-    const el = canvas.current;
-    const ctx = el?.getContext("2d");
-    if (!el || !ctx || size.width === 0) return;
-    const dpr = window.devicePixelRatio || 1;
-    const colours = palette(el);
-    ctx.clearRect(0, 0, el.width, el.height);
-    ctx.strokeStyle = colours.line;
-    ctx.lineWidth = dpr;
-    ctx.globalAlpha = 0.5;
-    for (const m of marks) {
-      const y = Math.round((1 - m.at) * el.height) + 0.5;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(el.width, y);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-  }, [size, canvas, marks]);
-
-  return (
-    <div className="flex h-full w-full">
-      <div aria-hidden className="relative mb-4 w-6 shrink-0">
-        {marks.map((m) => (
-          <span
-            key={m.db}
-            className="absolute right-1 translate-y-1/2 font-figures text-[9px] leading-none text-muted"
-            style={{ bottom: `${spectrumAt(m.db) * 100}%` }}
-          >
-            {formatTargetDb(m.db)}
-          </span>
-        ))}
-      </div>
-      <div className="relative min-w-0 flex-1">
-        <div
-          ref={box}
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 bottom-4"
-        >
-          <canvas ref={canvas} className="absolute inset-0 h-full w-full" />
-        </div>
-        <SpectrumBars
-          subscribe={subscribe}
-          ticks={ticks}
-          label={label}
-          className="h-full"
         />
       </div>
     </div>
