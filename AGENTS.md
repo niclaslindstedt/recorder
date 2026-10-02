@@ -316,7 +316,10 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   the device, sent nowhere). `Visualizer.tsx` is the card that fills the
   stage while listening and recording: a scrolling waveform on the meter's
   decibel scale, the framework's spectrum bars, or a spectrogram, switched
-  in its corner. `LevelWave.tsx` is a take's shape drawn the same way —
+  in its corner; `SpectrumView.tsx` draws the spectrum from the
+  framework's band levels, moved by the take's EQ and coloured by the
+  level after it against the target (`spectrumEq.ts`, pure, tested in
+  `tests/spectrumEq_test.ts`). `LevelWave.tsx` is a take's shape drawn the same way —
   the target band, each bar in its colour, the playhead's slider — in
   Review and the player (the list's rows keep the framework's plain
   `Waveform`); `canvas.ts` holds what the two share, and `waveAxis.ts`
@@ -596,7 +599,7 @@ job only type-checks and runs `npx expo-doctor`. See `native/README.md` and
 Tests live in `tests/` with a `_test` suffix and run under Vitest in the `node`
 environment — they cover the pure domain modules (`types`, `folders`, `merge`,
 `migrations`, `takes`, `export`, `format`, `levels`, `quality`, `target`, `pacing`,
-`playhead`, `look`, `eq`, `howl`, `gate`, `devices`, `audioHost`, `waveAxis`,
+`playhead`, `look`, `eq`, `howl`, `gate`, `devices`, `audioHost`, `waveAxis`, `spectrumEq`,
 `useAppSettings`'s parser, `shortcuts`, `cloudHost`, `selfHosted`,
 `demoData`), which is where the app's
 real logic is. `native_icloud_test.ts` pins the strings the wrapper and the app

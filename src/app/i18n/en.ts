@@ -130,16 +130,19 @@ export const en = {
     waveLabel:
       "Waveform of the last few seconds, with the target level, {low} to {high} dB, shaded across it",
     spectrum: "Spectrum",
+    spectrumEq:
+      "Spectrum, drawn as it will sound after the EQ: what it adds is paler, what it cuts is hollow",
     spectrogram: "Spectrogram",
     caption: {
       wave: "Waveform · aim for {low} to {high} dB",
       spectrum: "Spectrum · low to high",
+      spectrumEq: "After the EQ · pale added · hollow cut",
       spectrogram: "Spectrogram · frequency over time",
     },
     hint: {
       wave: "The sound's shape scrolling by, on the meter's decibel scale, with the target level shaded across it: grey is under it, the accent is in it, amber is over it and red is too hot. The target is chosen on the Record screen's Quality sheet.",
       spectrum:
-        "How loud each frequency is right now, from bass on the left to treble on the right.",
+        "How loud each frequency is right now, from bass on the left to treble on the right, as it will sound through the take's EQ: what the EQ adds is drawn paler, what it cuts hollow. The loudest bars — the ones setting the level — wear the waveform's colours for the level after the EQ, and the quiet ones stay grey, so a boost that takes you over the target turns the bars that did it amber.",
       spectrogram:
         "Frequencies over time, brighter where louder — hum, hiss and a voice's harmonics show as lines.",
     },

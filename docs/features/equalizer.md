@@ -8,6 +8,13 @@ it was.
 
 ## The sheet
 
+The Record screen's spectrum shows the EQ too, while listening and
+recording: each bar is drawn as it will sound after the EQ (what it adds
+paler, what it cuts hollow), and the loudest bars are coloured by where the
+level after the EQ lands against the target — so a boost that makes a take
+too loud shows as amber on the bars it boosted. The take itself is always kept as the microphone heard
+it — the EQ is applied when it is played or exported.
+
 One sheet, opened in two places:
 
 - **Record screen → EQ** sets the EQ new takes start with. A take is saved

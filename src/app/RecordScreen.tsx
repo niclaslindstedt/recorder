@@ -221,7 +221,10 @@ export function RecordScreen({
     [listen.subscribe],
   );
 
-  const ticks = useMemo(() => bandTicks(layoutBands(BANDS, 2048, 48000)), []);
+  // The bars' layout: the capture's own (`layoutBands`), whose edges do not
+  // move with the device's rate — the top is 16 kHz under either Nyquist.
+  const layout = useMemo(() => layoutBands(BANDS, 2048, 48000), []);
+  const ticks = useMemo(() => bandTicks(layout), [layout]);
 
   const state = recorder.state;
   const live = state === "recording" || state === "paused";
@@ -604,6 +607,8 @@ export function RecordScreen({
         running={state === "recording"}
         ticks={ticks}
         bands={BANDS}
+        edgesHz={layout.edgesHz}
+        eq={settings.recordEq}
         target={target}
         overview
         className={visualizerSize}
@@ -724,6 +729,8 @@ export function RecordScreen({
         running
         ticks={ticks}
         bands={BANDS}
+        edgesHz={layout.edgesHz}
+        eq={settings.recordEq}
         target={target}
         className={visualizerSize}
       />
