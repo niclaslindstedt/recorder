@@ -387,7 +387,8 @@ Visualizer).
   phone. It is drawn on the **meter's decibel scale**, not in raw
   amplitude, so a quiet voice still has a shape. The **target level** (the
   Quality sheet's) is a band shaded across it, its edges dashed and
-  labelled, and every slice wears where its peak landed: **grey** under the
+  labelled in a gutter up the side with as much of the meter's scale as
+  fits, and every slice wears where its peak landed: **grey** under the
   target, the **accent** in it, **amber** over it, **red** past −3 or when it
   clipped. Colour arrives only in the right range, so "am I at a good
   level?" is read off the picture without reading a number, and the caption
@@ -395,7 +396,9 @@ Visualizer).
   along the foot wears the same colours. This is the view most people know
   from a voice memo app.
 - **Spectrum**: the framework's bars, how loud each frequency is now, bass
-  on the left. For a musician tuning a mic position, or seeing a hum.
+  on the left, with the decibels in the same gutter. The bars are not
+  coloured by the target: a band's level is a share of the sound, not its
+  peak, so the target's range does not apply to it. For a musician tuning a mic position, or seeing a hum.
 - **Spectrogram**: frequency over time, low at the foot, brighter where
   louder, in the theme's own colours (accent, then amber, then red at the
   top). A fridge's hum, a fan's hiss or the harmonics of a voice show up as
@@ -435,7 +438,9 @@ whole screen on two fields and put a big red Discard under a small Save.
   replaces "New recording 3" and Enter saves.
 - **Listen back** before keeping it: the play button beside the facts plays
   the take from memory, and the shape above it is the playhead's track and
-  seekable. "Did I get it?" is the question this moment is for. A compact
+  seekable. It is drawn as the live waveform is (`LevelWave.tsx`): the
+  meter's scale, the target band, each bar in its colour, the decibels up
+  the side, and what is still to play dimmed once playing has started. "Did I get it?" is the question this moment is for. A compact
   take plays as the encoder wrote it; a lossless one (still samples) is made
   into a WAV on the first press, so a take nobody plays back costs nothing.
 - **The facts** (length, and peak and clipping as chips) are what a

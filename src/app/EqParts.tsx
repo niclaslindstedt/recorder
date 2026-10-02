@@ -19,7 +19,7 @@ import {
   type Eq,
 } from "./eq.ts";
 import { useT } from "./i18n/index.ts";
-import { palette, useCanvas } from "./Visualizer.tsx";
+import { palette, useCanvas } from "./canvas.ts";
 
 // The equalizer's two instruments: a knob per band, and the curve the
 // knobs make, drawn over what the sound is doing now when there is a sound

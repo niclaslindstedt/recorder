@@ -29,7 +29,9 @@ Tap a row and the player opens, a recording's page:
   glyph beside it;
 - when it was recorded, and the **folder** as a chip — tap it to move the
   recording, with the same folder picker;
-- the recording's shape with the playhead over it (tap or drag to seek) —
+- the recording's shape with the playhead over it (tap or drag to seek),
+  on the meter's decibel scale with the target level shaded across it and
+  each bar coloured by where it landed, as on the Record screen —
   the line runs on its own smooth clock at the playback rate, kept on the
   audio's own time, so it glides over a voice rather than catching on it;
 - the **EQ** glyph, left of the transport and lit when the recording has

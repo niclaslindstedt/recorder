@@ -55,6 +55,7 @@ import { createIdbDocBackend, useDocStore } from "./app/useDocStore.ts";
 import { useNamespaces } from "./app/useNamespaces.ts";
 import { useDesk, useStand } from "./app/useShape.ts";
 import { useSyncEngine } from "./app/useSyncEngine.ts";
+import { targetRange } from "./app/target.ts";
 import { status } from "./output.ts";
 
 // A local-first voice recorder built from the framework's shared surface.
@@ -91,6 +92,13 @@ export function App() {
   // The microphone and the output chosen on the Microphone sheet, for the
   // Record screen and every player.
   const routing = useAudioRouting(settings.inputDevice, settings.outputDevice);
+  // Where a take's peaks should land: the player's shape wears it, as the
+  // Record screen's does.
+  const { levelTarget: targetId, targetLowDb, targetHighDb } = settings;
+  const levelTarget = useMemo(
+    () => targetRange(targetId, { lowDb: targetLowDb, highDb: targetHighDb }),
+    [targetId, targetLowDb, targetHighDb],
+  );
   const prefersDark = usePrefersDark();
   const appearance = useMemo(
     () =>
@@ -455,6 +463,7 @@ export function App() {
           filesVersion={filesVersion}
           locale={locale}
           skipSeconds={settings.skipSeconds}
+          target={levelTarget}
           onExport={() => openExport(open.id)}
           onMove={() => setMoveId(open.id)}
           folderName={

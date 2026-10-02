@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   PLAYBACK_RATES,
-  Waveform,
   type Player,
 } from "@niclaslindstedt/oss-framework/audio";
 import {
@@ -37,6 +36,8 @@ import { shareOriginal } from "./export.ts";
 import { Chip, FolderChip, ToolGlyph } from "./Glyphs.tsx";
 import { ClipIcon, EqIcon, ShareIcon, StarFilledIcon } from "./icons.tsx";
 import { useT } from "./i18n/index.ts";
+import { LevelWave } from "./LevelWave.tsx";
+import type { TargetRange } from "./target.ts";
 import type { BlobStore } from "./blobStore.ts";
 import { useRouting } from "./useAudioRouting.ts";
 import { useEqPlayer } from "./useEqPlayer.ts";
@@ -58,6 +59,8 @@ type Props = {
   filesVersion: number;
   locale: string;
   skipSeconds: number;
+  /** Where the peaks should land: the shape's band and its colours. */
+  target: TargetRange;
   onExport: () => void;
   onMove: () => void;
   /** The folder's name, for the chip beside the date. */
@@ -74,6 +77,7 @@ export function PlayerModal({
   filesVersion,
   locale,
   skipSeconds,
+  target,
   onExport,
   onMove,
   folderName,
@@ -240,6 +244,7 @@ export function PlayerModal({
           <PlayerWave
             player={player}
             peaks={recording.peaks}
+            target={target}
             duration={duration}
             canSeek={blob !== null}
             label={t("player.position")}
@@ -468,12 +473,14 @@ export function PlayerModal({
 function PlayerWave({
   player,
   peaks,
+  target,
   duration,
   canSeek,
   label,
 }: {
   player: Player;
   peaks: readonly number[];
+  target: TargetRange;
   duration: number;
   canSeek: boolean;
   label: string;
@@ -482,9 +489,10 @@ function PlayerWave({
 
   return (
     <div>
-      <div className="h-24 rounded-md bg-surface-2 px-2 py-1">
-        <Waveform
+      <div className="h-28 rounded-md bg-surface-2 px-2 py-1">
+        <LevelWave
           peaks={peaks}
+          target={target}
           progress={duration > 0 ? time / duration : 0}
           onSeek={
             canSeek ? (share) => player.seek(share * duration) : undefined
