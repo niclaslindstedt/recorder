@@ -217,7 +217,15 @@ like SVG's `focusable` as `"false"` rather than a JSX boolean.
   holds the spaces. The keys stay in the framework's key vault — never add
   them to localStorage, logs or a backup — and the server only ever gets
   ciphertext. The sheets are `SelfHostedConnectModal.tsx` and
-  `SelfHostedSettings.tsx`.
+  `SelfHostedSettings.tsx`. **The phone app's store build has no self-hosted
+  backend for now** (the owner's decision): every gate — the picker option,
+  the `useServer` hook in `useSyncEngine.ts`, the sheets, the catalog's
+  `selfHosted` copy and the sentences naming the server — tests
+  `import.meta.env.VITE_EDITION === "store"` itself, never a constant derived
+  from it, because only the direct test is folded and a derived one ships the
+  code anyway. A stored `selfhosted` choice reads as this device there
+  (`tests/server_offered_test.ts`), and `storeWithoutServer` in
+  `vite.config.ts` keeps the server out of that build's page description.
 - `src/app/useSyncEngine.ts` — the sync engine over the framework's storage
   adapters (debounced push, conflict / auth / throttle handling), one file per
   space (`recorder-<slug>.json`) and a folder beside it (`recorder-<slug>/`)

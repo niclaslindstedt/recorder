@@ -29,7 +29,8 @@ Thin is the design, not an aspiration. The wrapper:
 - opens the **camera to read a pairing code** when the reader taps Scan on
   the storage server's pairing sheet (`src/scanQrBridge.ts` →
   `src/QrScanner.tsx` → `expo-camera`) — see
-  [Scanning a pairing code](#scanning-a-pairing-code);
+  [Scanning a pairing code](#scanning-a-pairing-code) — though the store
+  build has no storage server backend for now, so nothing in it asks for this;
 - prefers the **microphone and output** the page's Microphone sheet chose,
   through the phone's own audio session (`src/audioRouteBridge.ts` →
   `src/audioRoute.ts` → `modules/audio-route`) — see
@@ -179,6 +180,15 @@ A failure comes back as data (`ok: false`) and the page says so. A `blob:` or
 than handed to the system browser, which could not open it either.
 
 ## Scanning a pairing code
+
+**The store build has no storage server backend for now** — the owner's
+decision, until the server has been proven on the web. The bundle is the store
+edition (`VITE_EDITION=store`), which folds the "Your server" option, the
+pairing sheet and every sentence about the server out of the page, and a phone
+that was paired under an earlier build opens on the copy on the phone. The
+page therefore never asks for a scan, and the half below stays in the wrapper,
+unreached, for when the server comes back; so do the camera permission and
+`expo-camera`. The website and the desktop app keep the server.
 
 Pairing the app with the reader's own storage server takes a one-time code,
 shown as a QR code by the server's console or by another of the reader's

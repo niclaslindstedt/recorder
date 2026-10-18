@@ -578,14 +578,18 @@ export function App() {
         />
       )}
 
-      {sync.selfHosted.connectRequest && (
-        <SelfHostedConnectModal
-          selfHosted={sync.selfHosted}
-          initialPayload={sync.selfHosted.connectRequest.payload}
-          onConnected={sync.adoptSelfHosted}
-          onClose={sync.selfHosted.closeConnect}
-        />
-      )}
+      {/* Not in the phone app's store build, which offers no server for
+          now: the flag is tested here, not through a constant, so the
+          bundler leaves the sheet and its sentences out of that build. */}
+      {import.meta.env.VITE_EDITION !== "store" &&
+        sync.selfHosted?.connectRequest && (
+          <SelfHostedConnectModal
+            selfHosted={sync.selfHosted}
+            initialPayload={sync.selfHosted.connectRequest.payload}
+            onConnected={sync.adoptSelfHosted}
+            onClose={sync.selfHosted.closeConnect}
+          />
+        )}
     </div>
   );
   return (

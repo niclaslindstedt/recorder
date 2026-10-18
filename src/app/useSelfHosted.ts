@@ -26,7 +26,9 @@ import {
   type RecorderClient,
 } from "./selfHosted.ts";
 
-const log = logStore.createLogger("selfhosted");
+// Pure, so a build that never calls the hook (the phone app's store build,
+// which offers no server for now) drops the logger with it.
+const log = /* @__PURE__ */ logStore.createLogger("selfhosted");
 
 /** Where the device stands with its server.
  *

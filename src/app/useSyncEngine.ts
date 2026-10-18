@@ -79,6 +79,13 @@ import { useSelfHosted, type SelfHosted } from "./useSelfHosted.ts";
 // reader's own storage server (`useSelfHosted.ts`) seals everything itself
 // before it leaves the device, so the app adds nothing there. "This device"
 // connects nothing.
+//
+// The phone app's store build (`VITE_EDITION=store`) has no self-hosted
+// backend for now — the owner's decision, until it has been proven on the
+// web. Every place below that would offer, pair with or restore the server
+// tests `import.meta.env.VITE_EDITION` itself rather than a constant derived
+// from it, because that is what the bundler folds: the picker option, the
+// client, the pairing sheet and its sentences all leave that build.
 
 const syncLog = logStore.createLogger("sync");
 const encryptionLog = logStore.createLogger("encryption");
@@ -121,26 +128,34 @@ export const PROVIDER_NAMES: Record<SyncBackendId, string> = {
   local: "This device",
   icloud: "iCloud Drive",
   dropbox: "Dropbox",
-  selfhosted: "Your server",
+  // Never shown in the phone app's store build, which offers no server.
+  selfhosted: import.meta.env.VITE_EDITION === "store" ? "" : "Your server",
 };
 
 /** Which backends this build can offer without asking anything of its host. */
 export const AVAILABLE_BACKENDS: SyncBackendId[] = [
   "local",
   ...(DROPBOX_APP_KEY ? (["dropbox"] as const) : []),
-  "selfhosted",
+  // Not in the phone app's store build, for now.
+  ...(import.meta.env.VITE_EDITION === "store"
+    ? []
+    : (["selfhosted"] as const)),
 ];
 
 const ICLOUD_FOLDER = "iCloud Drive/Recorder";
 
 type DropboxTokens = { accessToken: string; refreshToken: string | null };
 
-function readBackend(): SyncBackendId {
+/** The backend the reader chose last, as this build can honour it. */
+export function readBackend(): SyncBackendId {
   try {
     const raw = localStorage.getItem(BACKEND_KEY);
-    return raw === "dropbox" || raw === "icloud" || raw === "selfhosted"
-      ? raw
-      : "local";
+    // A server a phone was paired with before its store build stopped
+    // offering one reads as this device: the recordings are in the local
+    // copy, and the copy on the server stays where it is.
+    if (raw === "selfhosted")
+      return import.meta.env.VITE_EDITION === "store" ? "local" : raw;
+    return raw === "dropbox" || raw === "icloud" ? raw : "local";
   } catch {
     return "local";
   }
@@ -165,7 +180,7 @@ function writeDropboxTokens(tokens: DropboxTokens | null): void {
 function backendPath(
   backend: SyncBackendId,
   slug: string,
-  server: SelfHosted["server"],
+  server: SelfHosted["server"] | undefined,
 ): string {
   const file = spaceFileName(slug);
   if (backend === "dropbox") return `Apps/${DROPBOX_APP_FOLDER}/${file}`;
@@ -203,7 +218,9 @@ export type SyncEngine = {
   reload: () => Promise<void>;
   reconnect: () => Promise<void>;
   checkConnection: () => Promise<ConnectionProbeResult>;
-  selfHosted: SelfHosted;
+  /** The reader's own server — null in a build that offers none (the phone
+   *  app's store build). */
+  selfHosted: SelfHosted | null;
   adoptSelfHosted: () => void;
   /** The passphrase over the Dropbox and iCloud copies. */
   encryption: Encryption;
@@ -215,6 +232,11 @@ export type SyncEngine = {
    *  can be opened here. */
   listSpaces: () => Promise<string[]>;
 };
+
+/** The reader's own server, or none: the phone app's store build neither
+ *  restores a pairing nor picks one up from a link. */
+const useServer: () => SelfHosted | null =
+  import.meta.env.VITE_EDITION === "store" ? () => null : useSelfHosted;
 
 export function useSyncEngine(
   store: DocStore,
@@ -229,8 +251,8 @@ export function useSyncEngine(
     readDropboxTokens,
   );
   const cloudHost: CloudHost | null = useCloudHost();
-  const selfHosted = useSelfHosted();
-  const selfHostedNs = selfHosted.namespace;
+  const selfHosted = useServer();
+  const selfHostedNs = selfHosted?.namespace ?? null;
 
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [statusDetail, setStatusDetail] = useState<string | null>(null);
@@ -295,7 +317,11 @@ export function useSyncEngine(
         ),
       };
     }
-    if (backend === "selfhosted" && selfHostedNs) {
+    if (
+      import.meta.env.VITE_EDITION !== "store" &&
+      backend === "selfhosted" &&
+      selfHostedNs
+    ) {
       const cloud = selfHostedNs.adapter({
         fileName: spaceFileName(slug),
         saveDebounceMs: SAVE_DEBOUNCE_MS,
@@ -331,6 +357,7 @@ export function useSyncEngine(
     (backend !== "local" &&
       !paused &&
       backend === "selfhosted" &&
+      selfHosted !== null &&
       selfHosted.phase !== "signed-out");
 
   const reportFailure = useCallback((err: unknown, what: string): void => {
@@ -586,6 +613,7 @@ export function useSyncEngine(
         return;
       }
       if (next === "selfhosted") {
+        if (!selfHosted) return; // a build that offers no server
         if (selfHosted.phase === "ready" || selfHosted.phase === "unreachable")
           adoptSelfHosted();
         else selfHosted.requestConnect();
@@ -641,7 +669,7 @@ export function useSyncEngine(
   }, [pull]);
 
   const reconnect = useCallback(async (): Promise<void> => {
-    if (backend === "selfhosted") {
+    if (backend === "selfhosted" && selfHosted) {
       if (selfHosted.phase === "signed-out") selfHosted.requestConnect();
       else await selfHosted.activate();
       return;
@@ -691,7 +719,11 @@ export function useSyncEngine(
         (await createCloudHostByteStore(cloudHost).list()).map((e) => e.path),
       );
     }
-    if (backend === "selfhosted" && selfHostedNs) {
+    if (
+      import.meta.env.VITE_EDITION !== "store" &&
+      backend === "selfhosted" &&
+      selfHostedNs
+    ) {
       return spacesFrom(
         (await selfHostedNs.fileStore().list()).map((e) => e.path),
       );
@@ -713,8 +745,8 @@ export function useSyncEngine(
     dirty,
     offline:
       offline ||
-      (backend === "selfhosted" && selfHosted.phase === "unreachable"),
-    location: { path: backendPath(backend, slug, selfHosted.server) },
+      (backend === "selfhosted" && selfHosted?.phase === "unreachable"),
+    location: { path: backendPath(backend, slug, selfHosted?.server) },
     available:
       cloudHost || backend === "icloud"
         ? ["local", "icloud", ...AVAILABLE_BACKENDS.slice(1)]

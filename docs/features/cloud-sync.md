@@ -15,12 +15,12 @@ container belongs to the iCloud account the phone is signed into — and the
 files land under **Files → iCloud Drive → the app's name**, where you can open
 and copy them. See [`native-app.md`](native-app.md).
 
-**Your server** keeps the copy on a machine you run yourself — a
+**Your server** — on the website and in the desktop app; the phone app does
+not offer it for now — keeps the copy on a machine you run yourself — a
 [storage server](https://github.com/niclaslindstedt/storage) at home or on a
 host you choose. It is end to end encrypted: the server holds the files but
 cannot read them. Connecting asks for a pairing code from the server's admin
-console (paste it, scan its QR code with the phone app's camera, or open the
-link the code carries), and the first device makes the account's keys and a
+console (paste it, or open the link the code carries), and the first device makes the account's keys and a
 recovery key to store somewhere safe. A second device is approved from the
 first.
 

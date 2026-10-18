@@ -10,6 +10,77 @@
 
 import { APP_NAME } from "../appName.ts";
 
+// The pairing sheet and the server's settings, which only a build that offers
+// a server shows. The phone app's store build offers none for now (the
+// owner's decision), and `selfHosted` below tests the flag itself so that
+// build carries none of these sentences.
+const selfHostedCopy = {
+  title: "Connect to your server",
+  intro:
+    "A storage server you run yourself — at home or on a host you choose. Your recordings are encrypted on this device before they leave it; the server only ever holds ciphertext.",
+  codeLabel: "Pairing code",
+  codeHint:
+    "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then scan its QR code with this phone's camera or paste the link here. A code from one of your other devices works too.",
+  codeHintScan:
+    "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then tap Scan and point this phone at its QR code — or paste the link here. A code from one of your other devices works too.",
+  scan: "Scan",
+  scanHint: "Point the camera at the pairing code",
+  scanDenied:
+    "Camera access is off for this app. Allow it in Settings, or paste the code.",
+  scanUnavailable: "The camera could not be opened. Paste the code instead.",
+  scanInvalid: "That QR code is not a pairing code.",
+  codePlaceholder: "oss-storage://pair?…",
+  deviceLabel: "This device's name",
+  connect: "Connect",
+  codeEmpty: "Paste or scan a pairing code first.",
+  codeInvite:
+    "That is an invite to someone's shared space, not a pairing code for this device.",
+  codeInvalid: "That is not a pairing code: {reason}",
+  codeInvalidPlain: "That is not a pairing code.",
+  pairing: "Pairing with {server}…",
+  newAccountTitle: "Make your keys",
+  newAccount: `This is the first device on this account. ${APP_NAME} will now make the encryption key for your recordings — here, on this device. The server never sees it.`,
+  makeKeys: "Make my keys",
+  recoveryTitle: "Your recovery key",
+  recovery:
+    "Write this down or store it in your password manager. It is the only way back to your recordings if you lose every device, and nobody — not the server, not us — can recover it for you.",
+  copy: "Copy",
+  copied: "Copied",
+  savedIt: "I have stored my recovery key somewhere safe",
+  done: "Done",
+  existingTitle: "Get your keys",
+  existing:
+    "This account already has keys on another device. Approve this device there — Settings → Your server → Approve — and check it shows this code:",
+  waiting: "Waiting for approval…",
+  orRecovery: "Or type your recovery key",
+  recoveryPlaceholder: "XXXX-XXXX-…",
+  recover: "Use recovery key",
+  recoverFailed: "That recovery key does not match this account.",
+  server: "Server",
+  addDevice: "Add a device",
+  addDeviceTitle: "Add a device",
+  addDeviceHint: `Scan this with your other phone's camera, or paste the link into ${APP_NAME} there. It works once, for {minutes} minutes, and carries your keys — show it only to your own devices.`,
+  expires: "Expires in {time}",
+  expired: "Expired — close and make a new one",
+  approvals: "Waiting for approval",
+  approvalsHint:
+    "Approve only a device you are holding, and only if it shows the same code.",
+  approve: "Approve",
+  noApprovals: "No device is waiting.",
+  checkApprovals: "Check for devices",
+  newRecovery: "Make a new recovery key",
+  newRecoveryConfirm: "Make a new recovery key?",
+  newRecoveryHint:
+    "The old one stops working. Store the new one before you close this.",
+  unpair: "Unpair this device",
+  unpairConfirm: "Unpair this device?",
+  unpairHint:
+    "Its keys are erased from this device, so it must be paired again to sync. Your recordings stay on this device and on the server.",
+  unreachable: "Server unreachable — working on this device's copy",
+  needsKeys: "Paired, waiting for this device's keys",
+  finish: "Finish connecting",
+} as const;
+
 export const en = {
   app: {
     // The listing's name in an app build, the project's on the website (see
@@ -609,10 +680,16 @@ export const en = {
       "Separate libraries, each with its own folders and its own synced file.",
     manageSpaces: "Manage spaces",
     sync: "Storage",
+    // The phone app's store build offers no server for now, so its sentences
+    // name none; the flag is tested here so the others leave that build.
     syncHint:
-      "Off by default. Connect your own Dropbox, or a storage server you run yourself, to keep a copy there and sync between devices.",
+      import.meta.env.VITE_EDITION === "store"
+        ? "Off by default. Connect your own Dropbox to keep a copy there and sync between devices."
+        : "Off by default. Connect your own Dropbox, or a storage server you run yourself, to keep a copy there and sync between devices.",
     syncHintICloud:
-      "Off by default. Keep a copy in your own iCloud, Dropbox or storage server to sync between devices.",
+      import.meta.env.VITE_EDITION === "store"
+        ? "Off by default. Keep a copy in your own iCloud or Dropbox to sync between devices."
+        : "Off by default. Keep a copy in your own iCloud, Dropbox or storage server to sync between devices.",
     backend: "Backend",
     connected: "Connected to {name}",
     localOnly: "Kept on this device only",
@@ -669,7 +746,10 @@ export const en = {
     },
     version: "Version",
     build: "Build",
-    privacy: `${APP_NAME} keeps your recordings on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there. The microphone is used only while you record, and the phone app's camera only when you tap Scan to read a pairing code; no picture is kept.`,
+    privacy:
+      import.meta.env.VITE_EDITION === "store"
+        ? `${APP_NAME} keeps your recordings on this device. Nothing is sent anywhere unless you connect your own cloud account, and then only there. The microphone is used only while you record.`
+        : `${APP_NAME} keeps your recordings on this device. Nothing is sent anywhere unless you connect your own cloud account or storage server, and then only there. The microphone is used only while you record.`,
   },
 
   encryption: {
@@ -712,72 +792,10 @@ export const en = {
     syncedTo: "Synced to {name}",
   },
 
-  selfHosted: {
-    title: "Connect to your server",
-    intro:
-      "A storage server you run yourself — at home or on a host you choose. Your recordings are encrypted on this device before they leave it; the server only ever holds ciphertext.",
-    codeLabel: "Pairing code",
-    codeHint:
-      "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then scan its QR code with this phone's camera or paste the link here. A code from one of your other devices works too.",
-    codeHintScan:
-      "Make one in your server's admin console (Accounts → Pair device) or with storage-server pair, then tap Scan and point this phone at its QR code — or paste the link here. A code from one of your other devices works too.",
-    scan: "Scan",
-    scanHint: "Point the camera at the pairing code",
-    scanDenied:
-      "Camera access is off for this app. Allow it in Settings, or paste the code.",
-    scanUnavailable: "The camera could not be opened. Paste the code instead.",
-    scanInvalid: "That QR code is not a pairing code.",
-    codePlaceholder: "oss-storage://pair?…",
-    deviceLabel: "This device's name",
-    connect: "Connect",
-    codeEmpty: "Paste or scan a pairing code first.",
-    codeInvite:
-      "That is an invite to someone's shared space, not a pairing code for this device.",
-    codeInvalid: "That is not a pairing code: {reason}",
-    codeInvalidPlain: "That is not a pairing code.",
-    pairing: "Pairing with {server}…",
-    newAccountTitle: "Make your keys",
-    newAccount: `This is the first device on this account. ${APP_NAME} will now make the encryption key for your recordings — here, on this device. The server never sees it.`,
-    makeKeys: "Make my keys",
-    recoveryTitle: "Your recovery key",
-    recovery:
-      "Write this down or store it in your password manager. It is the only way back to your recordings if you lose every device, and nobody — not the server, not us — can recover it for you.",
-    copy: "Copy",
-    copied: "Copied",
-    savedIt: "I have stored my recovery key somewhere safe",
-    done: "Done",
-    existingTitle: "Get your keys",
-    existing:
-      "This account already has keys on another device. Approve this device there — Settings → Your server → Approve — and check it shows this code:",
-    waiting: "Waiting for approval…",
-    orRecovery: "Or type your recovery key",
-    recoveryPlaceholder: "XXXX-XXXX-…",
-    recover: "Use recovery key",
-    recoverFailed: "That recovery key does not match this account.",
-    server: "Server",
-    addDevice: "Add a device",
-    addDeviceTitle: "Add a device",
-    addDeviceHint: `Scan this with your other phone's camera, or paste the link into ${APP_NAME} there. It works once, for {minutes} minutes, and carries your keys — show it only to your own devices.`,
-    expires: "Expires in {time}",
-    expired: "Expired — close and make a new one",
-    approvals: "Waiting for approval",
-    approvalsHint:
-      "Approve only a device you are holding, and only if it shows the same code.",
-    approve: "Approve",
-    noApprovals: "No device is waiting.",
-    checkApprovals: "Check for devices",
-    newRecovery: "Make a new recovery key",
-    newRecoveryConfirm: "Make a new recovery key?",
-    newRecoveryHint:
-      "The old one stops working. Store the new one before you close this.",
-    unpair: "Unpair this device",
-    unpairConfirm: "Unpair this device?",
-    unpairHint:
-      "Its keys are erased from this device, so it must be paired again to sync. Your recordings stay on this device and on the server.",
-    unreachable: "Server unreachable — working on this device's copy",
-    needsKeys: "Paired, waiting for this device's keys",
-    finish: "Finish connecting",
-  },
+  // Empty in the phone app's store build, which never shows the sheet.
+  selfHosted: (import.meta.env.VITE_EDITION === "store"
+    ? {}
+    : selfHostedCopy) as typeof selfHostedCopy,
 
   // A new version: the toast, and About's check.
   update: {

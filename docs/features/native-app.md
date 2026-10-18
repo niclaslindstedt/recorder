@@ -10,15 +10,13 @@ Two things are different, and they are the reason the wrapper exists:
 - **It needs no network, ever.** The app is inside the download rather than
   fetched and cached, so a first launch on a phone that has never been online
   is like a hundredth.
-- **iCloud Drive** is a backend, beside Dropbox and your own server, offered
+- **iCloud Drive** is a backend, beside Dropbox, offered
   by the wrapper to the page as a capability. The recordings land in the
   app's own container under **Files → iCloud Drive → the app's name**, where
   you can open and copy them.
 
-Three more are phone conveniences: the **share sheet** takes an export or
-the original file; the pairing sheet for your own server has a **Scan**
-button that reads the code with the camera — only then, and keeping no
-picture; and the **Microphone** sheet on the Record screen lists the
+Two more are phone conveniences: the **share sheet** takes an export or
+the original file, and the **Microphone** sheet on the Record screen lists the
 phone's own microphones and outputs, so a take can be recorded on the phone
 while you listen on Bluetooth headphones (see
 [Microphone and output](record.md#microphone-and-output)). On Android 12
@@ -34,3 +32,12 @@ for the app.
 The phone app updates through the store, like any other; there is no "a new
 version is ready" prompt inside it. See [`../sync.md`](../sync.md) for how
 iCloud fits in, and `native/README.md` in the repository for how it is built.
+
+## No storage server, for now
+
+The phone app does not offer **your own storage server** for now — the
+owner's decision, until it has been proven on the web: the picker has no such
+option and nothing on the screen names it. The website and the desktop app
+keep it. A phone that was paired with a server under an earlier build opens
+on the copy on the phone, with every recording it held; the copy on the
+server stays where it was.

@@ -474,13 +474,17 @@ export function SettingsScreen({
               onChanged={() => void sync.reload()}
             />
           )}
-          {sync.backend === "selfhosted" && (
-            <SelfHostedSettings
-              selfHosted={sync.selfHosted}
-              onUnpaired={sync.disconnect}
-              onNotice={onNotice}
-            />
-          )}
+          {/* Never in the phone app's store build, which offers no server
+              for now. */}
+          {import.meta.env.VITE_EDITION !== "store" &&
+            sync.backend === "selfhosted" &&
+            sync.selfHosted && (
+              <SelfHostedSettings
+                selfHosted={sync.selfHosted}
+                onUnpaired={sync.disconnect}
+                onNotice={onNotice}
+              />
+            )}
           {sync.connected && (
             <div className="flex flex-col gap-1">
               <Button

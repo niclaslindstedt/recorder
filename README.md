@@ -36,8 +36,8 @@ client — each with its own folders and its own file on a backend. Deleting a
 recording moves it to **Recently deleted** for thirty days first.
 
 Nothing leaves the device unless you connect a backend of your own: **Dropbox**,
-your own [storage server](https://github.com/niclaslindstedt/storage), or —
-in the phone app — **iCloud Drive**. Then the app keeps a copy there — an
+your own [storage server](https://github.com/niclaslindstedt/storage) (not in
+the phone app, for now), or — in the phone app — **iCloud Drive**. Then the app keeps a copy there — an
 index per space and the recordings' files beside it — and syncs it between
 your devices, recording by recording, last edit wins. The copy on Dropbox or
 iCloud can be sealed with a passphrase; the copy on your own server always

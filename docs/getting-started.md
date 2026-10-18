@@ -55,7 +55,8 @@ export sheet.
 In the browser, in IndexedDB: one index per space naming every recording and
 folder, and the audio files beside it. Clearing the site's data removes them.
 Under **Settings → Storage** you can connect your own Dropbox, your own
-storage server, or — in the phone app — iCloud Drive, and the app keeps a copy
+storage server (not in the phone app, for now), or — in the phone app —
+iCloud Drive, and the app keeps a copy
 there and syncs it between devices: see [`sync.md`](sync.md). The copy on
 Dropbox or iCloud can be sealed with a passphrase; the copy on your own server
 always is.

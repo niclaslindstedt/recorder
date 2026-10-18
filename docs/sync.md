@@ -63,10 +63,20 @@ the Files app under the app's name, so you can open and copy them yourself.
 
 ## Your own server
 
+The phone app's store build (`VITE_EDITION=store`) has no self-hosted
+backend for now — the owner's decision, until it has been proven on the web.
+It drops the option from the picker, never restores a pairing or reads one
+from a link, and reads a stored `selfhosted` choice as this device, so a
+phone paired under an earlier build carries on from its local copy. The
+website and the desktop app are unchanged. Every gate tests
+`import.meta.env.VITE_EDITION` itself, so the bundler leaves the client, the
+sheets and their sentences out of that build (`tests/server_offered_test.ts`),
+and `vite.config.ts` drops the server from that build's page description.
+
 The fourth backend is a [storage server](https://github.com/niclaslindstedt/storage)
 you run yourself. It is end to end encrypted: the app pairs with a code the
-server's admin console makes (pasted on the website, scanned with the camera
-in the phone app, or opened as an app link from the QR code), makes the
+server's admin console makes (pasted, or opened as an app link from the QR
+code), makes the
 account's keys on the first device — with a recovery key you are asked to
 store — and thereafter every byte it sends is ciphertext the server cannot
 read, index and files alike. A second device is approved from the first, or

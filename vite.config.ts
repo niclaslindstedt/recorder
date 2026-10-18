@@ -123,6 +123,28 @@ function websiteOnly(): Plugin {
   };
 }
 
+// The phone app's store build offers no storage server for now (the owner's
+// decision), so the page it ships does not name one either. Refuses to build
+// rather than ship a description that still does.
+function storeWithoutServer(): Plugin {
+  return {
+    name: "store-without-server",
+    apply: "build",
+    transformIndexHtml(html) {
+      const out = html.replace(
+        "your own Dropbox, iCloud or storage server",
+        "your own Dropbox or iCloud",
+      );
+      if (/storage server/i.test(out)) {
+        throw new Error(
+          "index.html names the storage server, which the store build does not offer",
+        );
+      }
+      return out;
+    },
+  };
+}
+
 export default defineConfig({
   base,
   // No size budgets, by owner decision: this only keeps Vite's warning quiet.
@@ -150,5 +172,6 @@ export default defineConfig({
     tailwindcss(),
     appPwa({ base, version, ignorePaths, serviceWorker: !shellBuild }),
     ...(appBuild ? [websiteOnly()] : []),
+    ...(process.env.VITE_EDITION === "store" ? [storeWithoutServer()] : []),
   ],
 });
